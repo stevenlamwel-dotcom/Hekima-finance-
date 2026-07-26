@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Hekima Mikopo</title>
+<meta name="theme-color" content="#0A0F14">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --bg:#0A0F14;
+  --panel:#121922;
+  --panel-2:#171F2A;
+  --line:#232D3A;
+  --ink:#EDEFF2;
+  --muted:#8B95A1;
+  --cyan:#35D0BA;
+  --cyan-dim:#1D8F7F;
+  --gold:#E3B341;
+  --red:#E5484D;
+  --blue:#4C8DFF;
+  --radius:14px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);}
+body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
+h1,h2,h3{font-weight:700;letter-spacing:-0.01em;margin:0;}
+button{font-family:inherit;cursor:pointer;}
+input,select{font-family:inherit;}
+
+/* ---------- Login ---------- */
+#loginScreen{
+  min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  padding:32px 24px;background:
+    radial-gradient(120% 90% at 15% -10%, #16232B 0%, var(--bg) 55%, #060809 100%);
+  color:#fff;
+}
+.brand{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;}
+.brand .mark{
+  width:38px;height:38px;border-radius:9px;background:var(--cyan);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;color:#04231d;font-size:18px;flex:none;
+}
+.brand h1{font-size:22px;color:#fff;}
+.brand-sub{color:var(--muted);font-size:13px;margin:0 0 40px 48px;}
+.login-card{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:22px;
+}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;letter-spacing:.02em;}
+.field input{
+  width:100%;padding:13px 14px;border-radius:10px;border:1px solid var(--line);
+  background:var(--panel-2);color:#fff;font-size:16px;outline:none;
+}
+.field input:focus{border-color:var(--cyan);}
+.field input::placeholder{color:#4b5561;}
+.btn-primary{
+  width:100%;padding:14px;border-radius:10px;border:none;background:var(--cyan);
+  color:#04231d;font-weight:700;font-size:15px;margin-top:6px;
+}
+.btn-primary:active{transform:scale(0.98);}
+.btn-primary:disabled{opacity:.6;}
+#loginError{color:#ff9d90;font-size:13px;margin-top:12px;min-height:16px;}
+
+/* ---------- App shell ---------- */
+#app{display:none;min-height:100vh;padding-bottom:40px;}
+header.topbar{
+  position:sticky;top:0;z-index:10;background:var(--panel);color:#fff;border-bottom:1px solid var(--line);
+  padding:14px 18px;display:flex;align-items:center;justify-content:space-between;
+}
+header.topbar .who{font-size:13px;color:var(--muted);}
+header.topbar .who b{display:block;font-size:15px;color:#fff;}
+header.topbar .role-pill{
+  display:inline-block;margin-top:3px;font-size:10px;padding:2px 8px;border-radius:20px;
+  background:var(--gold);color:#2b1e04;font-weight:700;letter-spacing:.03em;text-transform:uppercase;
+}
+#logoutBtn{
+  background:transparent;border:1px solid var(--line);color:#fff;
+  padding:8px 12px;border-radius:8px;font-size:12px;
+}
+main{padding:18px;max-width:640px;margin:0 auto;}
+
+/* Capital hero card */
+.capital-card{
+  background:linear-gradient(135deg, var(--panel) 0%, #0D1620 100%);
+  border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 16px;margin-bottom:16px;
+}
+.capital-card .cc-top{display:flex;align-items:center;gap:10px;}
+.capital-card .cc-icon{
+  width:36px;height:36px;border-radius:10px;background:rgba(53,208,186,.14);
+  display:flex;align-items:center;justify-content:center;color:var(--cyan);font-size:18px;flex:none;
+}
+.capital-card .cc-label{font-size:12px;color:var(--muted);}
+.capital-card .cc-sub{font-size:11px;color:#5b6572;margin-top:1px;}
+.capital-card .cc-value{font-size:32px;font-weight:800;margin-top:10px;color:#fff;letter-spacing:-0.02em;}
+.capital-split{display:flex;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
+.capital-split .cs{flex:1;}
+.capital-split .cs .k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.capital-split .cs .v{font-size:15px;font-weight:700;margin-top:3px;}
+.capital-split .cs.safi .v{color:var(--cyan);}
+.capital-split .cs.chafu .v{color:var(--red);}
+
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;}
+.stats-row .stat{grid-column:span 1;}
+.stats-row .stat.wide{grid-column:1 / -1;}
+.stat{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;
+}
+.stat .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.stat .value{font-size:20px;font-weight:800;margin-top:4px;color:#fff;}
+.stat .value.gold{color:var(--gold);}
+
+.section-title{display:flex;align-items:center;justify-content:space-between;margin:26px 0 12px;}
+.section-title h2{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.btn-add{
+  background:var(--cyan);color:#04231d;border:none;border-radius:9px;
+  padding:9px 14px;font-size:13px;font-weight:700;
+}
+select#agentFilter{
+  padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:#fff;font-size:13px;
+}
+
+/* ---- Uchambuzi kwa wakala (agent analysis cards) ---- */
+.agent-analysis-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px 16px;margin-bottom:10px;
+}
+.aa-head{display:flex;align-items:center;gap:10px;}
+.aa-chip{
+  font-size:11px;font-weight:800;padding:4px 9px;border-radius:7px;
+  background:rgba(76,141,255,.16);color:var(--blue);letter-spacing:.03em;flex:none;
+}
+.aa-name{font-size:14.5px;font-weight:700;color:#fff;}
+.aa-count{margin-left:auto;font-size:12px;color:var(--muted);}
+.aa-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;}
+.aa-grid .g{text-align:left;}
+.aa-grid .g .k{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
+.aa-grid .g .v{font-size:13.5px;font-weight:700;margin-top:2px;}
+.aa-grid .g.mkopo .v{color:#fff;}
+.aa-grid .g.paid .v{color:var(--cyan);}
+.aa-grid .g.left .v{color:var(--red);}
+.aa-print{
+  width:100%;margin-top:12px;padding:10px;border-radius:9px;border:1px solid var(--line);
+  background:var(--panel-2);color:var(--gold);font-weight:700;font-size:12.5px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.aa-print:active{transform:scale(.98);}
+
+/* client card with repayment meter */
+.client-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:15px 16px;margin-bottom:12px;
+}
+.client-card .row1{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.client-card .name{font-size:16px;font-weight:700;color:#fff;}
+.client-card .meta{font-size:12px;color:var(--muted);margin-top:2px;}
+.badge{
+  font-size:10px;padding:3px 9px;border-radius:20px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
+  white-space:nowrap;
+}
+.badge.MPYA{background:rgba(76,141,255,.16);color:var(--blue);}
+.badge.ENDELEA{background:rgba(53,208,186,.14);color:var(--cyan);}
+.badge.KAMILIKA{background:rgba(227,179,65,.16);color:var(--gold);}
+.badge.CHELEWA{background:rgba(229,72,77,.16);color:var(--red);}
+.meter-wrap{margin-top:12px;}
+.meter-track{
+  height:8px;border-radius:20px;background:var(--panel-2);overflow:hidden;position:relative;
+}
+.meter-fill{
+  height:100%;border-radius:20px;background:linear-gradient(90deg, var(--cyan-dim), var(--cyan));
+  transition:width .4s ease;
+}
+.meter-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px;}
+.meter-labels b{color:#fff;}
+.card-actions{display:flex;gap:8px;margin-top:12px;}
+.card-actions button{
+  flex:1;padding:9px;border-radius:8px;font-size:12.5px;font-weight:600;border:1px solid var(--line);
+  background:var(--panel-2);color:#fff;
+}
+.card-actions button.primary{background:var(--cyan);color:#04231d;border-color:var(--cyan);}
+.empty-state{
+  text-align:center;padding:32px 20px;color:var(--muted);font-size:13.5px;
+  border:1.5px dashed var(--line);border-radius:var(--radius);
+}
+
+/* ---------- Modal / Sheet ---------- */
+.sheet-backdrop{
+  display:none;position:fixed;inset:0;background:rgba(4,6,8,.6);z-index:50;
+  align-items:flex-end;justify-content:center;
+}
+.sheet{
+  background:var(--bg);width:100%;max-width:640px;border-radius:20px 20px 0 0;
+  padding:20px 18px 26px;max-height:88vh;overflow-y:auto;border-top:1px solid var(--line);
+  animation:slideUp .22s ease;
+}
+@keyframes slideUp{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.sheet h3{font-size:17px;color:#fff;margin-bottom:16px;}
+.sheet .field{margin-bottom:12px;}
+.sheet .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
+.sheet .field input, .sheet .field select{
+  width:100%;padding:11px 12px;border-radius:9px;border:1px solid var(--line);font-size:15px;background:var(--panel);color:#fff;
+}
+.sheet .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.sheet-actions{display:flex;gap:10px;margin-top:16px;}
+.sheet-actions button{flex:1;padding:13px;border-radius:10px;font-weight:700;border:none;font-size:14.5px;}
+.sheet-actions .cancel{background:var(--panel);border:1px solid var(--line);color:var(--ink);}
+.sheet-actions .save{background:var(--gold);color:#2b1e04;}
+.sheet-error{color:var(--red);font-size:13px;margin-top:8px;min-height:16px;}
+.close-x{position:absolute;top:14px;right:16px;background:none;border:none;font-size:20px;color:var(--muted);}
+.payment-item{
+  display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;color:#fff;
+}
+.payment-item:last-child{border-bottom:none;}
+.payment-item .d{color:var(--muted);font-size:12px;}
+#toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:var(--cyan);color:#04231d;padding:12px 20px;border-radius:30px;
+  font-size:13.5px;z-index:100;display:none;box-shadow:0 8px 24px rgba(0,0,0,.4);font-weight:600;
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="brand">
+    <div class="mark">H</div>
+    <h1>Hekima Mikopo</h1>
+  </div>
+  <p class="brand-sub">Mfumo wa usimamizi wa mikopo</p>
+  <div class="login-card">
+    <div class="field">
+      <label>Barua pepe</label>
+      <input type="email" id="loginEmail" placeholder="jina@mfano.com" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Nenosiri</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="loginBtn">Ingia</button>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header class="topbar">
+    <div class="who">
+      <b id="whoName">—</b>
+      <span class="role-pill" id="whoRole">—</span>
+    </div>
+    <button id="logoutBtn">Toka</button>
+  </header>
+  <main>
+
+    <div class="capital-card">
+      <div class="cc-top">
+        <div class="cc-icon">◆</div>
+        <div>
+          <div class="cc-label">Jumla ya Mtaji</div>
+          <div class="cc-sub">Fedha zote zinazozunguka</div>
+        </div>
+      </div>
+      <div class="cc-value" id="capTotal">TZS 0</div>
+      <div class="capital-split">
+        <div class="cs safi">
+          <div class="k">Mtaji Safi</div>
+          <div class="v" id="capSafi">TZS 0</div>
+        </div>
+        <div class="cs chafu">
+          <div class="k">Mtaji Mchafu (Sugu)</div>
+          <div class="v" id="capChafu">TZS 0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row" id="statsRow"></div>
+
+    <div id="agentAnalysisSection" style="display:none;">
+      <div class="section-title"><h2>Uchambuzi kwa Wakala</h2></div>
+      <div id="agentAnalysisList"></div>
+    </div>
+
+    <div id="agentFilterWrap" style="display:none;margin-bottom:6px;">
+      <select id="agentFilter"></select>
+    </div>
+
+    <div class="section-title">
+      <h2>Wateja</h2>
+      <button class="btn-add" id="addClientBtn">+ Mteja mpya</button>
+    </div>
+    <div id="clientList"></div>
+
+    <div id="adminAgentsSection" style="display:none;">
+      <div class="section-title">
+        <h2>Mawakala (Agents)</h2>
+        <button class="btn-add" id="addAgentBtn">+ Wakala mpya</button>
+      </div>
+      <div id="agentList"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Sheet: Add client -->
+<div class="sheet-backdrop" id="clientSheetBackdrop">
+  <div class="sheet">
+    <button class="close-x" data-close="clientSheetBackdrop">✕</button>
+    <h3>Ongeza Mteja Mpya</h3>
+    <div class="field"><label>Jina kamili</label><input id="c_jina" placeholder="Jina la mteja"></div>
+    <div class="field"><label>Jina maarufu (si lazima)</label><input id="c_maarufu"></div>
+    <div class="two-col">
+      <div class="field"><label>Simu</label><input id="c_simu" placeholder="07xx xxx xxx"></div>
+      <div class="field"><label>Eneo</label><input id="c_eneo" placeholder="Mfano: Iringa"></div>
+    </div>
+    <div class="field" id="c_agentWrap" style="display:none;">
+      <label>Wakala</label>
+      <select id="c_agent"></select>
+    </div>
+    <div class="two-col">
+      <div class="field"><label>Kiasi cha mkopo (TZS)</label><input id="c_mkopo" type="number" inputmode="decimal"></div>
+      <div class="field"><label>Riba (%)</label><input id="c_riba" type="number" inputmode="decimal" value="0"></div>
+    </div>
+    <div class="field"><label>Lengo la kurejesha (TZS)</label><input id="c_rejesho" type="number" inputmode="decimal"></div>
+    <div class="sheet-error" id="c_error"></div>
+    <div class="sheet-actions">
+      <button class="cancel" data-close="clientSheetBackdrop">Ghairi</button>
+      <button class="save" id="c_save">Hifadhi</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sheet: Client detail / payments -->
+<div class="sheet-backdrop" id="detailSheetBackdrop">
+  <div class="sheet">
+    <button class="close-x" data-close="detailSheetBackdrop">✕</button>
+    <h3 id="d_name">—</h3>
+    <div class="stats-row" style="margin-bottom:16px;">
+      <div class="stat"><div class="label">Mkopo</div><div class="value" id="d_mkopo">—</div></div>
+      <div class="stat"><div class="label">Lengo la kurejesha</div><div class="value" id="d_lengo">—</div></div>
+      <div class="stat wide"><div class="label">Deni linalobaki</div><div class="value gold" id="d_deni">—</div></div>
+    </div>
+    <div class="field two-col">
+      <div>
+        <label>Rekodi malipo mapya (TZS)</label>
+        <input id="p_kiasi" type="number" inputmode="decimal" placeholder="0">
+      </div>
+      <div style="align-self:flex-end;">
+        <button class="save" id="p_save" style="width:100%;padding:11px;border-radius:9px;border:none;background:var(--gold);color:#2b1e04;font-weight:700;">Rekodi</button>
+      </div>
+    </div>
+    <div class="sheet-error" id="p_error"></div>
+    <h3 style="margin-top:18px;font-size:14px;">Historia ya malipo</h3>
+    <div id="paymentHistory" style="margin-top:8px;"></div>
+  </div>
+</div>
+
+<!-- Sheet: Add agent -->
+<div class="sheet-backdrop" id="agentSheetBackdrop">
+  <div class="sheet">
+    <button class="close-x" data-close="agentSheetBackdrop">✕</button>
+    <h3>Ongeza Wakala Mpya</h3>
+    <div class="field"><label>Msimbo (kifupi, mfano: JUM)</label><input id="a_code" style="text-transform:uppercase;"></div>
+    <div class="field"><label>Jina kamili</label><input id="a_name"></div>
+    <div class="sheet-error" id="a_error"></div>
+    <div class="sheet-actions">
+      <button class="cancel" data-close="agentSheetBackdrop">Ghairi</button>
+      <button class="save" id="a_save">Hifadhi</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============ CONFIG ============ */
+const SUPABASE_URL = "https://dftsvrxzyakhyadjwhnb.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmdHN2cnh6eWFraHlhZGp3aG5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwNDczMzAsImV4cCI6MjEwMDYyMzMzMH0.k07kB77HAtIO-0JUca0b4drc9PyZObwIsZBXIYtfIL4";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ============ STATE ============ */
+let profile = null;
+let agents = [];
+let clients = [];
+let paymentsByClient = {};
+let activeClientId = null;
+let agentFilterValue = "ALL";
+
+/* ============ HELPERS ============ */
+function fmtTZS(n){
+  n = Number(n||0);
+  return "TZS " + n.toLocaleString("en-US", {maximumFractionDigits:0});
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(()=>{ t.style.display='none'; }, 2600);
+}
+function openSheet(id){ document.getElementById(id).style.display='flex'; }
+function closeSheet(id){ document.getElementById(id).style.display='none'; }
+document.querySelectorAll('[data-close]').forEach(btn=>{
+  btn.addEventListener('click', ()=> closeSheet(btn.dataset.close));
+});
+function statusFor(client, paid){
+  if (paid >= (client.rejesho_lengo||0) && client.rejesho_lengo > 0) return "KAMILIKA";
+  if (client.mteja === "MPYA" && paid === 0) return "MPYA";
+  const target = client.d_kamilisha ? new Date(client.d_kamilisha) : null;
+  if (target && new Date() > target && paid < (client.rejesho_lengo||0)) return "CHELEWA";
+  return "ENDELEA";
+}
+function statusLabel(s){
+  return {MPYA:"Mpya", ENDELEA:"Inaendelea", KAMILIKA:"Imekamilika", CHELEWA:"Imechelewa"}[s] || s;
+}
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ============ AUTH ============ */
+document.getElementById('loginBtn').addEventListener('click', doLogin);
+document.getElementById('loginPassword').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+async function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = "";
+  if(!email || !password){ errEl.textContent = "Jaza barua pepe na nenosiri."; return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = "Inaingia...";
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  btn.disabled = false; btn.textContent = "Ingia";
+  if(error){
+    errEl.textContent = "Imeshindikana kuingia: barua pepe au nenosiri sio sahihi.";
+    return;
+  }
+  await afterLogin();
+}
+document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+  await sb.auth.signOut();
+  location.reload();
+});
+async function afterLogin(){
+  const { data: { user } } = await sb.auth.getUser();
+  if(!user){ return; }
+  const { data: prof, error: profErr } = await sb.from('mikopo_profiles').select('*').eq('id', user.id).maybeSingle();
+  if(profErr || !prof){
+    document.getElementById('loginError').textContent = "Akaunti yako haijaongezwa kwenye mfumo bado. Wasiliana na admin.";
+    await sb.auth.signOut();
+    return;
+  }
+  profile = prof;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('whoName').textContent = profile.full_name || profile.email || "Mtumiaji";
+  document.getElementById('whoRole').textContent = profile.role === 'admin' ? 'Admin' : 'Wakala';
+  if(profile.role === 'admin'){
+    document.getElementById('adminAgentsSection').style.display = 'block';
+    document.getElementById('agentFilterWrap').style.display = 'block';
+    document.getElementById('c_agentWrap').style.display = 'block';
+    document.getElementById('agentAnalysisSection').style.display = 'block';
+  }
+  await loadAgents();
+  await loadClientsAndPayments();
+  render();
+}
+
+/* ============ DATA LOADING ============ */
+async function loadAgents(){
+  const { data } = await sb.from('mikopo_agents').select('*').order('name');
+  agents = data || [];
+  const filterSel = document.getElementById('agentFilter');
+  filterSel.innerHTML = '<option value="ALL">Mawakala wote</option>' +
+    agents.map(a=>`<option value="${a.code}">${a.name}</option>`).join('');
+  filterSel.onchange = ()=>{ agentFilterValue = filterSel.value; renderClients(); };
+  const cAgentSel = document.getElementById('c_agent');
+  cAgentSel.innerHTML = agents.map(a=>`<option value="${a.code}">${a.name} (${a.code})</option>`).join('');
+}
+async function loadClientsAndPayments(){
+  const { data: cData } = await sb.from('mikopo_clients').select('*').order('created_at', {ascending:false});
+  clients = cData || [];
+  const { data: pData } = await sb.from('mikopo_payments').select('*').order('tarehe', {ascending:false});
+  paymentsByClient = {};
+  (pData||[]).forEach(p=>{
+    (paymentsByClient[p.client_id] ||= []).push(p);
+  });
+}
+function paidFor(clientId){
+  return (paymentsByClient[clientId]||[]).reduce((s,p)=> s + Number(p.kiasi||0), 0);
+}
+
+/* ============ RENDER ============ */
+function render(){
+  renderCapital();
+  renderStats();
+  if(profile.role === 'admin') renderAgentAnalysis();
+  renderClients();
+  if(profile.role === 'admin') renderAgents();
+}
+
+// "Mtaji Safi" = deni linalobaki kwa wateja wasio CHELEWA (mikopo mizuri)
+// "Mtaji Mchafu" = deni linalobaki kwa wateja walio CHELEWA (mikopo sugu/mibaya)
+function renderCapital(){
+  let safi = 0, chafu = 0;
+  clients.forEach(c=>{
+    const paid = paidFor(c.id);
+    const remaining = Math.max(0, (c.rejesho_lengo||0) - paid);
+    const status = statusFor(c, paid);
+    if(status === 'CHELEWA') chafu += remaining; else safi += remaining;
+  });
+  document.getElementById('capTotal').textContent = fmtTZS(safi+chafu);
+  document.getElementById('capSafi').textContent = fmtTZS(safi);
+  document.getElementById('capChafu').textContent = fmtTZS(chafu);
+}
+
+function renderStats(){
+  const visible = clients;
+  const totalLoaned = visible.reduce((s,c)=> s + Number(c.mkopo||0), 0);
+  const totalPaid = visible.reduce((s,c)=> s + paidFor(c.id), 0);
+  const outstanding = totalLoaned - totalPaid;
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat"><div class="label">Wateja</div><div class="value">${visible.length}</div></div>
+    <div class="stat"><div class="label">Jumla mikopo</div><div class="value">${fmtTZS(totalLoaned)}</div></div>
+    <div class="stat"><div class="label">Kimerejeshwa</div><div class="value">${fmtTZS(totalPaid)}</div></div>
+    <div class="stat"><div class="label">Deni linalobaki</div><div class="value gold">${fmtTZS(outstanding)}</div></div>
+  `;
+}
+
+function renderAgentAnalysis(){
+  const wrap = document.getElementById('agentAnalysisList');
+  if(agents.length===0){ wrap.innerHTML = `<div class="empty-state">Hakuna mawakala bado.</div>`; return; }
+  wrap.innerHTML = agents.map(a=>{
+    const list = clients.filter(c=>c.agent_code===a.code);
+    const mkopo = list.reduce((s,c)=> s + Number(c.mkopo||0), 0);
+    const paid = list.reduce((s,c)=> s + paidFor(c.id), 0);
+    const left = list.reduce((s,c)=> s + Math.max(0,(c.rejesho_lengo||0) - paidFor(c.id)), 0);
+    return `
+    <div class="agent-analysis-card">
+      <div class="aa-head">
+        <span class="aa-chip">${escapeHtml(a.code)}</span>
+        <span class="aa-name">${escapeHtml(a.name)}</span>
+        <span class="aa-count">${list.length}</span>
+      </div>
+      <div class="aa-grid">
+        <div class="g mkopo"><div class="k">Mkopo</div><div class="v">${fmtTZS(mkopo)}</div></div>
+        <div class="g paid"><div class="k">Rejesho</div><div class="v">${fmtTZS(paid)}</div></div>
+        <div class="g left"><div class="k">Deni Baki</div><div class="v">${fmtTZS(left)}</div></div>
+      </div>
+      <button class="aa-print" onclick="printAgentSheet('${a.code}')">🖨️ Chapa</button>
+    </div>`;
+  }).join('');
+}
+
+function renderClients(){
+  let list = clients;
+  if(profile.role === 'admin' && agentFilterValue !== 'ALL'){
+    list = list.filter(c=> c.agent_code === agentFilterValue);
+  }
+  const wrap = document.getElementById('clientList');
+  if(list.length === 0){
+    wrap.innerHTML = `<div class="empty-state">Hakuna wateja bado. Bonyeza "+ Mteja mpya" kuanza.</div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(c=>{
+    const paid = paidFor(c.id);
+    const target = Number(c.rejesho_lengo||0);
+    const pct = target > 0 ? Math.min(100, Math.round((paid/target)*100)) : 0;
+    const status = statusFor(c, paid);
+    const agentName = (agents.find(a=>a.code===c.agent_code)||{}).name || c.agent_code || "";
+    return `
+    <div class="client-card">
+      <div class="row1">
+        <div>
+          <div class="name">${escapeHtml(c.jina)}</div>
+          <div class="meta">${c.simu ? c.simu+' · ' : ''}${c.eneo||''}${profile.role==='admin' ? ' · '+agentName : ''}</div>
+        </div>
+        <span class="badge ${status}">${statusLabel(status)}</span>
+      </div>
+      <div class="meter-wrap">
+        <div class="meter-track"><div class="meter-fill" style="width:${pct}%"></div></div>
+        <div class="meter-labels"><span><b>${fmtTZS(paid)}</b> / ${fmtTZS(target)}</span><span>${pct}%</span></div>
+      </div>
+      <div class="card-actions">
+        <button class="primary" onclick="openClientDetail('${c.id}')">Ona / Rekodi malipo</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAgents(){
+  const wrap = document.getElementById('agentList');
+  if(agents.length===0){ wrap.innerHTML = `<div class="empty-state">Hakuna mawakala bado.</div>`; return; }
+  wrap.innerHTML = agents.map(a=>{
+    const count = clients.filter(c=>c.agent_code===a.code).length;
+    return `<div class="client-card" style="padding:12px 16px;">
+      <div class="row1"><div><div class="name" style="font-size:14.5px;">${escapeHtml(a.name)}</div>
+      <div class="meta">Msimbo: ${a.code} · Wateja: ${count}</div></div></div>
+    </div>`;
+  }).join('');
+}
+
+/* ============ CHAPA (PRINT AGENT SHEET) ============ */
+// Muundo huu unafuata template ya Excel: P.O BOX 1115, DODOMA / MAREJESHO YA [WAKALA]
+// Safu: NO | JINA | DENI | SUGU | D.CHUKUA | AG | REJESHO | SAINI
+window.printAgentSheet = function(agentCode){
+  const agent = agents.find(a=>a.code===agentCode);
+  if(!agent) return;
+  const list = clients.filter(c=>c.agent_code===agentCode);
+  const rows = list.map((c,i)=>{
+    const paid = paidFor(c.id);
+    const deni = Math.max(0, (c.rejesho_lengo||0) - paid);
+    const status = statusFor(c, paid);
+    const sugu = status === 'CHELEWA' ? fmtTZS(deni) : '-';
+    const dChukua = c.d_kupewa ? new Date(c.d_kupewa).toLocaleDateString('sw-TZ',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+    return `<tr>
+      <td>${i+1}</td>
+      <td>${escapeHtml(c.jina)}</td>
+      <td>${fmtTZS(deni)}</td>
+      <td>${sugu}</td>
+      <td>${dChukua}</td>
+      <td>${escapeHtml(agent.code)}</td>
+      <td></td>
+      <td></td>
+    </tr>`;
+  }).join('');
+  const html = `<!DOCTYPE html><html lang="sw"><head><meta charset="UTF-8">
+    <title>Marejesho ya ${escapeHtml(agent.name)}</title>
+    <style>
+      body{font-family:Arial, Helvetica, sans-serif;padding:24px;color:#111;}
+      .hdr{text-align:center;margin-bottom:18px;}
+      .hdr .co{font-weight:800;font-size:16px;}
+      .hdr .addr{font-size:12px;color:#444;}
+      h2{text-align:center;font-size:15px;margin:14px 0 4px;text-transform:uppercase;}
+      .tarehe{text-align:right;font-size:12px;margin-bottom:10px;}
+      table{width:100%;border-collapse:collapse;font-size:12.5px;}
+      th,td{border:1px solid #333;padding:6px 8px;text-align:left;}
+      th{background:#eee;}
+      @media print{ @page{ margin:14mm; } }
+    </style></head>
+    <body>
+      <div class="hdr">
+        <div class="co">HEKIMA FINANCE</div>
+        <div class="addr">P.O BOX 1115, DODOMA</div>
+      </div>
+      <h2>Marejesho ya ${escapeHtml(agent.name)}</h2>
+      <div class="tarehe">Tarehe …….………….</div>
+      <table>
+        <thead><tr><th>NO</th><th>JINA</th><th>DENI</th><th>SUGU</th><th>D.CHUKUA</th><th>AG</th><th>REJESHO</th><th>SAINI</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="8" style="text-align:center;">Hakuna wateja</td></tr>'}</tbody>
+      </table>
+    </body></html>`;
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  w.onload = ()=>{ w.focus(); w.print(); };
+};
+
+/* ============ ADD CLIENT ============ */
+document.getElementById('addClientBtn').addEventListener('click', ()=>{
+  document.getElementById('c_error').textContent = '';
+  ['c_jina','c_maarufu','c_simu','c_eneo','c_mkopo','c_rejesho'].forEach(id=> document.getElementById(id).value='');
+  document.getElementById('c_riba').value = '0';
+  openSheet('clientSheetBackdrop');
+});
+document.getElementById('c_save').addEventListener('click', async ()=>{
+  const errEl = document.getElementById('c_error');
+  errEl.textContent = '';
+  const jina = document.getElementById('c_jina').value.trim();
+  const mkopo = parseFloat(document.getElementById('c_mkopo').value);
+  const rejesho = parseFloat(document.getElementById('c_rejesho').value);
+  const riba = parseFloat(document.getElementById('c_riba').value || '0');
+  if(!jina || isNaN(mkopo) || isNaN(rejesho)){
+    errEl.textContent = 'Jaza jina, kiasi cha mkopo, na lengo la kurejesha.';
+    return;
+  }
+  const agent_code = profile.role === 'admin' ? document.getElementById('c_agent').value : profile.agent_code;
+  if(!agent_code){
+    errEl.textContent = 'Wakala hajapangwa kwa akaunti yako. Wasiliana na admin.';
+    return;
+  }
+  const payload = {
+    jina,
+    maarufu: document.getElementById('c_maarufu').value.trim() || null,
+    simu: document.getElementById('c_simu').value.trim() || null,
+    eneo: document.getElementById('c_eneo').value.trim() || null,
+    mkopo, riba, riba2:0,
+    jumla: mkopo + (mkopo*riba/100),
+    rejesho_lengo: rejesho,
+    agent_code,
+    mteja: 'MPYA'
+  };
+  const { error } = await sb.from('mikopo_clients').insert(payload);
+  if(error){ errEl.textContent = 'Hitilafu: ' + error.message; return; }
+  closeSheet('clientSheetBackdrop');
+  showToast('Mteja ameongezwa.');
+  await loadClientsAndPayments();
+  render();
+});
+
+/* ============ CLIENT DETAIL / PAYMENTS ============ */
+window.openClientDetail = async function(clientId){
+  activeClientId = clientId;
+  const c = clients.find(x=>x.id===clientId);
+  if(!c) return;
+  const paid = paidFor(clientId);
+  document.getElementById('d_name').textContent = c.jina;
+  document.getElementById('d_mkopo').textContent = fmtTZS(c.mkopo);
+  document.getElementById('d_lengo').textContent = fmtTZS(c.rejesho_lengo);
+  document.getElementById('d_deni').textContent = fmtTZS(Math.max(0, (c.rejesho_lengo||0) - paid));
+  document.getElementById('p_kiasi').value = '';
+  document.getElementById('p_error').textContent = '';
+  renderPaymentHistory(clientId);
+  openSheet('detailSheetBackdrop');
+};
+function renderPaymentHistory(clientId){
+  const list = paymentsByClient[clientId] || [];
+  const wrap = document.getElementById('paymentHistory');
+  if(list.length===0){ wrap.innerHTML = '<div class="empty-state">Hakuna malipo bado.</div>'; return; }
+  wrap.innerHTML = list.map(p=>`
+    <div class="payment-item">
+      <span>${fmtTZS(p.kiasi)}</span>
+      <span class="d">${new Date(p.tarehe).toLocaleDateString('sw-TZ', {day:'2-digit',month:'short',year:'numeric'})}</span>
+    </div>
+  `).join('');
+}
+document.getElementById('p_save').addEventListener('click', async ()=>{
+  const errEl = document.getElementById('p_error');
+  errEl.textContent = '';
+  const kiasi = parseFloat(document.getElementById('p_kiasi').value);
+  if(!activeClientId || isNaN(kiasi) || kiasi<=0){
+    errEl.textContent = 'Weka kiasi sahihi cha malipo.';
+    return;
+  }
+  const { error } = await sb.from('mikopo_payments').insert({ client_id: activeClientId, kiasi });
+  if(error){ errEl.textContent = 'Hitilafu: ' + error.message; return; }
+  showToast('Malipo yamerekodiwa.');
+  await loadClientsAndPayments();
+  render();
+  openClientDetail(activeClientId);
+});
+
+/* ============ ADD AGENT (admin) ============ */
+document.getElementById('addAgentBtn').addEventListener('click', ()=>{
+  document.getElementById('a_code').value = '';
+  document.getElementById('a_name').value = '';
+  document.getElementById('a_error').textContent = '';
+  openSheet('agentSheetBackdrop');
+});
+document.getElementById('a_save').addEventListener('click', async ()=>{
+  const errEl = document.getElementById('a_error');
+  errEl.textContent = '';
+  const code = document.getElementById('a_code').value.trim().toUpperCase();
+  const name = document.getElementById('a_name').value.trim();
+  if(!code || !name){ errEl.textContent = 'Jaza msimbo na jina.'; return; }
+  const { error } = await sb.from('mikopo_agents').insert({ code, name });
+  if(error){ errEl.textContent = 'Hitilafu: ' + error.message; return; }
+  closeSheet('agentSheetBackdrop');
+  showToast('Wakala ameongezwa.');
+  await loadAgents();
+  renderAgents();
+});
+
+/* ============ INIT ============ */
+(async function init(){
+  const { data: { session } } = await sb.auth.getSession();
+  if(session){ await afterLogin(); }
+})();
+</script>
+</body>
+</html>
