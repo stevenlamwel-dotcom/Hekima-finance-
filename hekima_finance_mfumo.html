@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hekima Finance — Mfumo wa Wateja</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#070B14;
+    --bg-grad: radial-gradient(1200px 600px at 15% -10%, #0E2038 0%, #070B14 55%),
+               radial-gradient(900px 500px at 100% 0%, #0A1B2E 0%, #070B14 60%);
+    --panel:#0C1524; --panel-2:#0E1A2E; --line: rgba(120,170,220,0.14);
+    --cyan:#26E0FF; --cyan-dim:#1BA8C4; --cyan-glow: rgba(38,224,255,0.45);
+    --text:#EAF1FA; --text-dim:#7F90A8; --text-dim2:#5A6B84;
+    --amber:#F5B342; --green:#33E0A6; --red:#FF5C68; --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background: var(--bg-grad), var(--bg); color: var(--text); font-family:'Inter',sans-serif;
+    min-height:100vh; padding: 26px 18px 60px; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width: 1240px; margin:0 auto; }
+  .mono{ font-family:'JetBrains Mono',monospace; font-variant-numeric: tabular-nums; }
+
+  header{ display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:22px; flex-wrap:wrap; gap:14px; }
+  .brand-eyebrow{ font-size:11px; letter-spacing:3px; color:var(--cyan-dim); font-weight:600; margin-bottom:6px; text-transform:uppercase; }
+  header h1{ font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; }
+  .header-right{ text-align:right; font-size:12.5px; color:var(--text-dim); }
+  .header-right b{ color:var(--text); }
+
+  .hud-panel{ position:relative; background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border:1px solid var(--line); border-radius:var(--radius); padding:20px 24px;
+    box-shadow: 0 20px 60px -25px rgba(0,0,0,0.7); }
+  .hud-panel::before,.hud-panel::after,.hc::before,.hc::after{ content:""; position:absolute; width:16px; height:16px; }
+  .hud-panel::before{ top:-1px;left:-1px;border-top:2px solid var(--cyan);border-left:2px solid var(--cyan);border-radius:4px 0 0 0; filter:drop-shadow(0 0 4px var(--cyan-glow)); }
+  .hud-panel::after{ top:-1px;right:-1px;border-top:2px solid var(--cyan);border-right:2px solid var(--cyan);border-radius:0 4px 0 0; filter:drop-shadow(0 0 4px var(--cyan-glow)); }
+  .hc{ position:relative; }
+  .hc::before{ bottom:-1px;left:-1px;border-bottom:2px solid var(--cyan);border-left:2px solid var(--cyan);border-radius:0 0 0 4px; filter:drop-shadow(0 0 4px var(--cyan-glow)); }
+  .hc::after{ bottom:-1px;right:-1px;border-bottom:2px solid var(--cyan);border-right:2px solid var(--cyan);border-radius:0 0 4px 0; filter:drop-shadow(0 0 4px var(--cyan-glow)); }
+  .hud-title{ font-family:'Space Grotesk'; font-size:12.5px; font-weight:700; letter-spacing:2.5px; color:var(--cyan);
+    text-transform:uppercase; padding-bottom:12px; margin-bottom:4px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; }
+  .hud-title span.n{ color:var(--text-dim2); letter-spacing:0.5px; text-transform:none; font-size:11px; font-weight:500; }
+
+  .kpi-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(250px,1fr)); gap:16px; margin: 14px 0 22px; }
+  .stat-row{ display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); }
+  .stat-row:last-child{ border-bottom:none; padding-bottom:0; }
+  .stat-left{ display:flex; align-items:center; gap:12px; }
+  .stat-icon{ width:32px;height:32px;border-radius:8px; background:rgba(38,224,255,0.08); border:1px solid rgba(38,224,255,0.25);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+  .stat-icon svg{ width:16px;height:16px; stroke:var(--cyan); fill:none; stroke-width:1.8; }
+  .stat-label{ font-size:13px; font-weight:600; }
+  .stat-sub{ font-size:10.5px; color:var(--text-dim); }
+  .stat-value{ font-family:'JetBrains Mono'; font-size:19px; font-weight:700; }
+  .stat-value.warn{ color:var(--amber); } .stat-value.bad{ color:var(--red); } .stat-value.good{ color:var(--green); }
+
+  /* Agent breakdown table inside hud panel */
+  .agent-table{ width:100%; border-collapse:collapse; margin-top:6px; }
+  .agent-table th{ text-align:left; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--text-dim2);
+    padding:8px 10px; border-bottom:1px solid var(--line); font-weight:700; }
+  .agent-table td{ padding:9px 10px; font-size:12.5px; border-bottom:1px solid var(--line); }
+  .agent-table tr:last-child td{ border-bottom:none; }
+  .agent-code{ display:inline-block; background:rgba(38,224,255,0.1); color:var(--cyan); border-radius:6px;
+    padding:2px 8px; font-family:'JetBrains Mono'; font-size:11px; font-weight:700; margin-right:8px; }
+
+  .section-title{ font-family:'Space Grotesk'; font-size:13px; font-weight:700; letter-spacing:1.5px; color:var(--text-dim);
+    text-transform:uppercase; margin: 30px 0 12px; }
+
+  .toolbar{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin: 10px 0 16px; }
+  .search-box{ flex:1; min-width:200px; position:relative; }
+  .search-box input{ width:100%; background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:11px 14px 11px 38px; color:var(--text); font-size:13.5px; outline:none; }
+  .search-box input:focus{ border-color:var(--cyan-dim); box-shadow:0 0 0 3px rgba(38,224,255,0.08); }
+  .search-box svg{ position:absolute; left:12px; top:50%; transform:translateY(-50%); width:15px;height:15px; stroke:var(--text-dim); fill:none; stroke-width:2; }
+  .chip-group{ display:flex; gap:8px; flex-wrap:wrap; }
+  .chip{ padding:9px 15px; border-radius:999px; border:1px solid var(--line); background:var(--panel);
+    color:var(--text-dim); font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  .chip:hover{ border-color:var(--cyan-dim); color:var(--text); }
+  .chip.active{ background:rgba(38,224,255,0.12); border-color:var(--cyan); color:var(--cyan); }
+  .btn-primary{ background: linear-gradient(180deg,#2EEBFF,#1BC4E0); color:#04151C; border:none; border-radius:10px;
+    padding:11px 20px; font-weight:700; font-size:13.5px; cursor:pointer; box-shadow:0 0 22px -6px rgba(38,224,255,0.55); }
+  .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--text-dim); border-radius:10px;
+    padding:11px 16px; font-size:12.5px; font-weight:600; cursor:pointer; }
+  .btn-ghost:hover{ color:var(--text); border-color:var(--cyan-dim); }
+  .btn-small{ background:rgba(38,224,255,0.1); border:1px solid rgba(38,224,255,0.3); color:var(--cyan);
+    border-radius:8px; padding:7px 12px; font-size:12px; font-weight:700; cursor:pointer; }
+
+  .table-panel{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+  table{ width:100%; border-collapse:collapse; }
+  thead th{ text-align:left; font-size:10.2px; letter-spacing:1.1px; text-transform:uppercase; color:var(--text-dim2);
+    font-weight:700; padding:12px 14px; border-bottom:1px solid var(--line); background:rgba(255,255,255,0.015); }
+  tbody td{ padding:13px 14px; border-bottom:1px solid var(--line); font-size:13px; vertical-align:middle; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr{ cursor:pointer; } tbody tr:hover{ background:rgba(38,224,255,0.045); }
+  .cust-name{ font-weight:600; } .cust-sub{ font-size:11px; color:var(--text-dim); margin-top:2px; }
+  .badge{ display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; font-size:10.5px; font-weight:700; }
+  .badge::before{ content:""; width:6px;height:6px;border-radius:50%; }
+  .badge.safi{ background:rgba(51,224,166,0.12); color:var(--green); } .badge.safi::before{ background:var(--green); box-shadow:0 0 6px var(--green); }
+  .badge.chafu{ background:rgba(255,92,104,0.12); color:var(--red); } .badge.chafu::before{ background:var(--red); box-shadow:0 0 6px var(--red); }
+  .badge.mpya{ background:rgba(245,179,66,0.12); color:var(--amber); } .badge.mpya::before{ background:var(--amber); }
+  .bar-track{ width:100%; height:5px; border-radius:3px; background:rgba(255,255,255,0.06); overflow:hidden; margin-top:6px; }
+  .bar-fill{ height:100%; border-radius:3px; background: linear-gradient(90deg, var(--cyan-dim), var(--cyan)); }
+  .empty-state{ padding:50px 20px; text-align:center; color:var(--text-dim); }
+
+  .overlay{ position:fixed; inset:0; background:rgba(4,8,16,0.72); backdrop-filter:blur(3px);
+    display:flex; align-items:flex-start; justify-content:center; padding:36px 16px;
+    opacity:0; pointer-events:none; transition:opacity .15s; z-index:50; overflow-y:auto; }
+  .overlay.show{ opacity:1; pointer-events:all; }
+  .modal{ background:var(--panel-2); border:1px solid var(--line); border-radius:var(--radius); width:100%; max-width:560px;
+    padding:24px; position:relative; box-shadow:0 30px 80px -20px rgba(0,0,0,0.8); transform:translateY(-8px); transition:transform .15s; }
+  .overlay.show .modal{ transform:translateY(0); }
+  .modal h2{ font-family:'Space Grotesk'; font-size:17px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; }
+  .modal-close{ cursor:pointer; color:var(--text-dim); font-size:20px; background:none; border:none; }
+  .modal-close:hover{ color:var(--text); }
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+  .form-grid .full{ grid-column:1/-1; }
+  .field label{ display:block; font-size:11px; font-weight:600; color:var(--text-dim); margin-bottom:6px; }
+  .field input, .field select{ width:100%; background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:10px 12px; color:var(--text); font-size:13px; outline:none; }
+  .field input:focus, .field select:focus{ border-color:var(--cyan-dim); }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+
+  .calc-box{ background:rgba(38,224,255,0.06); border:1px solid rgba(38,224,255,0.2); border-radius:10px; padding:12px 14px; margin-top:4px; font-size:12.5px; }
+  .calc-box .row{ display:flex; justify-content:space-between; padding:3px 0; color:var(--text-dim); }
+  .calc-box .row b{ color:var(--text); font-family:'JetBrains Mono'; }
+  .calc-box .row.total{ border-top:1px solid var(--line); margin-top:6px; padding-top:8px; }
+  .calc-box .row.total b{ color:var(--cyan); font-size:14px; }
+
+  .detail-row{ display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .detail-row:last-child{ border-bottom:none; }
+  .detail-row span:first-child{ color:var(--text-dim); }
+  .detail-row span:last-child{ font-family:'JetBrains Mono'; font-weight:600; }
+  .paylog{ max-height:150px; overflow-y:auto; margin-top:8px; }
+  .paylog-row{ display:flex; justify-content:space-between; font-size:12.5px; padding:6px 0; border-bottom:1px dashed var(--line); }
+  .pay-add{ display:flex; gap:8px; margin-top:10px; }
+  .pay-add input{ flex:1; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:9px 11px; color:var(--text); font-size:13px; }
+
+  footer{ text-align:center; margin-top:36px; color:var(--text-dim2); font-size:11px; }
+
+  /* ===== Print sheet (mkeka wa wakala) ===== */
+  #printArea{ display:none; }
+  @media print{
+    body *{ visibility:hidden; }
+    #printArea, #printArea *{ visibility:visible; }
+    #printArea{ display:block; position:absolute; top:0; left:0; width:100%; padding:20px; background:#fff; color:#000; }
+    body{ background:#fff !important; padding:0 !important; }
+    .print-header{ display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:14px; }
+    .print-header h2{ font-family:'Space Grotesk',sans-serif; font-size:20px; }
+    .print-header .co{ font-size:11px; color:#333; }
+    .print-meta{ display:flex; justify-content:space-between; font-size:12px; margin-bottom:14px; }
+    .print-meta .line{ border-bottom:1px solid #000; min-width:160px; display:inline-block; }
+    table.print-table{ width:100%; border-collapse:collapse; font-size:11.5px; }
+    table.print-table th, table.print-table td{ border:1px solid #000; padding:6px 8px; text-align:left; }
+    table.print-table th{ background:#eee; font-size:10px; text-transform:uppercase; }
+    table.print-table td.num{ font-family:'JetBrains Mono',monospace; }
+    .print-sign-col{ min-width: 90px; }
+    .print-total-row td{ font-weight:700; background:#f5f5f5; }
+    .print-footer{ margin-top:18px; display:flex; justify-content:space-between; font-size:11px; }
+    .print-footer .box{ border-top:1px solid #000; padding-top:4px; width:180px; text-align:center; }
+  }
+
+  @media (max-width:760px){
+    thead{ display:none; } table,tbody,tr,td{ display:block; width:100%; }
+    tbody tr{ border-bottom:1px solid var(--line); padding:13px 4px; } tbody td{ border-bottom:none; padding:4px 12px; }
+    tbody td[data-label]::before{ content:attr(data-label); display:block; font-size:9.5px; letter-spacing:1px; text-transform:uppercase; color:var(--text-dim2); margin-bottom:3px; }
+    .form-grid{ grid-template-columns:1fr; }
+    .agent-table{ font-size:11px; }
+  }
+
+  /* ===== Auth screen ===== */
+  #authScreen{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .auth-card{ width:100%; max-width:400px; background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border:1px solid var(--line); border-radius:var(--radius); padding:28px 26px; position:relative;
+    box-shadow: 0 20px 60px -25px rgba(0,0,0,0.7); }
+  .auth-card h2{ font-family:'Space Grotesk'; font-size:19px; margin-bottom:6px; }
+  .auth-card .sub{ font-size:12px; color:var(--text-dim); margin-bottom:20px; }
+  .auth-field{ margin-bottom:12px; }
+  .auth-field label{ display:block; font-size:11px; font-weight:600; color:var(--text-dim); margin-bottom:6px; }
+  .auth-field input{ width:100%; background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:11px 12px; color:var(--text); font-size:13.5px; outline:none; }
+  .auth-field input:focus{ border-color:var(--cyan-dim); }
+  .auth-error{ background:rgba(255,92,104,0.1); border:1px solid rgba(255,92,104,0.3); color:var(--red);
+    border-radius:8px; padding:10px 12px; font-size:12.5px; margin-bottom:14px; display:none; }
+  .auth-toggle{ text-align:center; margin-top:16px; font-size:12.5px; color:var(--text-dim); }
+  .auth-toggle a{ color:var(--cyan); cursor:pointer; text-decoration:underline; }
+  #logoutBtn{ font-size:11.5px; padding:7px 12px; }
+  .user-badge{ display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-dim); }
+  .user-badge b{ color:var(--text); }
+  .role-pill{ background:rgba(38,224,255,0.12); color:var(--cyan); padding:2px 8px; border-radius:999px; font-size:10px; font-weight:700; }
+</style>
+</head>
+<body>
+<div id="authScreen"></div>
+<div class="wrap" id="appWrap" style="display:none;">
+  <header>
+    <div>
+      <div class="brand-eyebrow">Hekima Finance · Idara ya Mikopo</div>
+      <h1>Mfumo wa Kutunza Taarifa za Wateja</h1>
+    </div>
+    <div class="header-right">
+      Leo: <b id="todayLabel">—</b><br>
+      <span id="connStatus" class="mono" style="color:var(--cyan-dim);">Inaunganisha...</span><br>
+      <div style="margin-top:8px; display:flex; gap:10px; align-items:center; justify-content:flex-end;">
+        <span class="user-badge" id="userBadge"></span>
+        <button class="btn-ghost" id="logoutBtn">Toka</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="hud-panel hc">
+    <div class="hud-title">Muhtasari wa Mtaji <span class="n">DASHBOARD</span></div>
+    <div class="kpi-grid" id="kpiGrid"></div>
+  </div>
+
+  <div class="section-title">Uchambuzi kwa Wakala</div>
+  <div class="hud-panel hc">
+    <table class="agent-table" id="agentTable"><thead>
+      <tr><th>Wakala</th><th>Wateja</th><th>Mtaji Safi</th><th>Mtaji Mchafu</th><th>Jumla</th><th>Mkeka</th></tr>
+    </thead><tbody id="agentBody"></tbody></table>
+  </div>
+
+  <div class="section-title" id="staffSectionTitle" style="display:none;">Watumiaji (Akaunti za Kuingia)</div>
+  <div class="hud-panel hc" id="staffPanel" style="display:none;">
+    <table class="agent-table" id="staffTable"><thead>
+      <tr><th>Jina</th><th>Barua Pepe</th><th>Aina</th><th>Wateja</th><th>Hali</th><th>Vitendo</th></tr>
+    </thead><tbody id="staffBody"></tbody></table>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.6" y2="16.6"/></svg>
+      <input id="searchInput" type="text" placeholder="Tafuta jina, simu, au eneo...">
+    </div>
+    <div class="chip-group" id="filterChips">
+      <div class="chip active" data-filter="all">Wote</div>
+      <div class="chip" data-filter="safi">Safi (Kwenye Muda)</div>
+      <div class="chip" data-filter="chafu">Chafu (Wamechelewa)</div>
+    </div>
+    <button class="btn-ghost" id="resetBtn">⚠️ Futa Data Yote</button>
+    <button class="btn-ghost" id="printAllBtn">🖨 Chapisha Ripoti Kamili</button>
+    <button class="btn-ghost" id="addAgentBtn" style="display:none;">👤 Ongeza Akaunti ya Wakala</button>
+    <button class="btn-primary" id="addBtn">+ Ongeza Mteja</button>
+  </div>
+
+  <div class="table-panel">
+    <table id="custTable">
+      <thead><tr><th>Mteja</th><th>Simu / Eneo</th><th>Mkopo</th><th>Deni Baki</th><th>Muda</th><th>Wakala</th><th>Hali</th></tr></thead>
+      <tbody id="custBody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none;">Hakuna mteja anayelingana na utafutaji wako.</div>
+  </div>
+
+  <footer>Hesabu: Riba = 20% ya mkopo · Ada ya Mpya = 10% (wateja MPYA pekee) · Muda wa mkopo = siku 60 tangu kuanza · Deni Baki = Jumla ya Deni − Jumla ya Malipo. Data hii inashirikiwa na kila anayefungua kiungo hiki (hifadhidata moja ya pamoja).</footer>
+</div>
+
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <h2>Ongeza Mteja Mpya <button class="modal-close" data-close>&times;</button></h2>
+    <div class="form-grid">
+      <div class="field"><label>Jina Kamili</label><input id="f_jina" placeholder="Mfano: Amina Msigwa"></div>
+      <div class="field"><label>Jina la Utani</label><input id="f_maarufu" placeholder="Mfano: Mama Amina"></div>
+      <div class="field"><label>Namba ya Simu</label><input id="f_simu" placeholder="07XXXXXXXX"></div>
+      <div class="field"><label>Eneo</label><input id="f_eneo" placeholder="Mfano: Mwangata"></div>
+      <div class="field"><label>Aina ya Mteja</label>
+        <select id="f_mteja"><option value="MPYA">MPYA (mteja mpya — analipa ada 10%)</option><option value="ZAMANI">ZAMANI (mteja wa kurudia)</option></select>
+      </div>
+      <div class="field"><label>Kiasi cha Mkopo</label>
+        <select id="f_mkopo">
+          <option value="50000">50,000 TZS</option><option value="100000">100,000 TZS</option>
+          <option value="150000">150,000 TZS</option><option value="200000">200,000 TZS</option>
+          <option value="250000">250,000 TZS</option><option value="300000">300,000 TZS</option>
+          <option value="350000">350,000 TZS</option><option value="400000">400,000 TZS</option>
+        </select>
+      </div>
+      <div class="field"><label>Wakala</label>
+        <select id="f_agent">
+          <option value="STV">STV</option><option value="ABD">ABD — Abdallah</option>
+          <option value="MEC">MEC — Mecky</option><option value="BAR">BAR — Baraka</option>
+          <option value="ANT">ANT — Antony</option>
+        </select>
+      </div>
+      <div class="field"><label>Tarehe ya Kupewa Mkopo</label><input id="f_tarehe" type="date"></div>
+      <div class="field"><label>Kikundi (si lazima)</label><input id="f_kikundi" placeholder="Mfano: Kikundi cha Mwangata"></div>
+      <div class="field"><label>Mdhamini — Jina</label><input id="f_mdhamini_jina" placeholder="Jina la mdhamini"></div>
+      <div class="field"><label>Mdhamini — Simu</label><input id="f_mdhamini_simu" placeholder="07XXXXXXXX"></div>
+      <div class="field full calc-box" id="calcBox"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" data-close>Ghairi</button>
+      <button class="btn-primary" id="saveClientBtn">Hifadhi Mteja</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="detailOverlay">
+  <div class="modal">
+    <h2 id="detailName">—</h2>
+    <div id="detailBody"></div>
+    <div style="margin-top:14px;">
+      <label style="font-size:11px; font-weight:600; color:var(--text-dim);">RATIBA YA MALIPO (REFUND LOG)</label>
+      <div class="paylog" id="paylog"></div>
+      <div class="pay-add">
+        <input id="payAmount" type="number" placeholder="Kiasi alicholipa leo">
+        <button class="btn-small" id="payAddBtn">+ Rekodi Malipo</button>
+      </div>
+    </div>
+    <div class="modal-actions"><button class="btn-ghost" data-close>Funga</button></div>
+  </div>
+</div>
+
+<div id="printArea"></div>
+
+<div class="overlay" id="agentAcctOverlay">
+  <div class="modal">
+    <h2>Ongeza Akaunti ya Wakala <button class="modal-close" data-close>&times;</button></h2>
+    <div class="auth-error" id="agentAcctError"></div>
+    <div class="form-grid">
+      <div class="field full"><label>Jina Kamili la Wakala</label><input id="ag_name" placeholder="Mfano: Baraka Mnyawi"></div>
+      <div class="field full"><label>Wakala (Msimbo)</label>
+        <select id="ag_code">
+          <option value="STV">STV</option><option value="ABD">ABD — Abdallah</option>
+          <option value="MEC">MEC — Mecky</option><option value="BAR">BAR — Baraka</option>
+          <option value="ANT">ANT — Antony</option>
+        </select>
+      </div>
+      <div class="field full"><label>Barua Pepe ya Kuingilia</label><input id="ag_email" type="email" placeholder="mfano@hekima.co"></div>
+      <div class="field full"><label>Nywila ya Awali</label><input id="ag_password" type="text" placeholder="Herufi 6 au zaidi"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" data-close>Ghairi</button>
+      <button class="btn-primary" id="createAgentBtn">Unda Akaunti</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ICONS = {
+  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  alert:'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+};
+function iconEl(n){ return `<svg viewBox="0 0 24 24">${ICONS[n]}</svg>`; }
+
+const SUPABASE_URL = 'https://euhteovuhdvefzaavlqx.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1aHRlb3Z1aGR2ZWZ6YWF2bHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NjQwNjEsImV4cCI6MjA5NzE0MDA2MX0.gaV1mShFhVHVpxAqCptJsiSr4r-d3_OYvdtH0bpR58Q';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const FUNCTIONS_URL = SUPABASE_URL + '/functions/v1';
+
+// ===================== AUTH =====================
+let currentUser = null;
+let currentProfile = null; // { id, full_name, role, agent_code }
+
+function authScreenHTML(mode, errorMsg){
+  if(mode === 'bootstrap'){
+    return `<div class="auth-card">
+      <h2>Weka Akaunti ya Kwanza ya Msimamizi</h2>
+      <div class="sub">Hakuna akaunti bado kwenye mfumo huu. Tengeneza akaunti yako ya Msimamizi (utaona wateja WOTE na utaongeza akaunti za mawakala baadaye).</div>
+      <div class="auth-error" id="authError" style="${errorMsg?'display:block;':''}">${errorMsg||''}</div>
+      <div class="auth-field"><label>Jina Lako Kamili</label><input id="bs_name" placeholder="Mfano: Steven Lamwel"></div>
+      <div class="auth-field"><label>Barua Pepe</label><input id="bs_email" type="email" placeholder="wewe@barua.com"></div>
+      <div class="auth-field"><label>Nywila (herufi 6+)</label><input id="bs_password" type="password"></div>
+      <button class="btn-primary" id="bootstrapBtn" style="width:100%; padding:12px;">Tengeneza Akaunti ya Msimamizi</button>
+    </div>`;
+  }
+  return `<div class="auth-card">
+    <h2>Ingia — Hekima Finance</h2>
+    <div class="sub">Weka barua pepe na nywila uliyopewa na msimamizi wako.</div>
+    <div class="auth-error" id="authError" style="${errorMsg?'display:block;':''}">${errorMsg||''}</div>
+    <div class="auth-field"><label>Barua Pepe</label><input id="li_email" type="email" placeholder="wewe@barua.com"></div>
+    <div class="auth-field"><label>Nywila</label><input id="li_password" type="password"></div>
+    <button class="btn-primary" id="loginBtn" style="width:100%; padding:12px;">Ingia</button>
+    <div class="auth-toggle">Huna akaunti? Wasiliana na msimamizi wako akusajili.</div>
+  </div>`;
+}
+
+function showAuthScreen(mode, errorMsg){
+  document.getElementById('appWrap').style.display = 'none';
+  const el = document.getElementById('authScreen');
+  el.style.display = 'flex';
+  el.innerHTML = authScreenHTML(mode, errorMsg);
+  if(mode === 'bootstrap'){
+    document.getElementById('bootstrapBtn').addEventListener('click', doBootstrap);
+  } else {
+    document.getElementById('loginBtn').addEventListener('click', doLogin);
+    document.getElementById('li_password').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  }
+}
+
+async function doBootstrap(){
+  const full_name = document.getElementById('bs_name').value.trim();
+  const email = document.getElementById('bs_email').value.trim();
+  const password = document.getElementById('bs_password').value;
+  const btn = document.getElementById('bootstrapBtn');
+  btn.disabled = true; btn.textContent = 'Inatengeneza...';
+  try{
+    const res = await fetch(FUNCTIONS_URL + '/bootstrap-admin', {
+      method:'POST', headers:{ 'Content-Type':'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ email, password, full_name }),
+    });
+    const json = await res.json();
+    if(!res.ok) throw new Error(json.error || 'Imeshindikana');
+    const { error: signInErr } = await sb.auth.signInWithPassword({ email, password });
+    if(signInErr) throw signInErr;
+    await initAfterAuth();
+  }catch(e){
+    btn.disabled = false; btn.textContent = 'Tengeneza Akaunti ya Msimamizi';
+    showAuthScreen('bootstrap', e.message || String(e));
+  }
+}
+
+async function doLogin(){
+  const email = document.getElementById('li_email').value.trim();
+  const password = document.getElementById('li_password').value;
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Inaingia...';
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if(error){
+    btn.disabled = false; btn.textContent = 'Ingia';
+    showAuthScreen('login', 'Barua pepe au nywila si sahihi.');
+    return;
+  }
+  await initAfterAuth();
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  currentUser = null; currentProfile = null;
+  if(realtimeChannel){ sb.removeChannel(realtimeChannel); realtimeChannel = null; }
+  await boot();
+}
+
+async function initAfterAuth(){
+  const { data: { user } } = await sb.auth.getUser();
+  currentUser = user;
+  const { data: profile, error } = await sb.from('mikopo_profiles').select('*').eq('id', user.id).single();
+  if(error || !profile){
+    await sb.auth.signOut();
+    showAuthScreen('login', 'Akaunti yako haijasanidiwa vizuri — wasiliana na msimamizi.');
+    return;
+  }
+  currentProfile = profile;
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appWrap').style.display = 'block';
+  document.getElementById('userBadge').innerHTML =
+    `<b>${profile.full_name || profile.agent_code || 'Mtumiaji'}</b> <span class="role-pill">${profile.role === 'admin' ? 'MSIMAMIZI' : 'WAKALA · ' + (profile.agent_code||'')}</span>`;
+  document.getElementById('addAgentBtn').style.display = profile.role === 'admin' ? 'inline-block' : 'none';
+  document.getElementById('resetBtn').style.display = profile.role === 'admin' ? 'inline-block' : 'none';
+  document.querySelector('.section-title').style.display = profile.role === 'admin' ? 'block' : 'none';
+  document.getElementById('agentTable').closest('.hud-panel').style.display = profile.role === 'admin' ? 'block' : 'none';
+  document.getElementById('staffSectionTitle').style.display = profile.role === 'admin' ? 'block' : 'none';
+  document.getElementById('staffPanel').style.display = profile.role === 'admin' ? 'block' : 'none';
+  if(profile.role !== 'admin'){
+    // Non-admins can only add clients under their own agent code
+    const sel = document.getElementById('f_agent');
+    sel.innerHTML = `<option value="${profile.agent_code}">${AGENT_NAME[profile.agent_code] || profile.agent_code}</option>`;
+    sel.disabled = true;
+  }
+  await loadData();
+  if(profile.role === 'admin') await loadStaff();
+  subscribeRealtime();
+}
+
+async function boot(){
+  const { data: { session } } = await sb.auth.getSession();
+  if(session){ await initAfterAuth(); return; }
+  const { data: cnt, error } = await sb.rpc('mikopo_profile_count');
+  if(error){ showAuthScreen('login'); return; }
+  showAuthScreen(cnt === 0 ? 'bootstrap' : 'login');
+}
+
+const DAY = 24*60*60*1000;
+let AGENTS = [ ['STV','STV'], ['ABD','Abdallah'], ['MEC','Mecky'], ['BAR','Baraka'], ['ANT','Antony'] ];
+let AGENT_NAME = Object.fromEntries(AGENTS);
+
+function fmtTZS(n){ return Math.round(n).toLocaleString('en-US') + ' TZS'; }
+function daysBetween(a,b){ return Math.round((b-a)/DAY); }
+function dstr(ms){ return new Date(ms).toLocaleDateString('sw-TZ'); }
+
+// ---- Core loan math (mirrors CUST LIST formulas exactly) ----
+function computeLoan(mkopo, mtejaType, dKupewa){
+  const riba = mkopo * 0.2;                                   // E: RIBA = P/50000*10000 = 20% flat
+  const riba2 = mtejaType === 'MPYA' ? mkopo * 0.1 : 0;        // F: RIBA2 = IF(MPYA, P/10, 0)
+  const jumla = mkopo + riba + riba2;                          // G: MKOPO + RIBA
+  const rejeshoLengo = mkopo / 25;                             // D: lengo la marejesho ya kila siku
+  const dKuanza = dKupewa + 2*DAY;                             // H: D.KUANZA = D.KUPEWA + 2
+  const dKamilisha = dKuanza + 60*DAY;                         // I: D.KAMILISHA = D.KUANZA + 60
+  return { riba, riba2, jumla, rejeshoLengo, dKuanza, dKamilisha };
+}
+function statusOf(c){
+  // B: ST = IF(TODAY() > D.KAMILISHA + 1, 0, 1)
+  return (Date.now() > c.dKamilisha + DAY) ? 'chafu' : 'safi';
+}
+function deniBaki(c){ return Math.max(0, c.jumla - c.malipo.reduce((s,p)=>s+p.kiasi,0)); }
+
+function seedRows(){
+  const rows = [
+    ['Amina Msigwa','Mama Amina','0712345601','Mwangata','MPYA',100000,'STV',18],
+    ["Zainabu Mwakalinga",'Mama Z','0712345602','Kihesa','ZAMANI',50000,'ABD',40],
+    ['Godfrey Malisa','Baba Goodie','0712345603','Gangilonga','MPYA',150000,'MEC',5],
+    ['Halima Sanga','Mama Halima','0712345604','Ipogolo','ZAMANI',200000,'BAR',65],
+    ['Elias Mgeni','Elly','0712345605','Ismani','MPYA',50000,'ANT',70],
+    ['Rehema Chibwana','Mama Rehema','0712345606','Mwangata','ZAMANI',100000,'STV',12],
+    ['Baraka Nzali','Baraka','0712345607','Kihesa','MPYA',50000,'ABD',30],
+    ['Fatuma Kalinga','Mama Fatuma','0712345608','Mlandege','ZAMANI',300000,'MEC',22],
+    ['Simon Mhagama','Simo','0712345609','Gangilonga','MPYA',100000,'BAR',3],
+    ['Neema Kilewo','Mama Neema','0712345610','Ipogolo','ZAMANI',50000,'ANT',55],
+  ];
+  return rows.map(r=>{
+    const [jina,maarufu,simu,eneo,mtejaType,mkopo,agent,ageDays] = r;
+    const dKupewa = Date.now() - ageDays*DAY;
+    const calc = computeLoan(mkopo, mtejaType, dKupewa);
+    return { jina, maarufu, simu, eneo, mteja: mtejaType, mkopo, agent_code: agent,
+      d_kupewa: new Date(dKupewa).toISOString(), riba: calc.riba, riba2: calc.riba2, jumla: calc.jumla,
+      rejesho_lengo: calc.rejeshoLengo, d_kuanza: new Date(calc.dKuanza).toISOString(), d_kamilisha: new Date(calc.dKamilisha).toISOString() };
+  });
+}
+
+let clients = [];
+let activeFilter = 'all';
+let searchTerm = '';
+let realtimeChannel = null;
+
+function rowToClient(row){
+  return {
+    id: row.id, jina: row.jina, maarufu: row.maarufu, simu: row.simu, eneo: row.eneo,
+    mteja: row.mteja, mkopo: Number(row.mkopo), agent: row.agent_code,
+    dKupewa: Date.parse(row.d_kupewa), riba: Number(row.riba), riba2: Number(row.riba2),
+    jumla: Number(row.jumla), rejeshoLengo: Number(row.rejesho_lengo),
+    dKuanza: Date.parse(row.d_kuanza), dKamilisha: Date.parse(row.d_kamilisha),
+    kikundi: row.kikundi, mdhaminiJina: row.mdhamini_jina, mdhaminiSimu: row.mdhamini_simu,
+    malipo: (row.mikopo_payments || []).map(p=>({ id:p.id, tarehe: Date.parse(p.tarehe), kiasi: Number(p.kiasi) })),
+  };
+}
+
+async function loadData(silent){
+  if(!silent) setConnStatus('Inapakia...');
+  try{
+    let { data: agentRows } = await sb.from('mikopo_agents').select('*').order('code');
+    if(agentRows && agentRows.length){
+      AGENTS = agentRows.map(a=>[a.code, a.name]);
+      AGENT_NAME = Object.fromEntries(AGENTS);
+    }
+    let { data, error } = await sb.from('mikopo_clients').select('*, mikopo_payments(*)').order('created_at', {ascending:false});
+    if(error) throw error;
+    clients = (data || []).map(rowToClient);
+    setConnStatus('Data ya pamoja — LIVE');
+  }catch(e){
+    console.error('Imeshindwa kupata data', e);
+    setConnStatus('Imeshindwa kuunganisha — tazama muunganisho wa intaneti');
+  }
+  render();
+}
+function setConnStatus(text){
+  const el = document.getElementById('connStatus');
+  if(el) el.textContent = text;
+}
+function subscribeRealtime(){
+  if(realtimeChannel) return;
+  realtimeChannel = sb.channel('wateja-live')
+    .on('postgres_changes', {event:'*', schema:'public', table:'mikopo_clients'}, ()=> loadData(true))
+    .on('postgres_changes', {event:'*', schema:'public', table:'mikopo_payments'}, ()=> loadData(true))
+    .subscribe();
+}
+
+function computeKPIs(){
+  let safi=0, chafu=0, wateja=clients.length;
+  clients.forEach(c=>{
+    const bal = deniBaki(c);
+    if(statusOf(c)==='safi') safi += bal; else chafu += bal;
+  });
+  return {safi, chafu, jumla: safi+chafu, wateja};
+}
+function renderKPIs(){
+  const k = computeKPIs();
+  const rows = [
+    {icon:'users', label:'Jumla ya Wateja', sub:k.wateja+' rekodi hai', value:k.wateja, cls:''},
+    {icon:'shield', label:'Mtaji Safi', sub:'Deni la wateja walio kwenye muda', value:fmtTZS(k.safi), cls:'good'},
+    {icon:'alert', label:'Mtaji Mchafu', sub:'Deni la wateja waliochelewa', value:fmtTZS(k.chafu), cls:'bad'},
+    {icon:'layers', label:'Jumla ya Mtaji', sub:'Fedha zote zinazozunguka', value:fmtTZS(k.jumla), cls:''},
+  ];
+  document.getElementById('kpiGrid').innerHTML = rows.map(r=>`
+    <div class="stat-row"><div class="stat-left"><div class="stat-icon">${iconEl(r.icon)}</div>
+      <div><div class="stat-label">${r.label}</div><div class="stat-sub">${r.sub}</div></div></div>
+      <div class="stat-value ${r.cls} mono">${r.value}</div></div>`).join('');
+}
+function renderAgentTable(){
+  const rows = AGENTS.map(([code,name])=>{
+    const cs = clients.filter(c=>c.agent===code);
+    const safi = cs.filter(c=>statusOf(c)==='safi').reduce((s,c)=>s+deniBaki(c),0);
+    const chafu = cs.filter(c=>statusOf(c)==='chafu').reduce((s,c)=>s+deniBaki(c),0);
+    return {code,name,count:cs.length,safi,chafu};
+  }).filter(r=>r.count>0);
+  document.getElementById('agentBody').innerHTML = rows.map(r=>`
+    <tr><td><span class="agent-code">${r.code}</span>${r.name}</td><td>${r.count}</td>
+    <td class="mono" style="color:var(--green)">${fmtTZS(r.safi)}</td>
+    <td class="mono" style="color:var(--red)">${fmtTZS(r.chafu)}</td>
+    <td class="mono" style="font-weight:700;">${fmtTZS(r.safi+r.chafu)}</td>
+    <td><button class="btn-small" data-print-agent="${r.code}">🖨 Chapa</button></td></tr>`).join('')
+    || `<tr><td colspan="6" style="color:var(--text-dim);">Bado hakuna data.</td></tr>`;
+}
+
+let staffList = [];
+async function loadStaff(){
+  const { data, error } = await sb.from('mikopo_profiles').select('*').order('role').order('agent_code');
+  if(error){ console.error(error); return; }
+  staffList = data || [];
+  renderStaff();
+}
+function renderStaff(){
+  document.getElementById('staffBody').innerHTML = staffList.map(p=>{
+    const isAdmin = p.role === 'admin';
+    const clientCount = isAdmin ? clients.length : clients.filter(c=>c.agent===p.agent_code).length;
+    const isMe = currentProfile && p.id === currentProfile.id;
+    const agentOptions = AGENTS.filter(([code])=>code!==p.agent_code)
+      .map(([code,name])=>`<option value="${code}">${code} — ${name}</option>`).join('');
+    return `<tr>
+      <td>${p.full_name || '—'}${isMe ? ' <span style="color:var(--cyan);font-size:10px;">(wewe)</span>' : ''}</td>
+      <td style="font-size:11.5px;">${p.email || '—'}</td>
+      <td>${isAdmin ? '<span class="role-pill">MSIMAMIZI</span>' : '<span class="agent-code">'+p.agent_code+'</span>'}</td>
+      <td>${clientCount}</td>
+      <td><span class="badge ${p.active ? 'safi' : 'chafu'}">${p.active ? 'Hai' : 'Imezimwa'}</span></td>
+      <td style="display:flex; gap:6px; flex-wrap:wrap;">
+        ${isMe ? '' : `<button class="btn-small" data-toggle-active="${p.id}" data-active="${p.active}">${p.active ? 'Zima' : 'Washa'}</button>`}
+        ${(!isAdmin && clientCount>0) ? `
+          <select data-reassign-select="${p.agent_code}" style="background:var(--panel); border:1px solid var(--line); color:var(--text); border-radius:6px; font-size:11px; padding:4px;">
+            <option value="">Hamisha wateja kwenda...</option>${agentOptions}
+          </select>
+          <button class="btn-small" data-reassign-btn="${p.agent_code}">Hamisha</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="6" style="color:var(--text-dim);">Bado hakuna watumiaji.</td></tr>`;
+}
+document.getElementById('staffBody').addEventListener('click', async (e)=>{
+  const toggleBtn = e.target.closest('[data-toggle-active]');
+  if(toggleBtn){
+    const id = toggleBtn.dataset.toggleActive;
+    const currentlyActive = toggleBtn.dataset.active === 'true';
+    const label = currentlyActive ? 'kuzima' : 'kuwasha';
+    if(!confirm(`Una uhakika unataka ${label} akaunti hii?`)) return;
+    const { error } = await sb.from('mikopo_profiles').update({ active: !currentlyActive }).eq('id', id);
+    if(error){ alert('Imeshindwa: ' + error.message); return; }
+    await loadStaff();
+    return;
+  }
+  const reassignBtn = e.target.closest('[data-reassign-btn]');
+  if(reassignBtn){
+    const fromCode = reassignBtn.dataset.reassignBtn;
+    const select = document.querySelector(`[data-reassign-select="${fromCode}"]`);
+    const toCode = select.value;
+    if(!toCode){ alert('Chagua wakala wa kuhamishia kwanza.'); return; }
+    const n = clients.filter(c=>c.agent===fromCode).length;
+    if(!confirm(`Hamisha wateja ${n} kutoka ${fromCode} kwenda ${toCode}?`)) return;
+    const { error } = await sb.from('mikopo_clients').update({ agent_code: toCode }).eq('agent_code', fromCode);
+    if(error){ alert('Imeshindwa: ' + error.message); return; }
+    await loadData(true);
+    await loadStaff();
+  }
+});
+
+function filteredClients(){
+  return clients.filter(c=>{
+    if(activeFilter!=='all' && statusOf(c)!==activeFilter) return false;
+    if(searchTerm){
+      const hay=(c.jina+' '+c.maarufu+' '+c.simu+' '+c.eneo).toLowerCase();
+      if(!hay.includes(searchTerm.toLowerCase())) return false;
+    }
+    return true;
+  });
+}
+function renderTable(){
+  const list = filteredClients();
+  document.getElementById('emptyState').style.display = list.length ? 'none':'block';
+  document.getElementById('custBody').innerHTML = list.map(c=>{
+    const s = statusOf(c);
+    const bal = deniBaki(c);
+    const pct = Math.min(100, Math.round((1 - bal / c.jumla) * 100));
+    const daysLeft = daysBetween(Date.now(), c.dKamilisha);
+    const muda = daysLeft>=0 ? daysLeft+' siku zilizobaki' : Math.abs(daysLeft)+' siku kuchelewa';
+    return `<tr data-id="${c.id}">
+      <td data-label="Mteja"><div class="cust-name">${c.jina}</div><div class="cust-sub">${c.maarufu}
+        ${c.mteja==='MPYA' ? '<span class="badge mpya" style="margin-left:6px;">MPYA</span>':''}</div></td>
+      <td data-label="Simu/Eneo"><div class="mono" style="font-size:12.5px;">${c.simu}</div><div class="cust-sub">${c.eneo}</div></td>
+      <td data-label="Mkopo" class="mono">${fmtTZS(c.mkopo)}</td>
+      <td data-label="Deni Baki"><div class="mono" style="font-weight:700;">${fmtTZS(bal)}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div></td>
+      <td data-label="Muda" class="cust-sub">${muda}</td>
+      <td data-label="Wakala"><span class="agent-code">${c.agent}</span></td>
+      <td data-label="Hali"><span class="badge ${s}">${s==='safi'?'Safi':'Chafu'}</span></td>
+    </tr>`;
+  }).join('');
+  [...document.querySelectorAll('#custBody tr')].forEach(tr=>tr.addEventListener('click', ()=>openDetail(tr.dataset.id)));
+}
+function render(){ renderKPIs(); renderAgentTable(); renderTable(); if(staffList.length) renderStaff(); }
+
+function openDetail(id){
+  const c = clients.find(x=>x.id===id); if(!c) return;
+  document.getElementById('detailName').textContent = c.jina + ' — ' + c.maarufu;
+  const s = statusOf(c);
+  const bal = deniBaki(c);
+  const rows = [
+    ['Namba ya Simu', c.simu], ['Eneo', c.eneo], ['Wakala', AGENT_NAME[c.agent]+' ('+c.agent+')'],
+    ['Kikundi', c.kikundi || '—'],
+    ['Aina ya Mteja', c.mteja], ['Kiasi cha Mkopo', fmtTZS(c.mkopo)],
+    ['Riba (20%)', fmtTZS(c.riba)], ['Ada ya Mpya (10%)', c.mteja==='MPYA' ? fmtTZS(c.riba2) : '—'],
+    ['Jumla ya Deni', fmtTZS(c.jumla)], ['Lengo la Kila Siku', fmtTZS(c.rejeshoLengo)],
+    ['Tarehe ya Kuanza', dstr(c.dKuanza)], ['Tarehe ya Kukamilisha', dstr(c.dKamilisha)],
+    ['Deni Linalobaki', fmtTZS(bal)], ['Hali', s==='safi'?'Safi (Kwenye Muda)':'Chafu (Amechelewa)'],
+    ['Mdhamini — Jina', c.mdhaminiJina || '—'], ['Mdhamini — Simu', c.mdhaminiSimu || '—'],
+  ];
+  document.getElementById('detailBody').innerHTML = rows.map(([k,v])=>`<div class="detail-row"><span>${k}</span><span>${v}</span></div>`).join('');
+  const pl = document.getElementById('paylog');
+  pl.innerHTML = c.malipo.length
+    ? [...c.malipo].reverse().map(p=>`<div class="paylog-row"><span>${dstr(p.tarehe)}</span><span class="mono">${fmtTZS(p.kiasi)}</span></div>`).join('')
+    : '<div class="paylog-row" style="color:var(--text-dim);">Bado hakuna malipo yaliyorekodiwa.</div>';
+  document.getElementById('payAddBtn').onclick = async ()=>{
+    const amt = Number(document.getElementById('payAmount').value);
+    if(!amt || amt<=0) return;
+    document.getElementById('payAddBtn').disabled = true;
+    const { error } = await sb.from('mikopo_payments').insert({ client_id: c.id, kiasi: amt, tarehe: new Date().toISOString() });
+    document.getElementById('payAddBtn').disabled = false;
+    if(error){ console.error(error); alert('Imeshindwa kuhifadhi malipo — angalia muunganisho wa intaneti.'); return; }
+    document.getElementById('payAmount').value='';
+    await loadData(true);
+    openDetail(id);
+  };
+  document.getElementById('detailOverlay').classList.add('show');
+}
+
+function updateCalcBox(){
+  const mkopo = Number(document.getElementById('f_mkopo').value);
+  const mtejaType = document.getElementById('f_mteja').value;
+  const calc = computeLoan(mkopo, mtejaType, Date.now());
+  document.getElementById('calcBox').innerHTML = `
+    <div class="row"><span>Riba (20%)</span><b>${fmtTZS(calc.riba)}</b></div>
+    <div class="row"><span>Ada ya Mpya (10%)</span><b>${mtejaType==='MPYA'?fmtTZS(calc.riba2):'Hapana — mteja wa zamani'}</b></div>
+    <div class="row"><span>Lengo la Kila Siku</span><b>${fmtTZS(calc.rejeshoLengo)}</b></div>
+    <div class="row"><span>Muda wa Mkopo</span><b>Siku 60</b></div>
+    <div class="row total"><span>Jumla ya Deni</span><b>${fmtTZS(calc.jumla)}</b></div>`;
+}
+['f_mkopo','f_mteja'].forEach(id=>document.getElementById(id).addEventListener('change', updateCalcBox));
+
+document.getElementById('searchInput').addEventListener('input', e=>{ searchTerm=e.target.value; renderTable(); });
+document.getElementById('filterChips').addEventListener('click', e=>{
+  const chip = e.target.closest('.chip'); if(!chip) return;
+  [...document.querySelectorAll('.chip')].forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active'); activeFilter = chip.dataset.filter; renderTable();
+});
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', ()=>{
+  document.getElementById('addOverlay').classList.remove('show');
+  document.getElementById('detailOverlay').classList.remove('show');
+}));
+document.getElementById('addBtn').addEventListener('click', ()=>{ updateCalcBox(); document.getElementById('addOverlay').classList.add('show'); });
+
+document.getElementById('saveClientBtn').addEventListener('click', async ()=>{
+  const jina = document.getElementById('f_jina').value.trim();
+  if(!jina){ document.getElementById('f_jina').focus(); return; }
+  const mkopo = Number(document.getElementById('f_mkopo').value);
+  const mtejaType = document.getElementById('f_mteja').value;
+  const tareheVal = document.getElementById('f_tarehe').value;
+  const dKupewa = tareheVal ? new Date(tareheVal).getTime() : Date.now();
+  const calc = computeLoan(mkopo, mtejaType, dKupewa);
+  const row = {
+    jina, maarufu: document.getElementById('f_maarufu').value.trim() || jina.split(' ')[0],
+    simu: document.getElementById('f_simu').value.trim() || '—',
+    eneo: document.getElementById('f_eneo').value.trim() || '—',
+    mteja: mtejaType, mkopo, agent_code: document.getElementById('f_agent').value,
+    d_kupewa: new Date(dKupewa).toISOString(), riba: calc.riba, riba2: calc.riba2, jumla: calc.jumla,
+    rejesho_lengo: calc.rejeshoLengo, d_kuanza: new Date(calc.dKuanza).toISOString(),
+    d_kamilisha: new Date(calc.dKamilisha).toISOString(),
+    kikundi: document.getElementById('f_kikundi').value.trim() || null,
+    mdhamini_jina: document.getElementById('f_mdhamini_jina').value.trim() || null,
+    mdhamini_simu: document.getElementById('f_mdhamini_simu').value.trim() || null,
+  };
+  const btn = document.getElementById('saveClientBtn');
+  btn.disabled = true; btn.textContent = 'Inahifadhi...';
+  const { error } = await sb.from('mikopo_clients').insert(row);
+  btn.disabled = false; btn.textContent = 'Hifadhi Mteja';
+  if(error){ console.error(error); alert('Imeshindwa kuhifadhi mteja — angalia muunganisho wa intaneti.'); return; }
+  await loadData(true);
+  document.getElementById('addOverlay').classList.remove('show');
+  document.querySelectorAll('.form-grid input').forEach(i=>i.value='');
+});
+
+document.getElementById('resetBtn').addEventListener('click', async ()=>{
+  const ok1 = confirm('Hii itafuta WATEJA WOTE na MALIPO YOTE kwa kila mtu anayetumia mfumo huu. Una uhakika?');
+  if(!ok1) return;
+  const ok2 = confirm('Hakika kabisa? Hatua hii HAIWEZI kurudishwa nyuma.');
+  if(!ok2) return;
+  await sb.from('mikopo_payments').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  await sb.from('mikopo_clients').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  await loadData();
+});
+document.getElementById('todayLabel').textContent = new Date().toLocaleDateString('sw-TZ', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+// ===== Mkeka wa Wakala (printable field collection sheet) =====
+function buildPrintTable(list, title, subtitle){
+  const rowsHtml = list.map((c,i)=>{
+    const bal = deniBaki(c);
+    return `<tr>
+      <td>${i+1}</td>
+      <td>${c.jina}<br><span style="font-size:10px;color:#555;">${c.maarufu}${c.mdhaminiJina ? ' · Mdh: '+c.mdhaminiJina : ''}</span></td>
+      <td>${c.simu}</td>
+      <td>${c.eneo}</td>
+      <td class="num">${fmtTZS(c.mkopo)}</td>
+      <td class="num">${fmtTZS(bal)}</td>
+      <td class="print-sign-col"></td>
+    </tr>`;
+  }).join('');
+  const totalDeni = list.reduce((s,c)=>s+deniBaki(c),0);
+  return `
+    <div class="print-header">
+      <div><h2>HEKIMA FINANCE</h2><div class="co">Idara ya Mikopo — Mkeka wa Ukusanyaji</div></div>
+      <div style="text-align:right;">
+        <div style="font-weight:700; font-size:14px;">${title}</div>
+        <div class="co">${subtitle}</div>
+      </div>
+    </div>
+    <div class="print-meta">
+      <div>TAREHE: <span class="line">&nbsp;</span></div>
+      <div>WAKALA: <span class="line">&nbsp;</span></div>
+    </div>
+    <table class="print-table">
+      <thead><tr><th>Na.</th><th>Jina la Mteja</th><th>Simu</th><th>Eneo</th><th>Mkopo</th><th>Deni Baki</th><th>Kiasi Alicholipa / Saini</th></tr></thead>
+      <tbody>${rowsHtml}
+        <tr class="print-total-row"><td colspan="5">JUMLA</td><td class="num">${fmtTZS(totalDeni)}</td><td></td></tr>
+      </tbody>
+    </table>
+    <div class="print-footer">
+      <div class="box">Saini ya Wakala</div>
+      <div class="box">Saini ya Msimamizi</div>
+    </div>`;
+}
+function printAgentSheet(code){
+  const list = clients.filter(c=>c.agent===code);
+  const name = AGENT_NAME[code] || code;
+  document.getElementById('printArea').innerHTML = buildPrintTable(list, 'MAREJESHO YA ' + name.toUpperCase(), 'Wakala: ' + code + ' — ' + name);
+  window.print();
+}
+function printAllSheet(){
+  document.getElementById('printArea').innerHTML = buildPrintTable(clients, 'RIPOTI KAMILI YA WATEJA', 'Wateja wote — Wakala zote');
+  window.print();
+}
+document.getElementById('printAllBtn').addEventListener('click', printAllSheet);
+document.getElementById('agentBody').addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-print-agent]');
+  if(btn) printAgentSheet(btn.dataset.printAgent);
+});
+
+document.getElementById('logoutBtn').addEventListener('click', doLogout);
+
+document.getElementById('addAgentBtn').addEventListener('click', ()=>{
+  document.getElementById('agentAcctError').style.display = 'none';
+  document.getElementById('ag_name').value = '';
+  document.getElementById('ag_email').value = '';
+  document.getElementById('ag_password').value = '';
+  document.getElementById('agentAcctOverlay').classList.add('show');
+});
+document.getElementById('createAgentBtn').addEventListener('click', async ()=>{
+  const full_name = document.getElementById('ag_name').value.trim();
+  const agent_code = document.getElementById('ag_code').value;
+  const email = document.getElementById('ag_email').value.trim();
+  const password = document.getElementById('ag_password').value;
+  const errEl = document.getElementById('agentAcctError');
+  errEl.style.display = 'none';
+  const btn = document.getElementById('createAgentBtn');
+  btn.disabled = true; btn.textContent = 'Inaunda...';
+  try{
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(FUNCTIONS_URL + '/create-agent', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ email, password, full_name, agent_code }),
+    });
+    const json = await res.json();
+    if(!res.ok) throw new Error(json.error || 'Imeshindikana');
+    document.getElementById('agentAcctOverlay').classList.remove('show');
+    alert('Akaunti ya ' + (full_name||agent_code) + ' imetengenezwa. Mpe barua pepe na nywila hii: ' + email + ' / ' + password);
+  }catch(e){
+    errEl.textContent = e.message || String(e);
+    errEl.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = 'Unda Akaunti';
+});
+
+sb.auth.onAuthStateChange((event)=>{
+  if(event === 'SIGNED_OUT'){
+    document.getElementById('appWrap').style.display = 'none';
+  }
+});
+
+boot();
+</script>
+</body>
+</html>
