@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hekima Finance — Refund</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#0b0f16; --panel:#121a26; --panel2:#0f1622; --border:#1e2836;
+    --cyan:#22d3ee; --cyan-dim:rgba(34,211,238,0.15);
+    --green:#34d399; --red:#f87171;
+    --text:#e6edf5; --sub:#7c8aa0;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding-bottom:60px;}
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 40px;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .topbar h1{font-size:17px;margin:0;font-weight:600;}
+  .refresh-btn{background:var(--panel);border:1px solid var(--border);color:var(--cyan);padding:8px 14px;border-radius:10px;font-size:13px;cursor:pointer;}
+
+  .auth-gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;}
+  .login-box{width:100%;max-width:340px;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:26px 22px;}
+  .login-box h2{margin:0 0 4px;font-size:18px;}
+  .login-box p{margin:0 0 18px;font-size:12px;color:var(--sub);}
+  .login-input{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:10px;font-size:14px;margin-bottom:10px;}
+  .login-btn{width:100%;background:var(--cyan);color:#00202a;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+  .login-err{color:var(--red);font-size:12px;margin-top:10px;min-height:14px;}
+  .logout-link{font-size:11px;color:var(--sub);cursor:pointer;text-decoration:underline;margin-left:10px;}
+
+  .datebar{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:10px 14px;margin-bottom:14px;font-size:13px;
+  }
+  .datebar b{color:var(--cyan);}
+
+  .search{width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:12px;font-size:14px;margin-bottom:12px;}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;}
+  .chip{flex-shrink:0;background:var(--panel);border:1px solid var(--border);color:var(--sub);padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
+  .chip.active{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);}
+
+  .r-card{background:var(--panel);border-radius:14px;padding:14px 16px;margin-bottom:12px;}
+  .r-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+  .r-name{font-size:14.5px;font-weight:600;}
+  .r-sub{font-size:11.5px;color:var(--sub);margin-top:2px;}
+  .r-deni{text-align:right;}
+  .r-deni .l{font-size:10px;color:var(--sub);text-transform:uppercase;}
+  .r-deni .v{font-size:15px;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums;}
+  .r-deni .v.paid{color:var(--sub);text-decoration:line-through;}
+
+  .r-form{display:flex;gap:8px;}
+  .r-input{
+    flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    padding:10px 12px;border-radius:10px;font-size:14px;
+  }
+  .r-btn{
+    background:var(--cyan);color:#00202a;border:none;padding:0 18px;border-radius:10px;
+    font-size:13px;font-weight:700;cursor:pointer;
+  }
+  .r-btn:disabled{opacity:0.5;}
+  .r-msg{font-size:11.5px;margin-top:6px;min-height:14px;}
+  .r-msg.ok{color:var(--green);}
+  .r-msg.err{color:var(--red);}
+  .r-already{font-size:11.5px;color:var(--sub);margin-top:6px;}
+
+  .state-msg{text-align:center;color:var(--sub);font-size:13px;padding:30px 0;}
+</style>
+</head>
+<body>
+
+<div class="auth-gate" id="authGate">
+  <div class="login-box">
+    <h2>Ingia — Hekima Finance</h2>
+    <p>Tumia akaunti yako ya admin kuingia.</p>
+    <input class="login-input" id="loginEmail" type="email" placeholder="Email">
+    <input class="login-input" id="loginPass" type="password" placeholder="Password">
+    <button class="login-btn" onclick="doLogin()">Ingia</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<div id="appContent" style="display:none">
+<div class="wrap">
+  <div class="topbar">
+    <h1>Refund — Marejesho</h1>
+    <div>
+      <button class="refresh-btn" onclick="loadRefund()">↻ Onyesha upya</button>
+      <span class="logout-link" onclick="doLogout()">Toka</span>
+    </div>
+  </div>
+
+  <div class="datebar">Marejesho ya leo — <b id="todayLabel"></b></div>
+
+  <input class="search" id="searchBox" placeholder="Tafuta jina, simu..." oninput="render()">
+  <div class="chips" id="agentChips"></div>
+
+  <div id="listArea"><div class="state-msg">Inapakia data...</div></div>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://dftsvrxzyakhyadjwhnb.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmdHN2cnh6eWFraHlhZGp3aG5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwNDczMzAsImV4cCI6MjEwMDYyMzMzMH0.k07kB77HAtIO-0JUca0b4drc9PyZObwIsZBXIYtfIL4";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let ROWS = [];
+let activeAgent = "ALL";
+
+function tzs(n){ return Math.round(n).toLocaleString('en-US') + " TZS"; }
+
+async function loadRefund(){
+  document.getElementById('todayLabel').textContent = new Date().toLocaleDateString('sw-TZ',{weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+  document.getElementById('listArea').innerHTML = '<div class="state-msg">Inapakia data...</div>';
+  try{
+    const [{data: agents, error:e1}, {data: clients, error:e2}, {data: loans, error:e3}, {data: payments, error:e4}] =
+      await Promise.all([
+        sb.from('mikopo_agents').select('*'),
+        sb.from('mikopo_clients').select('*'),
+        sb.from('mikopo_loans').select('*'),
+        sb.from('mikopo_payments').select('*'),
+      ]);
+    if(e1) throw e1; if(e2) throw e2; if(e3) throw e3; if(e4) throw e4;
+
+    const agentName = {}; (agents||[]).forEach(a=> agentName[a.code]=a.name);
+    const clientById = {}; (clients||[]).forEach(c=> clientById[c.id]=c);
+
+    const paidByLoan = {};
+    (payments||[]).forEach(p=>{ if(!p.loan_id) return; paidByLoan[p.loan_id]=(paidByLoan[p.loan_id]||0)+Number(p.kiasi||0); });
+
+    // je kuna malipo yaliyoingizwa LEO kwa loan hii?
+    const todayStr = new Date().toDateString();
+    const paidTodayByLoan = {};
+    (payments||[]).forEach(p=>{
+      if(!p.loan_id) return;
+      if(new Date(p.tarehe).toDateString() === todayStr){
+        paidTodayByLoan[p.loan_id] = (paidTodayByLoan[p.loan_id]||0) + Number(p.kiasi||0);
+      }
+    });
+
+    ROWS = (loans||[])
+      .filter(l => {
+        const jumla = Number(l.jumla||0);
+        const paid = paidByLoan[l.id] || 0;
+        return (jumla - paid) > 1; // onyesha tu wenye deni bado
+      })
+      .map(l=>{
+        const c = clientById[l.client_id] || {};
+        const jumla = Number(l.jumla||0);
+        const paid = paidByLoan[l.id] || 0;
+        return {
+          loanId: l.id, clientId: l.client_id,
+          jina: c.jina || "—", simu: c.simu || "", agentCode: c.agent_code || "—",
+          agentName: agentName[c.agent_code] || c.agent_code || "—",
+          rejeshoLengo: Number(l.rejesho_lengo||0),
+          deniBaki: jumla - paid,
+          paidToday: paidTodayByLoan[l.id] || 0
+        };
+      })
+      .sort((a,b)=> a.jina.localeCompare(b.jina));
+
+    const codes = ["ALL", ...Object.keys(agentName)];
+    document.getElementById('agentChips').innerHTML = codes.map(code=>{
+      const label = code === "ALL" ? "Wote" : code;
+      return `<div class="chip ${code===activeAgent?'active':''}" onclick="setAgent('${code}')">${label}</div>`;
+    }).join('');
+
+    render();
+  } catch(err){
+    document.getElementById('listArea').innerHTML = '<div class="state-msg">Imeshindikana kupakia: '+(err.message||err)+'</div>';
+  }
+}
+
+function setAgent(code){ activeAgent = code; loadRefund(); }
+
+function render(){
+  const q = (document.getElementById('searchBox').value||"").toLowerCase();
+  let filtered = ROWS.filter(r => activeAgent==="ALL" || r.agentCode===activeAgent);
+  if(q){
+    filtered = filtered.filter(r => r.jina.toLowerCase().includes(q) || r.simu.toLowerCase().includes(q));
+  }
+
+  const listEl = document.getElementById('listArea');
+  if(filtered.length===0){
+    listEl.innerHTML = '<div class="state-msg">Hakuna wateja wenye deni bado.</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(r => `
+    <div class="r-card" id="card-${r.loanId}">
+      <div class="r-top">
+        <div>
+          <div class="r-name">${r.jina}</div>
+          <div class="r-sub">${r.simu || 'Hakuna simu'} · ${r.agentCode} · Lengo/siku: ${tzs(r.rejeshoLengo)}</div>
+        </div>
+        <div class="r-deni">
+          <div class="l">Deni Baki</div>
+          <div class="v" id="deni-${r.loanId}">${tzs(r.deniBaki)}</div>
+        </div>
+      </div>
+      <div class="r-form">
+        <input class="r-input" type="number" id="amt-${r.loanId}" placeholder="Kiasi kilicholipwa leo">
+        <button class="r-btn" onclick="saveRefund('${r.loanId}','${r.clientId}')">Hifadhi</button>
+      </div>
+      <div class="r-msg" id="msg-${r.loanId}"></div>
+      ${r.paidToday > 0 ? `<div class="r-already">Tayari leo: ${tzs(r.paidToday)}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+async function saveRefund(loanId, clientId){
+  const input = document.getElementById('amt-'+loanId);
+  const msg = document.getElementById('msg-'+loanId);
+  const btn = event.target;
+  const kiasi = Number(input.value || 0);
+
+  if(kiasi <= 0){
+    msg.className='r-msg err'; msg.textContent='Weka kiasi sahihi.';
+    return;
+  }
+
+  btn.disabled = true;
+  try{
+    const { error } = await sb.from('mikopo_payments').insert({
+      client_id: clientId, loan_id: loanId, tarehe: new Date().toISOString(), kiasi
+    });
+    if(error) throw error;
+
+    const row = ROWS.find(r=>r.loanId===loanId);
+    row.deniBaki -= kiasi;
+    row.paidToday += kiasi;
+    document.getElementById('deni-'+loanId).textContent = tzs(Math.max(row.deniBaki,0));
+    if(row.deniBaki <= 1) document.getElementById('deni-'+loanId).classList.add('paid');
+
+    msg.className='r-msg ok'; msg.textContent = '✓ Rejesho la ' + tzs(kiasi) + ' limehifadhiwa.';
+    input.value = '';
+  } catch(err){
+    msg.className='r-msg err'; msg.textContent = 'Hitilafu: ' + (err.message || err);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function checkAuth(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(session){ enterApp(); } else {
+    document.getElementById('authGate').style.display='flex';
+    document.getElementById('appContent').style.display='none';
+  }
+}
+function enterApp(){
+  document.getElementById('authGate').style.display='none';
+  document.getElementById('appContent').style.display='block';
+  loadRefund();
+}
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  document.getElementById('loginErr').textContent='';
+  const {error} = await sb.auth.signInWithPassword({email,password:pass});
+  if(error){ document.getElementById('loginErr').textContent = error.message; return; }
+  enterApp();
+}
+async function doLogout(){
+  await sb.auth.signOut();
+  location.reload();
+}
+checkAuth();
+</script>
+</body>
+</html>
