@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hekima Finance — Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg: #0b0f16;
+    --panel: #121a26;
+    --panel2: #0f1622;
+    --border: #1e2836;
+    --cyan: #22d3ee;
+    --cyan-dim: rgba(34,211,238,0.15);
+    --green: #34d399;
+    --red: #f87171;
+    --text: #e6edf5;
+    --sub: #7c8aa0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding-bottom:60px;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 40px;}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:20px;
+  }
+  .topbar h1{font-size:17px;margin:0;font-weight:600;}
+  .refresh-btn{
+    background:var(--panel);border:1px solid var(--border);color:var(--cyan);
+    padding:8px 14px;border-radius:10px;font-size:13px;cursor:pointer;
+  }
+  .refresh-btn:active{opacity:0.7;}
+
+  .mtaji-card{
+    background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:28px;
+  }
+  .mtaji-left{display:flex;align-items:center;gap:14px;}
+  .mtaji-icon{
+    width:44px;height:44px;border-radius:12px;
+    background:var(--cyan-dim);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--cyan);flex-shrink:0;
+  }
+  .mtaji-title{font-weight:600;font-size:15px;}
+  .mtaji-sub{font-size:12px;color:var(--sub);margin-top:2px;}
+  .mtaji-value{font-size:26px;font-weight:700;letter-spacing:-0.5px;text-align:right;}
+
+  .section-label{
+    text-transform:uppercase;
+    font-size:12px;
+    letter-spacing:1.5px;
+    color:var(--sub);
+    font-weight:700;
+    margin:0 0 12px 4px;
+  }
+
+  .analysis-panel{
+    position:relative;
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:14px;
+    background:rgba(255,255,255,0.01);
+  }
+  .analysis-panel::before, .analysis-panel::after{
+    content:"";
+    position:absolute; top:-1px; width:22px; height:22px;
+    border-top:2px solid var(--cyan);
+  }
+  .analysis-panel::before{left:-1px;border-left:2px solid var(--cyan);border-top-left-radius:10px;}
+  .analysis-panel::after{right:-1px;border-right:2px solid var(--cyan);border-top-right-radius:10px;}
+
+  .agent-card{
+    background:var(--panel);
+    border-radius:14px;
+    overflow:hidden;
+    margin-bottom:14px;
+  }
+  .agent-card:last-child{margin-bottom:0;}
+  .agent-head{
+    display:flex;align-items:center;gap:10px;
+    padding:14px 16px 10px;
+  }
+  .agent-badge{
+    background:var(--cyan-dim);
+    color:var(--cyan);
+    font-weight:700;
+    font-size:12px;
+    padding:5px 10px;
+    border-radius:8px;
+    letter-spacing:0.5px;
+  }
+  .agent-name{font-size:15px;font-weight:600;}
+  .agent-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 16px;
+    border-top:1px solid var(--border);
+    font-size:14px;
+  }
+  .agent-row .lbl{color:var(--sub);font-size:13px;}
+  .val-count{font-weight:600;}
+  .val-green{color:var(--green);font-weight:700;font-variant-numeric:tabular-nums;}
+  .val-red{color:var(--red);font-weight:700;font-variant-numeric:tabular-nums;}
+  .val-total{font-weight:700;font-variant-numeric:tabular-nums;}
+  .chapa-row{padding:12px 16px 14px;border-top:1px solid var(--border);}
+  .chapa-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    background:transparent;
+    border:1px solid var(--cyan);
+    color:var(--cyan);
+    padding:8px 16px;
+    border-radius:20px;
+    font-size:13px;font-weight:600;
+    cursor:pointer;
+  }
+  .chapa-btn:active{background:var(--cyan-dim);}
+
+  .state-msg{
+    text-align:center;color:var(--sub);font-size:13px;padding:30px 0;
+  }
+  .footnote{
+    font-size:11px;color:var(--sub);text-align:center;margin-top:24px;line-height:1.6;
+  }
+
+  @media print{
+    body{background:#fff;color:#000;}
+    .refresh-btn, .chapa-btn{display:none;}
+  }
+
+  .auth-gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;}
+  .login-box{width:100%;max-width:340px;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:26px 22px;}
+  .login-box h2{margin:0 0 4px;font-size:18px;}
+  .login-box p{margin:0 0 18px;font-size:12px;color:var(--sub);}
+  .login-input{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:10px;font-size:14px;margin-bottom:10px;box-sizing:border-box;}
+  .login-btn{width:100%;background:var(--cyan);color:#00202a;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+  .login-err{color:var(--red);font-size:12px;margin-top:10px;min-height:14px;}
+  .logout-link{font-size:11px;color:var(--sub);cursor:pointer;text-decoration:underline;margin-left:10px;}
+</style>
+</head>
+<body>
+<div class="auth-gate" id="authGate">
+  <div class="login-box">
+    <h2>Ingia — Hekima Finance</h2>
+    <p>Tumia akaunti yako ya admin kuingia.</p>
+    <input class="login-input" id="loginEmail" type="email" placeholder="Email">
+    <input class="login-input" id="loginPass" type="password" placeholder="Password">
+    <button class="login-btn" onclick="doLogin()">Ingia</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+<div id="appContent" style="display:none">
+<div class="wrap">
+
+  <div class="topbar">
+    <h1>Hekima Finance</h1>
+    <button class="refresh-btn" onclick="loadDashboard()">↻ Onyesha upya</button>
+    <span class="logout-link" onclick="doLogout()">Toka</span>
+  </div>
+
+  <div class="mtaji-card">
+    <div class="mtaji-left">
+      <div class="mtaji-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2 3 7l9 5 9-5-9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/>
+        </svg>
+      </div>
+      <div>
+        <div class="mtaji-title">Jumla ya Mtaji</div>
+        <div class="mtaji-sub">Fedha zote zinazozunguka</div>
+      </div>
+    </div>
+    <div class="mtaji-value" id="jumlaMtaji">…</div>
+  </div>
+
+  <div class="section-label">Uchambuzi kwa Wakala</div>
+  <div class="analysis-panel">
+    <div id="agentList"><div class="state-msg">Inapakia data...</div></div>
+  </div>
+
+  <div class="footnote" id="footnote"></div>
+</div>
+
+<script>
+// ---- Supabase connection (hekima-mikopo project) ----
+const SUPABASE_URL = "https://dftsvrxzyakhyadjwhnb.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmdHN2cnh6eWFraHlhZGp3aG5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwNDczMzAsImV4cCI6MjEwMDYyMzMzMH0.k07kB77HAtIO-0JUca0b4drc9PyZObwIsZBXIYtfIL4";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function tzs(n){
+  return Math.round(n).toLocaleString('en-US') + " TZS";
+}
+
+async function loadDashboard(){
+  document.getElementById('jumlaMtaji').textContent = "…";
+  document.getElementById('agentList').innerHTML = '<div class="state-msg">Inapakia data...</div>';
+
+  try{
+    const [{data: agents, error: e1}, {data: clients, error: e2}, {data: loans, error: e3}, {data: payments, error: e4}] =
+      await Promise.all([
+        sb.from('mikopo_agents').select('*'),
+        sb.from('mikopo_clients').select('*'),
+        sb.from('mikopo_loans').select('*'),
+        sb.from('mikopo_payments').select('*'),
+      ]);
+    if(e1) throw e1; if(e2) throw e2; if(e3) throw e3; if(e4) throw e4;
+
+    // DENI BAKI per loan = jumla - jumla ya malipo yote (REFUND!G = D-H, D=CUST LIST!G, H=SUM ya malipo)
+    const paidByLoan = {};
+    (payments||[]).forEach(p=>{
+      if(!p.loan_id) return;
+      paidByLoan[p.loan_id] = (paidByLoan[p.loan_id]||0) + Number(p.kiasi||0);
+    });
+
+    // client_id -> agent_code (idadi ya wateja kwa kila wakala, kama D6:D30 kwenye REPORT)
+    const clientAgent = {};
+    (clients||[]).forEach(c=>{ clientAgent[c.id] = c.agent_code; });
+    const clientCountByAgent = {};
+    (clients||[]).forEach(c=>{
+      if(!c.agent_code) return;
+      clientCountByAgent[c.agent_code] = (clientCountByAgent[c.agent_code]||0) + 1;
+    });
+
+    const today = new Date();
+
+    // per-agent totals: mtaji msafi (ST=1, ndani ya muda) na mtaji mchafu (ST=0, imepitiliza muda)
+    // ST = IF(TODAY() > D.KAMILISHA + 1, 0, 1)  -- fomula halisi ya CUST LIST!B
+    const agentTotals = {}; // code -> {msafi, mchafu, clientCount}
+    (agents||[]).forEach(a=>{
+      agentTotals[a.code] = {name:a.name, msafi:0, mchafu:0, clientCount: clientCountByAgent[a.code]||0};
+    });
+
+    let grandMsafi = 0, grandMchafu = 0;
+
+    (loans||[]).forEach(l=>{
+      const code = clientAgent[l.client_id];
+      const jumla = Number(l.jumla||0);
+      const paid = paidByLoan[l.id] || 0;
+      const deniBaki = jumla - paid; // DENI BAKI = REFUND!G = D-H
+
+      let isMchafu = false;
+      if(l.d_kamilisha){
+        const dueDatePlusOne = new Date(l.d_kamilisha);
+        dueDatePlusOne.setDate(dueDatePlusOne.getDate() + 1);
+        isMchafu = today > dueDatePlusOne;
+      }
+
+      if(isMchafu){ grandMchafu += deniBaki; } else { grandMsafi += deniBaki; }
+
+      if(!code || !agentTotals[code]) return;
+      const bucket = agentTotals[code];
+      if(isMchafu){ bucket.mchafu += deniBaki; } else { bucket.msafi += deniBaki; }
+    });
+
+    document.getElementById('jumlaMtaji').textContent = tzs(grandMsafi + grandMchafu);
+
+    const listEl = document.getElementById('agentList');
+    const codes = Object.keys(agentTotals);
+    if(codes.length === 0){
+      listEl.innerHTML = '<div class="state-msg">Hakuna mawakala bado.</div>';
+    } else {
+      listEl.innerHTML = codes.map(code=>{
+        const b = agentTotals[code];
+        const outstanding = Math.max(b.jumla - b.paid, 0);
+        return `
+        <div class="agent-card">
+          <div class="agent-head">
+            <span class="agent-badge">${code}</span>
+            <span class="agent-name">${b.name || code}</span>
+          </div>
+          <div class="agent-row"><span class="lbl">Wateja</span><span class="val-count">${b.clientCount}</span></div>
+          <div class="agent-row"><span class="lbl">Mtaji Msafi</span><span class="val-green">${tzs(b.msafi)}</span></div>
+          <div class="agent-row"><span class="lbl">Mtaji Mchafu</span><span class="val-red">${tzs(b.mchafu)}</span></div>
+          <div class="agent-row"><span class="lbl">Jumla ya Mtaji</span><span class="val-total">${tzs(b.msafi + b.mchafu)}</span></div>
+          <div class="chapa-row">
+            <button class="chapa-btn" onclick="window.print()">🖨️ Chapa</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    document.getElementById('footnote').textContent =
+      "Fomula: DENI BAKI = jumla − malipo yote | ST = TODAY()>D.KAMILISHA+1 (REPORT/REFUND/CUST LIST) — data live kutoka Supabase, " + new Date().toLocaleString('sw-TZ');
+
+  } catch(err){
+    document.getElementById('jumlaMtaji').textContent = "Hitilafu";
+    document.getElementById('agentList').innerHTML =
+      '<div class="state-msg">Imeshindikana kupakia: ' + (err.message || err) + '</div>';
+  }
+}
+
+
+async function checkAuth(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(session){ enterApp(); } else {
+    document.getElementById('authGate').style.display='flex';
+    document.getElementById('appContent').style.display='none';
+  }
+}
+function enterApp(){
+  document.getElementById('authGate').style.display='none';
+  document.getElementById('appContent').style.display='block';
+  loadDashboard();
+}
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  document.getElementById('loginErr').textContent='';
+  const {error} = await sb.auth.signInWithPassword({email,password:pass});
+  if(error){ document.getElementById('loginErr').textContent = error.message; return; }
+  enterApp();
+}
+async function doLogout(){
+  await sb.auth.signOut();
+  location.reload();
+}
+checkAuth();
+</script>
+</div>
+</body>
+</html>
