@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hekima Finance — Mkeka</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#0b0f16; --panel:#121a26; --panel2:#0f1622; --border:#1e2836;
+    --cyan:#22d3ee; --cyan-dim:rgba(34,211,238,0.15);
+    --green:#34d399; --red:#f87171; --text:#e6edf5; --sub:#7c8aa0;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding-bottom:60px;}
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 40px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .topbar h1{font-size:17px;margin:0;font-weight:600;}
+  .refresh-btn{background:var(--panel);border:1px solid var(--border);color:var(--cyan);padding:8px 14px;border-radius:10px;font-size:13px;cursor:pointer;}
+
+  .auth-gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;}
+  .login-box{width:100%;max-width:340px;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:26px 22px;}
+  .login-box h2{margin:0 0 4px;font-size:18px;}
+  .login-box p{margin:0 0 18px;font-size:12px;color:var(--sub);}
+  .login-input{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:10px;font-size:14px;margin-bottom:10px;}
+  .login-btn{width:100%;background:var(--cyan);color:#00202a;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+  .login-err{color:var(--red);font-size:12px;margin-top:10px;min-height:14px;}
+  .logout-link{font-size:11px;color:var(--sub);cursor:pointer;text-decoration:underline;margin-left:10px;}
+
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;}
+  .chip{flex-shrink:0;background:var(--panel);border:1px solid var(--border);color:var(--sub);padding:8px 16px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .chip.active{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);}
+
+  .letterhead{text-align:center;border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;background:var(--panel);}
+  .letterhead .org{font-size:12px;font-weight:700;letter-spacing:0.3px;}
+  .letterhead .addr{font-size:11px;color:var(--sub);margin-top:2px;}
+  .letterhead .title{font-size:15px;font-weight:700;color:var(--cyan);margin-top:10px;}
+  .letterhead .date{font-size:12px;color:var(--sub);margin-top:4px;}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  thead th{background:var(--panel2);color:var(--sub);text-transform:uppercase;font-size:10px;letter-spacing:0.5px;padding:8px 6px;text-align:left;}
+  tbody td{padding:9px 6px;border-bottom:1px solid var(--border);}
+  tbody tr:nth-child(even){background:rgba(255,255,255,0.02);}
+  .col-deni{color:var(--green);font-weight:700;font-variant-numeric:tabular-nums;}
+  .col-sugu{color:var(--red);font-weight:700;font-variant-numeric:tabular-nums;}
+  .rejesho-input{width:70px;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px;font-size:12px;}
+  .saini-line{border-bottom:1px solid var(--sub);display:inline-block;width:50px;}
+  .table-wrap{border:1px solid var(--border);border-radius:14px;overflow:auto;background:var(--panel);}
+  .print-btn{margin-top:16px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:transparent;border:1px solid var(--cyan);color:var(--cyan);padding:12px;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;}
+  .state-msg{text-align:center;color:var(--sub);font-size:13px;padding:30px 0;}
+
+  @media print{
+    body{background:#fff;color:#000;}
+    .refresh-btn,.chips,.print-btn{display:none;}
+    .letterhead{border:1px solid #000;} .letterhead .title{color:#000;}
+    table, .table-wrap{border-color:#000;} thead th{background:#eee;color:#000;} tbody td{border-color:#ccc;}
+    .col-deni,.col-sugu{color:#000;}
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-gate" id="authGate">
+  <div class="login-box">
+    <h2>Ingia — Hekima Finance</h2>
+    <p>Tumia akaunti yako kuingia.</p>
+    <input class="login-input" id="loginEmail" type="email" placeholder="Email">
+    <input class="login-input" id="loginPass" type="password" placeholder="Password">
+    <button class="login-btn" onclick="doLogin()">Ingia</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<div id="appContent" style="display:none">
+<div class="wrap">
+  <div class="topbar">
+    <h1>Mkeka</h1>
+    <div><button class="refresh-btn" onclick="loadMkeka()">↻ Onyesha upya</button><span class="logout-link" onclick="doLogout()">Toka</span></div>
+  </div>
+  <div class="chips" id="agentChips"></div>
+  <div class="letterhead">
+    <div class="org">JUDE WOMEN AND YOUTH EMPOWERMENT FOUNDATION LIMITED</div>
+    <div class="addr">P.O BOX 1115, DODOMA</div>
+    <div class="title" id="sheetTitle">MAREJESHO YA —</div>
+    <div class="date" id="sheetDate"></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>NO</th><th>JINA</th><th>DENI</th><th>SUGU</th><th>D.CHUKUA</th><th>REJESHO</th><th>SAINI</th></tr></thead>
+      <tbody id="mkekaBody"><tr><td colspan="7" class="state-msg">Inapakia data...</td></tr></tbody>
+    </table>
+  </div>
+  <button class="print-btn" onclick="window.print()">🖨️ Chapa Mkeka</button>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://euhteovuhdvefzaavlqx.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1aHRlb3Z1aGR2ZWZ6YWF2bHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NjQwNjEsImV4cCI6MjA5NzE0MDA2MX0.gaV1mShFhVHVpxAqCptJsiSr4r-d3_OYvdtH0bpR58Q";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const DAY = 86400000;
+
+let activeAgent = null;
+let AGENTS = [];
+
+function tzs(n){ return Math.round(n).toLocaleString('en-US'); }
+function fmtDate(d){ if(!d) return "—"; return new Date(d).toLocaleDateString('sw-TZ',{day:'2-digit',month:'short'}); }
+function statusOf(c){ return (Date.now() > Date.parse(c.d_kamilisha) + DAY) ? 'chafu' : 'safi'; }
+function deniBaki(c){ return Math.max(0, Number(c.jumla) - (c.mikopo_payments||[]).reduce((s,p)=>s+Number(p.kiasi),0)); }
+
+async function loadMkeka(){
+  document.getElementById('mkekaBody').innerHTML = '<tr><td colspan="7" class="state-msg">Inapakia data...</td></tr>';
+  document.getElementById('sheetDate').textContent = "TAREHE " + new Date().toLocaleDateString('sw-TZ',{day:'2-digit',month:'long',year:'numeric'});
+  try{
+    const { data: agents, error: e1 } = await sb.from('mikopo_agents').select('*').order('code');
+    if(e1) throw e1;
+    AGENTS = agents || [];
+    if(!activeAgent && AGENTS.length) activeAgent = AGENTS[0].code;
+
+    document.getElementById('agentChips').innerHTML = AGENTS.map(a=>
+      `<div class="chip ${a.code===activeAgent?'active':''}" onclick="setAgent('${a.code}')">${a.name}</div>`
+    ).join('');
+
+    const agentObj = AGENTS.find(a=>a.code===activeAgent);
+    document.getElementById('sheetTitle').textContent = "MAREJESHO YA " + (agentObj ? agentObj.name.toUpperCase() : activeAgent);
+
+    const { data: clients, error:e2 } = await sb.from('mikopo_clients').select('*, mikopo_payments(*)').eq('agent_code', activeAgent);
+    if(e2) throw e2;
+
+    const rows = (clients||[]).map((c, idx)=>{
+      const bal = deniBaki(c);
+      const mchafu = statusOf(c)==='chafu';
+      return { no: idx+1, jina: c.jina, deniBaki: bal, sugu: mchafu?bal:0, dChukua: c.d_kuanza };
+    });
+
+    const body = document.getElementById('mkekaBody');
+    body.innerHTML = rows.length===0 ? '<tr><td colspan="7" class="state-msg">Hakuna wateja kwa wakala huyu.</td></tr>' :
+      rows.map(r=>`
+        <tr>
+          <td>${r.no}</td><td>${r.jina}</td>
+          <td class="col-deni">${tzs(r.deniBaki)}</td>
+          <td class="${r.sugu>0?'col-sugu':''}">${r.sugu>0?tzs(r.sugu):'—'}</td>
+          <td>${fmtDate(r.dChukua)}</td>
+          <td><input class="rejesho-input" placeholder="0"></td>
+          <td><span class="saini-line">&nbsp;</span></td>
+        </tr>`).join('');
+  } catch(err){
+    document.getElementById('mkekaBody').innerHTML = '<tr><td colspan="7" class="state-msg">Imeshindikana kupakia: '+(err.message||err)+'</td></tr>';
+  }
+}
+
+function setAgent(code){ activeAgent = code; loadMkeka(); }
+
+async function checkAuth(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(session){ enterApp(); } else {
+    document.getElementById('authGate').style.display='flex';
+    document.getElementById('appContent').style.display='none';
+  }
+}
+function enterApp(){
+  document.getElementById('authGate').style.display='none';
+  document.getElementById('appContent').style.display='block';
+  loadMkeka();
+}
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  document.getElementById('loginErr').textContent='';
+  const {error} = await sb.auth.signInWithPassword({email,password:pass});
+  if(error){ document.getElementById('loginErr').textContent = error.message; return; }
+  enterApp();
+}
+async function doLogout(){ await sb.auth.signOut(); location.reload(); }
+checkAuth();
+</script>
+</body>
+</html>
