@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hekima Finance</title>
+<style>
+  :root{
+    --bg:#0b0f16; --panel:#121a26; --panel2:#0f1622; --border:#1e2836;
+    --cyan:#22d3ee; --cyan-dim:rgba(34,211,238,0.15);
+    --green:#34d399;
+    --text:#e6edf5; --sub:#7c8aa0;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:640px;margin:0 auto;padding:28px 18px 50px;}
+
+  /* Hero / brand header */
+  .hero{
+    position:relative;overflow:hidden;
+    background:radial-gradient(120% 140% at 20% 0%, rgba(34,211,238,0.12), transparent 60%), linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--border);border-radius:22px;
+    padding:26px 22px 22px;margin-bottom:22px;
+  }
+  .hero::before{
+    content:"";position:absolute;top:-1px;left:-1px;width:26px;height:26px;
+    border-top:2px solid var(--cyan);border-left:2px solid var(--cyan);border-top-left-radius:12px;
+  }
+  .hero::after{
+    content:"";position:absolute;top:-1px;right:-1px;width:26px;height:26px;
+    border-top:2px solid var(--cyan);border-right:2px solid var(--cyan);border-top-right-radius:12px;
+  }
+  .brand-row{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+  .brand-mark{
+    width:46px;height:46px;border-radius:13px;flex-shrink:0;
+    background:linear-gradient(135deg,var(--cyan),#0891b2);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:16px;color:#00202a;letter-spacing:-0.5px;
+  }
+  .brand-name{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.6px;text-transform:uppercase;}
+  .brand-addr{font-size:11px;color:var(--sub);margin-top:1px;}
+
+  .hero h1{font-size:25px;margin:0;font-weight:800;letter-spacing:-0.5px;}
+  .hero .eyebrow{text-transform:uppercase;font-size:11.5px;letter-spacing:1.5px;color:var(--cyan);font-weight:700;margin-bottom:6px;}
+  .hero .meta{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:12.5px;color:var(--sub);}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(52,211,153,0.2);flex-shrink:0;}
+
+  /* Menu */
+  .menu{display:grid;gap:12px;}
+  .menu-item{
+    position:relative;display:flex;align-items:center;gap:15px;
+    background:var(--panel);border:1px solid var(--border);border-radius:16px;
+    padding:16px 16px;text-decoration:none;color:var(--text);
+    transition:transform .1s ease;
+  }
+  .menu-item:active{background:var(--panel2);transform:scale(0.99);}
+  .icon{
+    width:46px;height:46px;border-radius:13px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--cyan-dim);color:var(--cyan);
+  }
+  .menu-item .label{font-size:15px;font-weight:700;}
+  .menu-item .desc{font-size:12px;color:var(--sub);margin-top:2px;}
+  .chevron{margin-left:auto;color:var(--sub);flex-shrink:0;}
+
+  .footnote{text-align:center;font-size:11px;color:var(--sub);margin-top:26px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="brand-row">
+      <div class="brand-mark">HF</div>
+      <div>
+        <div class="brand-name">Jude Women and Youth Empowerment Foundation Limited</div>
+        <div class="brand-addr">P.O BOX 1115, Dodoma</div>
+      </div>
+    </div>
+    <div class="eyebrow">Hekima Finance</div>
+    <h1>Idara ya Mikopo</h1>
+    <div class="meta"><span class="live-dot"></span><span id="todayLabel">—</span></div>
+  </div>
+
+  <div class="menu">
+    <a class="menu-item" href="dashboard.html">
+      <div class="icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+      </div>
+      <div><div class="label">Dashboard</div><div class="desc">Muhtasari wa mtaji na wakala</div></div>
+      <div class="chevron">›</div>
+    </a>
+
+    <a class="menu-item" href="cust-list.html">
+      <div class="icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17" cy="8.5" r="2.4"/><path d="M15.5 14.3c2.6.4 4.5 2.3 4.5 5.2"/></svg>
+      </div>
+      <div><div class="label">Cust List</div><div class="desc">Wateja, mikopo, wadhamini</div></div>
+      <div class="chevron">›</div>
+    </a>
+
+    <a class="menu-item" href="refund.html">
+      <div class="icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 6v0M18 18v0"/></svg>
+      </div>
+      <div><div class="label">Refund</div><div class="desc">Marejesho ya kila siku</div></div>
+      <div class="chevron">›</div>
+    </a>
+
+    <a class="menu-item" href="mkeka.html">
+      <div class="icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M6 17h12v5H6z"/></svg>
+      </div>
+      <div><div class="label">Mkeka</div><div class="desc">Karatasi ya kuchapisha kwa wakala</div></div>
+      <div class="chevron">›</div>
+    </a>
+
+    <a class="menu-item" href="report.html">
+      <div class="icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>
+      </div>
+      <div><div class="label">Report</div><div class="desc">Ripoti kamili ya wateja na mitaji</div></div>
+      <div class="chevron">›</div>
+    </a>
+  </div>
+
+  <div class="footnote">Hekima Finance · Mfumo wa Kutunza Taarifa za Mikopo</div>
+</div>
+
+<script>
+  const opts = {weekday:'long', day:'2-digit', month:'long', year:'numeric'};
+  document.getElementById('todayLabel').textContent = "Leo: " + new Date().toLocaleDateString('sw-TZ', opts);
+</script>
+</body>
+</html>
