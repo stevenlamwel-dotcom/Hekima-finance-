@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hekima Finance — Refund</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#0b0f16; --panel:#121a26; --panel2:#0f1622; --border:#1e2836;
+    --cyan:#22d3ee; --cyan-dim:rgba(34,211,238,0.15);
+    --green:#34d399; --red:#f87171; --text:#e6edf5; --sub:#7c8aa0;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding-bottom:60px;}
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 40px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .topbar h1{font-size:17px;margin:0;font-weight:600;}
+  .logout-link{font-size:11px;color:var(--sub);cursor:pointer;text-decoration:underline;margin-left:10px;}
+
+  .auth-gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;}
+  .auth-loading{color:var(--sub);font-size:13px;text-align:center;}
+  .login-box{width:100%;max-width:340px;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:26px 22px;}
+  .login-box h2{margin:0 0 4px;font-size:18px;}
+  .login-box p{margin:0 0 18px;font-size:12px;color:var(--sub);}
+  .login-input{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:10px;font-size:14px;margin-bottom:10px;}
+  .login-btn{width:100%;background:var(--cyan);color:#00202a;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+  .login-err{color:var(--red);font-size:12px;margin-top:10px;min-height:14px;}
+
+  .tabs{display:flex;gap:8px;margin-bottom:16px;}
+  .tab{flex:1;text-align:center;background:var(--panel);border:1px solid var(--border);color:var(--sub);padding:10px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;}
+  .tab.active{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);}
+
+  .date-row{display:flex;gap:8px;margin-bottom:12px;}
+  .date-input{flex:1;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:11px 12px;border-radius:12px;font-size:14px;}
+  .search{width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:12px;font-size:14px;margin-bottom:12px;}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;}
+  .chip{flex-shrink:0;background:var(--panel);border:1px solid var(--border);color:var(--sub);padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
+  .chip.active{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);}
+
+  .total-bar{
+    background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:16px;
+    padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;
+  }
+  .total-bar .l{font-size:12px;color:var(--sub);}
+  .total-bar .v{font-size:22px;font-weight:800;color:var(--cyan);}
+  .total-bar .sub{font-size:11px;color:var(--sub);margin-top:2px;}
+
+  .r-card{background:var(--panel);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+  .r-info{flex:1;min-width:0;}
+  .r-name{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .r-sub{font-size:11px;color:var(--sub);margin-top:1px;}
+  .r-input{
+    width:110px;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    padding:9px 10px;border-radius:9px;font-size:14px;text-align:right;flex-shrink:0;
+  }
+  .r-input.filled{border-color:var(--green);}
+
+  .save-bar{position:sticky;bottom:0;background:var(--bg);padding-top:10px;margin-top:6px;}
+  .save-btn{
+    width:100%;background:var(--cyan);color:#00202a;border:none;padding:14px;
+    border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;
+  }
+  .save-btn:disabled{opacity:0.5;}
+  .save-msg{text-align:center;font-size:12.5px;margin-top:10px;min-height:16px;}
+  .save-msg.ok{color:var(--green);} .save-msg.err{color:var(--red);}
+
+  /* Tafuta kwa Tarehe */
+  .find-result{background:var(--panel);border-radius:14px;padding:16px;margin-top:14px;}
+  .find-name{font-size:15px;font-weight:700;}
+  .find-sub{font-size:12px;color:var(--sub);margin-top:2px;}
+  .find-amount-row{display:flex;gap:8px;margin-top:14px;}
+
+  /* Mini calendar */
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .cal-nav{background:var(--panel2);border:1px solid var(--border);color:var(--cyan);width:30px;height:30px;border-radius:8px;cursor:pointer;}
+  .cal-title{font-size:13px;font-weight:700;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-dow{font-size:10px;color:var(--sub);text-align:center;padding:4px 0;}
+  .cal-day{
+    aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;
+    font-size:11.5px;background:var(--panel2);color:var(--sub);cursor:pointer;position:relative;
+  }
+  .cal-day.paid{background:rgba(52,211,153,0.18);color:var(--green);font-weight:700;}
+  .cal-day.empty{background:none;cursor:default;}
+  .cal-day.selected{outline:2px solid var(--cyan);}
+
+  .state-msg{text-align:center;color:var(--sub);font-size:13px;padding:30px 0;}
+</style>
+</head>
+<body>
+
+<div class="auth-gate" id="authGate">
+  <div class="auth-loading" id="authLoading">Inapakia...</div>
+  <div class="login-box" id="loginBox" style="display:none">
+    <h2>Ingia — Hekima Finance</h2>
+    <p>Tumia akaunti yako kuingia.</p>
+    <input class="login-input" id="loginEmail" type="email" placeholder="Email">
+    <input class="login-input" id="loginPass" type="password" placeholder="Password">
+    <button class="login-btn" onclick="doLogin()">Ingia</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<div id="appContent" style="display:none">
+<div class="wrap">
+  <div class="topbar">
+    <h1>Refund — Marejesho</h1>
+    <div><a href="index.html" style="color:var(--cyan);text-decoration:none;font-size:13px;">‹ Menu</a><span class="logout-link" onclick="doLogout()">Toka</span></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="tabFast" onclick="switchTab('fast')">⚡ Jaza Haraka</div>
+    <div class="tab" id="tabFind" onclick="switchTab('find')">🔎 Tafuta kwa Tarehe</div>
+  </div>
+
+  <div id="fastPane"></div>
+  <div id="findPane" style="display:none"></div>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://euhteovuhdvefzaavlqx.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1aHRlb3Z1aGR2ZWZ6YWF2bHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NjQwNjEsImV4cCI6MjA5NzE0MDA2MX0.gaV1mShFhVHVpxAqCptJsiSr4r-d3_OYvdtH0bpR58Q";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let ME = null;
+
+function tzs(n){ return Math.round(n||0).toLocaleString('en-US') + " TZS"; }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+// ================= TAB SWITCHING =================
+function switchTab(tab){
+  document.getElementById('tabFast').classList.toggle('active', tab==='fast');
+  document.getElementById('tabFind').classList.toggle('active', tab==='find');
+  document.getElementById('fastPane').style.display = tab==='fast' ? 'block' : 'none';
+  document.getElementById('findPane').style.display = tab==='find' ? 'block' : 'none';
+  if(tab==='fast' && !FAST_LOADED){ initFastPane(); }
+  if(tab==='find' && !FIND_LOADED){ initFindPane(); }
+}
+
+// ================= JAZA HARAKA =================
+let FAST_LOADED = false;
+let fastState = { date: todayISO(), agentCode: null };
+let AGENTS = [];
+let FAST_ROWS = [];
+
+function initFastPane(){
+  FAST_LOADED = true;
+  const isAdmin = ME && ME.role === 'admin';
+  if(!isAdmin) fastState.agentCode = ME ? ME.agent_code : null;
+
+  document.getElementById('fastPane').innerHTML = `
+    <div class="date-row">
+      <input type="date" class="date-input" id="fastDate" value="${fastState.date}" onchange="onFastDateChange()">
+    </div>
+    ${isAdmin ? `<div class="chips" id="fastChips"></div>` : ''}
+    <div class="total-bar">
+      <div>
+        <div class="l">Jumla ya Marejesho — <span id="fastDateLabel"></span></div>
+        <div class="sub" id="fastCountLabel"></div>
+      </div>
+      <div class="v" id="fastTotal">0 TZS</div>
+    </div>
+    <div id="fastRows"><div class="state-msg">Inapakia data...</div></div>
+    <div class="save-bar">
+      <button class="save-btn" id="fastSaveBtn" onclick="saveFastAll()">Hifadhi Wote</button>
+      <div class="save-msg" id="fastSaveMsg"></div>
+    </div>
+  `;
+
+  if(isAdmin){
+    sb.from('mikopo_agents').select('*').order('code').then(({data})=>{
+      AGENTS = data || [];
+      document.getElementById('fastChips').innerHTML = ['ALL', ...AGENTS.map(a=>a.code)].map(code=>{
+        const label = code==='ALL' ? 'Wote' : code;
+        return `<div class="chip ${(!fastState.agentCode && code==='ALL') || fastState.agentCode===code ? 'active':''}" onclick="setFastAgent('${code==='ALL'?'':code}')">${label}</div>`;
+      }).join('');
+      loadFastRows();
+    });
+  } else {
+    loadFastRows();
+  }
+}
+
+function onFastDateChange(){
+  fastState.date = document.getElementById('fastDate').value;
+  loadFastRows();
+}
+function setFastAgent(code){
+  fastState.agentCode = code || null;
+  document.querySelectorAll('#fastChips .chip').forEach(c=>c.classList.remove('active'));
+  event.target.classList.add('active');
+  loadFastRows();
+}
+
+async function loadFastRows(){
+  const rowsEl = document.getElementById('fastRows');
+  rowsEl.innerHTML = '<div class="state-msg">Inapakia data...</div>';
+  document.getElementById('fastDateLabel').textContent = new Date(fastState.date+"T00:00:00").toLocaleDateString('sw-TZ',{day:'2-digit',month:'long',year:'numeric'});
+
+  try{
+    let query = sb.from('mikopo_clients').select('*, mikopo_payments(*)');
+    if(fastState.agentCode) query = query.eq('agent_code', fastState.agentCode);
+    const { data: clients, error } = await query;
+    if(error) throw error;
+
+    const dateStr = fastState.date;
+    FAST_ROWS = (clients||[])
+      .map(c=>{
+        const paid = (c.mikopo_payments||[]).reduce((s,p)=>s+Number(p.kiasi),0);
+        const deniBaki = Math.max(0, Number(c.jumla) - paid);
+        const existing = (c.mikopo_payments||[]).find(p=> p.tarehe && p.tarehe.slice(0,10) === dateStr);
+        return { clientId: c.id, jina: c.jina, agentCode: c.agent_code, deniBaki, paymentId: existing?existing.id:null, amount: existing?Number(existing.kiasi):null };
+      })
+      .filter(r=> r.deniBaki > 1 || r.amount)
+      .sort((a,b)=> a.jina.localeCompare(b.jina));
+
+    renderFastRows();
+  } catch(err){
+    rowsEl.innerHTML = '<div class="state-msg">Imeshindikana kupakia: '+(err.message||err)+'</div>';
+  }
+}
+
+function renderFastRows(){
+  const rowsEl = document.getElementById('fastRows');
+  if(FAST_ROWS.length===0){ rowsEl.innerHTML = '<div class="state-msg">Hakuna wateja wenye deni.</div>'; updateFastTotal(); return; }
+  rowsEl.innerHTML = FAST_ROWS.map((r,i)=>`
+    <div class="r-card">
+      <div class="r-info">
+        <div class="r-name">${r.jina}</div>
+        <div class="r-sub">${!fastState.agentCode ? r.agentCode+' · ' : ''}Deni: ${tzs(r.deniBaki)}</div>
+      </div>
+      <input class="r-input ${r.amount?'filled':''}" type="number" inputmode="numeric"
+        id="famt-${i}" value="${r.amount ?? ''}" placeholder="0"
+        oninput="onFastAmountInput(${i})">
+    </div>
+  `).join('');
+  updateFastTotal();
+}
+
+function onFastAmountInput(i){
+  const val = document.getElementById('famt-'+i).value;
+  FAST_ROWS[i].amount = val === '' ? null : Number(val);
+  document.getElementById('famt-'+i).classList.toggle('filled', !!val);
+  updateFastTotal();
+}
+
+function updateFastTotal(){
+  const total = FAST_ROWS.reduce((s,r)=> s + (Number(r.amount)||0), 0);
+  const count = FAST_ROWS.filter(r=> Number(r.amount) > 0).length;
+  document.getElementById('fastTotal').textContent = tzs(total);
+  document.getElementById('fastCountLabel').textContent = `${count} kati ya ${FAST_ROWS.length} wamejazwa`;
+}
+
+async function saveFastAll(){
+  const btn = document.getElementById('fastSaveBtn');
+  const msg = document.getElementById('fastSaveMsg');
+  const toSave = FAST_ROWS.filter(r=> Number(r.amount) > 0);
+  if(toSave.length===0){ msg.className='save-msg err'; msg.textContent='Hakuna kiasi chochote kilichojazwa.'; return; }
+
+  btn.disabled = true;
+  msg.className='save-msg'; msg.textContent = 'Inahifadhi...';
+  const dateISO = new Date(fastState.date+"T12:00:00").toISOString();
+  let okCount = 0, errCount = 0;
+
+  for(const r of toSave){
+    try{
+      if(r.paymentId){
+        const { error } = await sb.from('mikopo_payments').update({ kiasi: r.amount }).eq('id', r.paymentId);
+        if(error) throw error;
+      } else {
+        const { data, error } = await sb.from('mikopo_payments').insert({ client_id: r.clientId, tarehe: dateISO, kiasi: r.amount }).select().single();
+        if(error) throw error;
+        r.paymentId = data.id;
+      }
+      okCount++;
+    } catch(err){ errCount++; }
+  }
+
+  btn.disabled = false;
+  msg.className = errCount ? 'save-msg err' : 'save-msg ok';
+  msg.textContent = errCount
+    ? `Zimehifadhiwa ${okCount}, zimeshindikana ${errCount}.`
+    : `✓ Zimehifadhiwa ${okCount} — Jumla ${tzs(toSave.reduce((s,r)=>s+Number(r.amount),0))}`;
+}
+
+// ================= TAFUTA KWA TAREHE =================
+let FIND_LOADED = false;
+let findState = { clientId: null, date: todayISO() };
+
+function initFindPane(){
+  FIND_LOADED = true;
+  document.getElementById('findPane').innerHTML = `
+    <input class="search" id="findSearch" placeholder="Tafuta jina la mteja..." oninput="onFindSearch()">
+    <div id="findResults"></div>
+    <div id="findDetail"></div>
+  `;
+}
+
+let findDebounce;
+function onFindSearch(){
+  clearTimeout(findDebounce);
+  findDebounce = setTimeout(async ()=>{
+    const q = document.getElementById('findSearch').value.trim();
+    const resultsEl = document.getElementById('findResults');
+    document.getElementById('findDetail').innerHTML = '';
+    if(q.length < 2){ resultsEl.innerHTML=''; return; }
+    resultsEl.innerHTML = '<div class="state-msg">Inatafuta...</div>';
+    let query = sb.from('mikopo_clients').select('id, jina, maarufu, agent_code, simu').ilike('jina', `%${q}%`).limit(15);
+    const { data, error } = await query;
+    if(error){ resultsEl.innerHTML = '<div class="state-msg">Hitilafu: '+error.message+'</div>'; return; }
+    if(!data || data.length===0){ resultsEl.innerHTML = '<div class="state-msg">Hakuna aliyepatikana.</div>'; return; }
+    resultsEl.innerHTML = data.map(c=>`
+      <div class="r-card" style="cursor:pointer" onclick="selectFindClient('${c.id}','${c.jina.replace(/'/g,"\\'")}')">
+        <div class="r-info"><div class="r-name">${c.jina}</div><div class="r-sub">${c.maarufu||''} ${c.agent_code?'· '+c.agent_code:''}</div></div>
+        <div class="chevron" style="color:var(--sub)">›</div>
+      </div>`).join('');
+  }, 300);
+}
+
+async function selectFindClient(clientId, jina){
+  findState.clientId = clientId;
+  document.getElementById('findResults').innerHTML = '';
+  document.getElementById('findSearch').value = jina;
+  await renderFindDetail();
+}
+
+async function renderFindDetail(){
+  const el = document.getElementById('findDetail');
+  el.innerHTML = '<div class="state-msg">Inapakia...</div>';
+  const { data: c, error } = await sb.from('mikopo_clients').select('*, mikopo_payments(*)').eq('id', findState.clientId).single();
+  if(error){ el.innerHTML = '<div class="state-msg">Hitilafu: '+error.message+'</div>'; return; }
+
+  const payment = (c.mikopo_payments||[]).find(p=> p.tarehe && p.tarehe.slice(0,10)===findState.date);
+  const paid = (c.mikopo_payments||[]).reduce((s,p)=>s+Number(p.kiasi),0);
+  const deniBaki = Math.max(0, Number(c.jumla)-paid);
+
+  el.innerHTML = `
+    <div class="find-result">
+      <div class="find-name">${c.jina}</div>
+      <div class="find-sub">${c.simu||'Hakuna simu'} · Deni Baki: ${tzs(deniBaki)}</div>
+      <div class="find-amount-row">
+        <input type="date" class="date-input" id="findDateInput" value="${findState.date}" onchange="onFindDateChange()">
+        <input class="r-input" style="width:130px" type="number" id="findAmount" placeholder="0" value="${payment?Number(payment.kiasi):''}">
+      </div>
+      <button class="save-btn" style="margin-top:12px" onclick="saveFindPayment('${payment?payment.id:''}')">Hifadhi</button>
+      <div class="save-msg" id="findMsg"></div>
+      <div id="calendarWrap" style="margin-top:18px"></div>
+    </div>
+  `;
+  renderMiniCalendar(c);
+}
+
+function onFindDateChange(){
+  findState.date = document.getElementById('findDateInput').value;
+  renderFindDetail();
+}
+
+async function saveFindPayment(existingId){
+  const amount = Number(document.getElementById('findAmount').value || 0);
+  const msg = document.getElementById('findMsg');
+  if(amount <= 0){ msg.className='save-msg err'; msg.textContent='Weka kiasi sahihi.'; return; }
+  try{
+    const dateISO = new Date(findState.date+"T12:00:00").toISOString();
+    if(existingId){
+      const { error } = await sb.from('mikopo_payments').update({ kiasi: amount }).eq('id', existingId);
+      if(error) throw error;
+    } else {
+      const { error } = await sb.from('mikopo_payments').insert({ client_id: findState.clientId, tarehe: dateISO, kiasi: amount });
+      if(error) throw error;
+    }
+    msg.className='save-msg ok'; msg.textContent='✓ Imehifadhiwa.';
+    renderFindDetail();
+  } catch(err){
+    msg.className='save-msg err'; msg.textContent='Hitilafu: '+(err.message||err);
+  }
+}
+
+// ---- Mini month calendar (marks days with a payment) ----
+let calMonth = new Date(); calMonth.setDate(1);
+function renderMiniCalendar(client){
+  const wrap = document.getElementById('calendarWrap');
+  const paymentsByDay = {};
+  (client.mikopo_payments||[]).forEach(p=>{ if(p.tarehe) paymentsByDay[p.tarehe.slice(0,10)] = Number(p.kiasi); });
+
+  const year = calMonth.getFullYear(), month = calMonth.getMonth();
+  const firstDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const monthName = calMonth.toLocaleDateString('sw-TZ',{month:'long', year:'numeric'});
+
+  let cells = '';
+  for(let i=0;i<firstDow;i++) cells += `<div class="cal-day empty"></div>`;
+  for(let d=1; d<=daysInMonth; d++){
+    const iso = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const paid = paymentsByDay[iso];
+    const selected = iso === findState.date;
+    cells += `<div class="cal-day ${paid?'paid':''} ${selected?'selected':''}" onclick="jumpToDay('${iso}')" title="${paid?tzs(paid):''}">${d}</div>`;
+  }
+
+  wrap.innerHTML = `
+    <div class="cal-head">
+      <button class="cal-nav" onclick="changeCalMonth(-1)">‹</button>
+      <div class="cal-title">${monthName}</div>
+      <button class="cal-nav" onclick="changeCalMonth(1)">›</button>
+    </div>
+    <div class="cal-grid">
+      ${['J','J','J','J','J','J','J'].map((d,i)=>['Jm','Jt','Jn','Jt','Al','Ij','Jm'][i]).map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+      ${cells}
+    </div>
+  `;
+}
+function changeCalMonth(delta){
+  calMonth.setMonth(calMonth.getMonth()+delta);
+  renderFindDetail();
+}
+function jumpToDay(iso){
+  findState.date = iso;
+  renderFindDetail();
+}
+
+// ================= AUTH =================
+async function isCurrentUserAdmin(){
+  const { data: { user } } = await sb.auth.getUser();
+  if(!user) return false;
+  const { data: profile } = await sb.from('mikopo_profiles').select('*').eq('id', user.id).single();
+  ME = profile;
+  return !!(profile && profile.active);
+}
+async function checkAuth(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(session){
+    if(await isCurrentUserAdmin()){ enterApp(); }
+    else {
+      await sb.auth.signOut();
+      document.getElementById('authLoading').style.display='none';
+      document.getElementById('loginBox').style.display='block';
+      document.getElementById('appContent').style.display='none';
+      document.getElementById('loginErr').textContent = 'Akaunti hii haipo hai. Wasiliana na msimamizi.';
+    }
+  } else {
+    document.getElementById('authLoading').style.display='none';
+    document.getElementById('loginBox').style.display='block';
+    document.getElementById('appContent').style.display='none';
+  }
+}
+function enterApp(){
+  document.getElementById('authGate').style.display='none';
+  document.getElementById('appContent').style.display='block';
+  initFastPane();
+}
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  document.getElementById('loginErr').textContent='';
+  const {error} = await sb.auth.signInWithPassword({email,password:pass});
+  if(error){ document.getElementById('loginErr').textContent = error.message; return; }
+  if(await isCurrentUserAdmin()){ enterApp(); }
+  else {
+    await sb.auth.signOut();
+    document.getElementById('loginErr').textContent = 'Akaunti hii haipo hai. Wasiliana na msimamizi.';
+  }
+}
+async function doLogout(){ await sb.auth.signOut(); location.reload(); }
+checkAuth();
+</script>
+</body>
+</html>
