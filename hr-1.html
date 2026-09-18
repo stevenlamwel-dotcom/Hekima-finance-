@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hekima Finance — HR Department</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#0a1f36; --panel:#123152; --panel2:#0e2743; --border:#1f3f61;
+    --cyan:#c89a3d; --cyan-dim:rgba(200,154,61,0.16);
+    --green:#1f9d74; --red:#e2645a; --text:#eef2f6; --sub:#93a7ba;
+  }
+  html[data-theme="light"]{
+    --bg:#f5f6f1; --panel:#ffffff; --panel2:#eceee6; --border:#dee1d7;
+    --text:#12202f; --sub:#51606c;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding-bottom:60px;}
+  .wrap{max-width:760px;margin:0 auto;padding:20px 16px 40px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:8px;flex-wrap:wrap;}
+  .topbar h1{font-size:17px;margin:0;font-weight:600;}
+  .icon-toggle-btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;}
+  .back-link{color:var(--cyan);text-decoration:none;font-size:13px;}
+  .logout-link{font-size:11px;color:var(--sub);cursor:pointer;text-decoration:underline;margin-left:10px;}
+
+  .auth-gate{
+    position:fixed;inset:0;
+    background:radial-gradient(120% 90% at 12% 0%, rgba(31,157,116,0.32), transparent 55%),
+      radial-gradient(120% 90% at 88% 100%, rgba(200,154,61,0.28), transparent 55%),
+      linear-gradient(160deg,#0a1f36 0%, #123152 60%, #0a1f36 100%);
+    display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
+  }
+  .auth-loading{color:#dbe3ea;font-size:13px;text-align:center;}
+  .login-box{width:100%;max-width:380px;background:rgba(255,255,255,0.98);border:1px solid rgba(255,255,255,0.4);border-radius:26px;padding:32px 26px 26px;box-shadow:0 30px 70px rgba(0,0,0,0.35);}
+  .login-greeting{font-size:13px;font-weight:600;color:#b9863a;margin-bottom:6px;}
+  .login-box h2{margin:0 0 4px;font-size:26px;font-weight:800;color:#12202f;}
+  .login-box p{margin:0 0 22px;font-size:13.5px;color:#5b6b80;}
+  .login-label{display:block;font-size:12.5px;color:#51606c;font-weight:600;margin:0 0 6px;}
+  .login-field{position:relative;margin-bottom:16px;}
+  .login-field .fico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#8a97a6;}
+  .login-input{width:100%;background:#f5f6f4;border:1.5px solid #e1e4dd;color:#12202f;padding:13px 14px 13px 42px;border-radius:12px;font-size:15px;}
+  .login-input:focus{outline:none;border-color:#c89a3d;background:#fff;}
+  .pw-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#8a97a6;cursor:pointer;padding:7px;display:flex;}
+  .login-btn{width:100%;background:#0a1f36;color:#fff;border:none;padding:15px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+  .login-btn:active{background:#123152;}
+  .login-err{color:#c0392b;font-size:12.5px;margin-top:12px;min-height:14px;text-align:center;}
+  .login-help{text-align:center;margin-top:16px;font-size:13px;}
+  .login-help a{color:#123152;text-decoration:none;font-weight:600;}
+  .login-foot{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:12px;color:rgba(255,255,255,0.55);}
+  .denied{max-width:380px;background:rgba(255,255,255,0.98);border-radius:20px;padding:30px;text-align:center;color:#12202f;}
+
+  .tabs{display:flex;gap:8px;margin-bottom:18px;overflow-x:auto;padding-bottom:2px;}
+  .tab{flex:none;padding:10px 16px;border-radius:10px;background:var(--panel);border:1px solid var(--border);color:var(--sub);font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap;}
+  .tab.active{background:var(--cyan);color:#231603;border-color:var(--cyan);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px;}
+  .card h3{margin:0 0 12px;font-size:15px;}
+  .field{margin-bottom:10px;}
+  .field label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px;}
+  .field input, .field select, .field textarea{
+    width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    padding:10px 12px;border-radius:9px;font-size:14px;
+  }
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .btn{background:var(--cyan);color:#231603;border:none;padding:11px 18px;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer;}
+  .btn.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border);}
+  .msg{font-size:12.5px;margin-top:8px;min-height:14px;}
+  .msg.err{color:var(--red);}
+  .msg.ok{color:var(--green);}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;color:var(--sub);font-weight:600;font-size:11.5px;padding:8px 8px;border-bottom:1px solid var(--border);}
+  td{padding:8px 8px;border-bottom:1px solid var(--border);}
+  .badge{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;}
+  .badge.active{background:rgba(31,157,116,0.15);color:var(--green);}
+  .badge.inactive{background:rgba(226,100,90,0.15);color:var(--red);}
+  .badge.present{background:rgba(31,157,116,0.15);color:var(--green);}
+  .badge.late{background:rgba(200,154,61,0.18);color:var(--cyan);}
+  .badge.absent{background:rgba(226,100,90,0.15);color:var(--red);}
+  .badge.leave{background:rgba(147,167,186,0.2);color:var(--sub);}
+  .empty{color:var(--sub);font-size:13px;padding:14px 0;text-align:center;}
+  .scrollx{overflow-x:auto;}
+</style>
+</head>
+<body>
+
+<div class="auth-gate" id="authGate">
+  <div class="auth-loading" id="authLoading">Loading...</div>
+  <div class="login-box" id="loginBox" style="display:none">
+    <div class="login-greeting" id="loginGreeting">Habari</div>
+    <h2>Ingia</h2>
+    <p>Tumia akaunti yako ya Hekima Finance kuingia.</p>
+    <label class="login-label" for="loginEmail">Barua pepe</label>
+    <div class="login-field">
+      <svg class="fico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9 6 9-6M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/></svg>
+      <input class="login-input" id="loginEmail" type="email" placeholder="jina@hekimafinance.co.tz">
+    </div>
+    <label class="login-label" for="loginPass">Nywila</label>
+    <div class="login-field">
+      <svg class="fico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <input class="login-input" id="loginPass" type="password" placeholder="••••••••">
+      <button type="button" class="pw-eye" id="pwEyeBtn" onclick="togglePwVisibility()" aria-label="Onyesha nywila">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Ingia</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-help"><a href="mailto:stevenlamwel@gmail.com">Umesahau nywila? Wasiliana na msimamizi</a></div>
+  </div>
+  <div class="denied" id="deniedBox" style="display:none">
+    <h2 style="margin:0 0 10px;font-size:20px;">Huna ruhusa</h2>
+    <p style="color:#5b6b80;font-size:14px;">Sehemu ya HR inapatikana kwa admin pekee.</p>
+    <a href="portal.html" style="display:inline-block;margin-top:14px;color:#123152;font-weight:600;">‹ Rudi kwenye menyu</a>
+  </div>
+  <div class="login-foot">Hekima Finance &middot; Iringa, Tanzania</div>
+</div>
+
+<div id="appContent" style="display:none">
+<div class="wrap">
+  <div class="topbar">
+    <h1>HR Department</h1>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      <a href="portal.html" class="back-link">‹ Menu</a>
+      <button class="icon-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">🌙</button>
+      <span class="logout-link" onclick="doLogout()">Log Out</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="employees" onclick="switchTab('employees')">Wafanyakazi</div>
+    <div class="tab" data-tab="profiles" onclick="switchTab('profiles')">Wasifu</div>
+    <div class="tab" data-tab="performance" onclick="switchTab('performance')">Utendaji</div>
+    <div class="tab" data-tab="attendance" onclick="switchTab('attendance')">Mahudhurio</div>
+    <div class="tab" data-tab="leave" onclick="switchTab('leave')">Likizo</div>
+    <div class="tab" data-tab="payroll" onclick="switchTab('payroll')">Mishahara</div>
+  </div>
+
+  <!-- EMPLOYEES -->
+  <div class="panel active" id="panel-employees">
+    <div class="card">
+      <h3>Ongeza Mfanyakazi</h3>
+      <div class="row2">
+        <div class="field"><label>Jina Kamili</label><input id="empName"></div>
+        <div class="field"><label>Simu</label><input id="empPhone"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Email</label><input id="empEmail" type="email"></div>
+        <div class="field"><label>Nafasi/Cheo</label><input id="empPosition"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Department</label>
+          <select id="empDept">
+            <option>Loans</option><option>HR</option><option>Operations</option><option>Hekima Tech</option>
+          </select>
+        </div>
+        <div class="field"><label>Tarehe ya Kuajiriwa</label><input id="empHireDate" type="date"></div>
+      </div>
+      <div class="field"><label>Mshahara wa Msingi (TZS)</label><input id="empSalary" type="number"></div>
+      <div class="row2">
+        <div class="field"><label>Namba ya Kitambulisho (NIDA)</label><input id="empNatId"></div>
+        <div class="field"><label>Agent Code (kama ni Loans)</label><input id="empAgentCode" placeholder="mfano AG01"></div>
+      </div>
+      <div class="field"><label>Makazi</label><input id="empResidence" placeholder="Mtaa, Kata, Wilaya"></div>
+      <div class="field"><label>Msimamizi (Tupo Chini ya Kiongozi Gani)</label><select id="empSupervisor"><option value="">— Hakuna —</option></select></div>
+      <h3 style="margin:16px 0 10px;font-size:13.5px;color:var(--sub);">Mkataba wa Kazi</h3>
+      <div class="row2">
+        <div class="field"><label>Aina ya Mkataba</label>
+          <select id="empContractType">
+            <option value="">— Chagua —</option>
+            <option>Majaribio (Probation)</option>
+            <option>Muda Maalum</option>
+            <option>Kudumu</option>
+          </select>
+        </div>
+        <div class="field"><label>Kuanzia</label><input id="empContractStart" type="date"></div>
+      </div>
+      <div class="field"><label>Mwisho wa Mkataba (hiari)</label><input id="empContractEnd" type="date"></div>
+      <div class="field"><label>Maelezo ya Mkataba (hiari)</label><input id="empContractNotes"></div>
+      <button class="btn" onclick="addEmployee()">Hifadhi</button>
+      <div class="msg" id="empMsg"></div>
+    </div>
+    <div class="card">
+      <h3>Orodha ya Wafanyakazi</h3>
+      <div class="scrollx"><table>
+        <thead><tr><th>Jina</th><th>Department</th><th>Nafasi</th><th>Hali</th></tr></thead>
+        <tbody id="empTableBody"></tbody>
+      </table></div>
+      <div class="empty" id="empEmpty" style="display:none">Bado hakuna wafanyakazi waliosajiliwa.</div>
+    </div>
+  </div>
+
+  <!-- PROFILES (Wasifu) -->
+  <div class="panel" id="panel-profiles">
+    <div class="card">
+      <h3>Wasifu wa Wafanyakazi</h3>
+      <p style="font-size:12.5px;color:var(--sub);margin:-4px 0 12px;">Kila mfanyakazi lazima awe amesajiliwa hapa (Sajili Ufikiaji) ndipo aweze kuingia katika idara nyingine.</p>
+      <div id="profilesList"></div>
+      <div class="empty" id="profilesEmpty" style="display:none">Bado hakuna wafanyakazi.</div>
+    </div>
+  </div>
+
+  <!-- PERFORMANCE (Utendaji) -->
+  <div class="panel" id="panel-performance">
+    <div class="card">
+      <h3>Wasilisha Ripoti ya Utendaji</h3>
+      <p style="font-size:12.5px;color:var(--sub);margin:-4px 0 12px;">Ripoti hii itawasilishwa kwenye Idara ya Operations kwa ukaguzi na kuunganishwa.</p>
+      <div class="field"><label>Mfanyakazi</label><select id="prfEmp"></select></div>
+      <div class="field"><label>Kipindi (mfano 2026-09)</label><input id="prfPeriod" placeholder="2026-09"></div>
+      <div class="field"><label>Muhtasari wa Utendaji</label><textarea id="prfSummary" rows="3"></textarea></div>
+      <div class="field"><label>Mafanikio</label><textarea id="prfAchievements" rows="2"></textarea></div>
+      <div class="field"><label>Changamoto</label><textarea id="prfChallenges" rows="2"></textarea></div>
+      <div class="field"><label>Malengo ya Kipindi Kijacho</label><textarea id="prfTargets" rows="2"></textarea></div>
+      <button class="btn" onclick="submitPerformanceReport()">Wasilisha kwa Operations</button>
+      <div class="msg" id="prfMsg"></div>
+    </div>
+    <div class="card">
+      <h3>Ripoti Zilizowasilishwa</h3>
+      <div class="scrollx"><table>
+        <thead><tr><th>Mfanyakazi</th><th>Kipindi</th><th>Hali</th></tr></thead>
+        <tbody id="prfTableBody"></tbody>
+      </table></div>
+      <div class="empty" id="prfEmpty" style="display:none">Hakuna ripoti bado.</div>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE -->
+  <div class="panel" id="panel-attendance">
+    <div class="card">
+      <h3>Weka Mahudhurio</h3>
+      <div class="field"><label>Mfanyakazi</label><select id="attEmp"></select></div>
+      <div class="row2">
+        <div class="field"><label>Tarehe</label><input id="attDate" type="date"></div>
+        <div class="field"><label>Hali</label>
+          <select id="attStatus">
+            <option value="present">Alikuwepo</option>
+            <option value="late">Alichelewa</option>
+            <option value="absent">Hakuwepo</option>
+            <option value="leave">Likizo</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Maelezo (hiari)</label><input id="attNote"></div>
+      <button class="btn" onclick="addAttendance()">Hifadhi</button>
+      <div class="msg" id="attMsg"></div>
+    </div>
+    <div class="card">
+      <h3>Rekodi za Hivi Karibuni</h3>
+      <div class="scrollx"><table>
+        <thead><tr><th>Jina</th><th>Tarehe</th><th>Hali</th></tr></thead>
+        <tbody id="attTableBody"></tbody>
+      </table></div>
+      <div class="empty" id="attEmpty" style="display:none">Hakuna rekodi bado.</div>
+    </div>
+  </div>
+
+  <!-- LEAVE -->
+  <div class="panel" id="panel-leave">
+    <div class="card">
+      <h3>Weka Likizo</h3>
+      <div class="field"><label>Mfanyakazi</label><select id="lvEmp"></select></div>
+      <div class="field"><label>Aina ya Likizo</label><input id="lvType" placeholder="Mfano: Likizo ya Mwaka"></div>
+      <div class="row2">
+        <div class="field"><label>Kuanzia</label><input id="lvStart" type="date"></div>
+        <div class="field"><label>Hadi</label><input id="lvEnd" type="date"></div>
+      </div>
+      <div class="field"><label>Maelezo (hiari)</label><input id="lvNote"></div>
+      <button class="btn" onclick="addLeave()">Hifadhi</button>
+      <div class="msg" id="lvMsg"></div>
+    </div>
+    <div class="card">
+      <h3>Rekodi za Likizo</h3>
+      <div class="scrollx"><table>
+        <thead><tr><th>Jina</th><th>Aina</th><th>Kuanzia</th><th>Hadi</th></tr></thead>
+        <tbody id="lvTableBody"></tbody>
+      </table></div>
+      <div class="empty" id="lvEmpty" style="display:none">Hakuna rekodi bado.</div>
+    </div>
+  </div>
+
+  <!-- PAYROLL -->
+  <div class="panel" id="panel-payroll">
+    <div class="card">
+      <h3>Weka Malipo ya Mshahara</h3>
+      <div class="field"><label>Mfanyakazi</label><select id="prEmp"></select></div>
+      <div class="row2">
+        <div class="field"><label>Mwezi (mfano 2026-09)</label><input id="prPeriod" placeholder="2026-09"></div>
+        <div class="field"><label>Kiasi (TZS)</label><input id="prAmount" type="number"></div>
+      </div>
+      <div class="field"><label>Tarehe ya Malipo</label><input id="prDate" type="date"></div>
+      <div class="field"><label>Maelezo (hiari)</label><input id="prNote"></div>
+      <button class="btn" onclick="addPayroll()">Hifadhi</button>
+      <div class="msg" id="prMsg"></div>
+    </div>
+    <div class="card">
+      <h3>Rekodi za Malipo</h3>
+      <div class="scrollx"><table>
+        <thead><tr><th>Jina</th><th>Mwezi</th><th>Kiasi</th><th>Tarehe</th></tr></thead>
+        <tbody id="prTableBody"></tbody>
+      </table></div>
+      <div class="empty" id="prEmpty" style="display:none">Hakuna rekodi bado.</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://euhteovuhdvefzaavlqx.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1aHRlb3Z1aGR2ZWZ6YWF2bHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NjQwNjEsImV4cCI6MjA5NzE0MDA2MX0.gaV1mShFhVHVpxAqCptJsiSr4r-d3_OYvdtH0bpR58Q";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function tzs(n){ return "TZS " + Number(n||0).toLocaleString('en-US'); }
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+name));
+}
+
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeToggleBtn').textContent = theme==='light' ? '☀️' : '🌙';
+  localStorage.setItem('hekima_theme', theme);
+}
+function toggleTheme(){
+  const cur = localStorage.getItem('hekima_theme') || 'light';
+  applyTheme(cur === 'light' ? 'dark' : 'light');
+}
+
+let EMPLOYEES = [];
+
+async function loadEmployees(){
+  const { data, error } = await sb.from('hr_employees').select('*').order('full_name');
+  if(error){ document.getElementById('empMsg').textContent = error.message; document.getElementById('empMsg').className='msg err'; return; }
+  EMPLOYEES = data || [];
+  const body = document.getElementById('empTableBody');
+  body.innerHTML = EMPLOYEES.map(e => `
+    <tr><td>${e.full_name}</td><td>${e.department}</td><td>${e.position||''}</td>
+    <td><span class="badge ${e.status}">${e.status==='active'?'Active':'Inactive'}</span></td></tr>
+  `).join('');
+  document.getElementById('empEmpty').style.display = EMPLOYEES.length ? 'none':'block';
+
+  const opts = EMPLOYEES.map(e => `<option value="${e.id}">${e.full_name} (${e.department})</option>`).join('');
+  ['attEmp','lvEmp','prEmp','prfEmp'].forEach(id => document.getElementById(id).innerHTML = opts);
+
+  const supOpts = '<option value="">— Hakuna —</option>' + EMPLOYEES.map(e => `<option value="${e.id}">${e.full_name} (${e.position||e.department})</option>`).join('');
+  document.getElementById('empSupervisor').innerHTML = supOpts;
+
+  renderProfiles();
+  loadPerformanceReports();
+}
+
+async function addEmployee(){
+  const full_name = document.getElementById('empName').value.trim();
+  const phone = document.getElementById('empPhone').value.trim();
+  const email = document.getElementById('empEmail').value.trim();
+  const position = document.getElementById('empPosition').value.trim();
+  const department = document.getElementById('empDept').value;
+  const hire_date = document.getElementById('empHireDate').value || null;
+  const base_salary = document.getElementById('empSalary').value || null;
+  const national_id = document.getElementById('empNatId').value.trim() || null;
+  const agent_code = document.getElementById('empAgentCode').value.trim() || null;
+  const residence = document.getElementById('empResidence').value.trim() || null;
+  const supervisor_id = document.getElementById('empSupervisor').value || null;
+  const contract_type = document.getElementById('empContractType').value || null;
+  const contract_start = document.getElementById('empContractStart').value || null;
+  const contract_end = document.getElementById('empContractEnd').value || null;
+  const contract_notes = document.getElementById('empContractNotes').value.trim() || null;
+  const msg = document.getElementById('empMsg');
+  if(!full_name){ msg.textContent='Jina linahitajika'; msg.className='msg err'; return; }
+  const { error } = await sb.from('hr_employees').insert([{
+    full_name, phone, email, position, department, hire_date, base_salary, status:'active',
+    national_id, agent_code, residence, supervisor_id, contract_type, contract_start, contract_end, contract_notes
+  }]);
+  if(error){ msg.textContent = error.message; msg.className='msg err'; return; }
+  msg.textContent = 'Imehifadhiwa.'; msg.className='msg ok';
+  ['empName','empPhone','empEmail','empPosition','empSalary','empNatId','empAgentCode','empResidence','empContractStart','empContractEnd','empContractNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('empContractType').value='';
+  document.getElementById('empSupervisor').value='';
+  loadEmployees();
+}
+
+function missingFields(e){
+  const missing = [];
+  if(!e.national_id) missing.push('Namba ya Kitambulisho');
+  if(!e.residence) missing.push('Makazi');
+  if(!e.phone) missing.push('Simu');
+  if(!e.position) missing.push('Nafasi/Cheo');
+  if(!e.supervisor_id) missing.push('Msimamizi');
+  if(!e.contract_type) missing.push('Aina ya Mkataba');
+  if(!e.contract_start) missing.push('Tarehe ya Kuanza Mkataba');
+  if(e.contract_type && e.contract_type !== 'Kudumu' && !e.contract_end) missing.push('Mwisho wa Mkataba');
+  if(!e.registered_access) missing.push('Bado Hajasajiliwa Kupata Ufikiaji');
+  return missing;
+}
+
+async function renderProfiles(){
+  const list = document.getElementById('profilesList');
+  document.getElementById('profilesEmpty').style.display = EMPLOYEES.length ? 'none':'block';
+  if(!EMPLOYEES.length){ list.innerHTML=''; return; }
+
+  const agentCodes = EMPLOYEES.map(e=>e.agent_code).filter(Boolean);
+  let statsByAgent = {};
+  if(agentCodes.length){
+    const { data: clients } = await sb.from('mikopo_clients').select('agent_code, client_rating').in('agent_code', agentCodes);
+    (clients||[]).forEach(c=>{
+      const s = statsByAgent[c.agent_code] || (statsByAgent[c.agent_code] = { mzuri:0, mbovu:0, mtaji_chafu:0, jumla:0 });
+      s.jumla++;
+      if(c.client_rating === 'mzuri') s.mzuri++;
+      else if(c.client_rating === 'mbovu') s.mbovu++;
+      else if(c.client_rating === 'mtaji_chafu') s.mtaji_chafu++;
+    });
+  }
+
+  list.innerHTML = EMPLOYEES.map(e => {
+    const sup = EMPLOYEES.find(x=>x.id===e.supervisor_id);
+    const miss = missingFields(e);
+    const stats = statsByAgent[e.agent_code];
+    return `
+    <div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div>
+          <div style="font-weight:700;font-size:14.5px;">${e.full_name}</div>
+          <div style="font-size:12px;color:var(--sub);">${e.position||'—'} · ${e.department}</div>
+        </div>
+        <span class="badge ${e.registered_access?'active':'inactive'}">${e.registered_access?'Amesajiliwa':'Hajasajiliwa'}</span>
+      </div>
+      <div style="margin-top:10px;font-size:12.5px;line-height:1.8;">
+        <div><b>Kitambulisho:</b> ${e.national_id||'—'}</div>
+        <div><b>Makazi:</b> ${e.residence||'—'}</div>
+        <div><b>Simu / Email:</b> ${e.phone||'—'} / ${e.email||'—'}</div>
+        <div><b>Msimamizi:</b> ${sup ? sup.full_name : '—'}</div>
+        <div><b>Mkataba:</b> ${e.contract_type||'—'} ${e.contract_start?('· Kuanzia '+e.contract_start):''} ${e.contract_end?('· Hadi '+e.contract_end):''}</div>
+        ${stats ? `<div><b>Wateja (Agent ${e.agent_code}):</b> Jumla ${stats.jumla} — Wazuri ${stats.mzuri} · Wabovu ${stats.mbovu} · Mtaji Mchafu ${stats.mtaji_chafu}</div>` : (e.agent_code ? `<div><b>Wateja (Agent ${e.agent_code}):</b> Hakuna data bado</div>` : '')}
+      </div>
+      ${miss.length ? `<div class="msg err" style="margin-top:8px;">⚠ Mapungufu kwenye profile: ${miss.join(', ')}</div>` : `<div class="msg ok" style="margin-top:8px;">✓ Profile Kamili</div>`}
+      <button class="btn secondary" style="margin-top:10px;" onclick="toggleAccess('${e.id}', ${!e.registered_access})">${e.registered_access ? 'Zuia Ufikiaji' : 'Sajili Ufikiaji (Ruhusu Kuingia Idara)'}</button>
+    </div>`;
+  }).join('');
+}
+
+async function toggleAccess(id, val){
+  const { error } = await sb.from('hr_employees').update({ registered_access: val }).eq('id', id);
+  if(error){ alert(error.message); return; }
+  loadEmployees();
+}
+
+async function loadPerformanceReports(){
+  const { data, error } = await sb.from('hr_performance_reports').select('*, hr_employees(full_name)').order('created_at', {ascending:false}).limit(50);
+  const body = document.getElementById('prfTableBody');
+  if(error){ body.innerHTML=''; return; }
+  const statusLabel = { submitted:'Imetumwa', reviewed_by_ops:'Imepokelewa na Operations', sent_to_management:'Imefika Management' };
+  body.innerHTML = (data||[]).map(r => `
+    <tr><td>${r.hr_employees ? r.hr_employees.full_name : ''}</td><td>${r.period}</td>
+    <td><span class="badge active">${statusLabel[r.status]||r.status}</span></td></tr>
+  `).join('');
+  document.getElementById('prfEmpty').style.display = (data||[]).length ? 'none':'block';
+}
+
+async function submitPerformanceReport(){
+  const employee_id = document.getElementById('prfEmp').value;
+  const period = document.getElementById('prfPeriod').value.trim();
+  const summary = document.getElementById('prfSummary').value.trim();
+  const achievements = document.getElementById('prfAchievements').value.trim();
+  const challenges = document.getElementById('prfChallenges').value.trim();
+  const targets_next = document.getElementById('prfTargets').value.trim();
+  const msg = document.getElementById('prfMsg');
+  if(!employee_id || !period){ msg.textContent='Chagua mfanyakazi na kipindi'; msg.className='msg err'; return; }
+  const emp = EMPLOYEES.find(e=>e.id===employee_id);
+  const { data:{ user } } = await sb.auth.getUser();
+  const { error } = await sb.from('hr_performance_reports').insert([{
+    employee_id, department: emp ? emp.department : null, period, summary, achievements, challenges, targets_next,
+    submitted_by: user ? user.id : null
+  }]);
+  if(error){ msg.textContent = error.message; msg.className='msg err'; return; }
+  msg.textContent = 'Ripoti imewasilishwa kwa Operations.'; msg.className='msg ok';
+  ['prfPeriod','prfSummary','prfAchievements','prfChallenges','prfTargets'].forEach(id=>document.getElementById(id).value='');
+  loadPerformanceReports();
+}
+
+async function loadAttendance(){
+  const { data, error } = await sb.from('hr_attendance').select('*, hr_employees(full_name)').order('att_date', {ascending:false}).limit(50);
+  const body = document.getElementById('attTableBody');
+  if(error){ body.innerHTML=''; return; }
+  body.innerHTML = (data||[]).map(r => `
+    <tr><td>${r.hr_employees ? r.hr_employees.full_name : ''}</td><td>${r.att_date}</td>
+    <td><span class="badge ${r.status}">${r.status}</span></td></tr>
+  `).join('');
+  document.getElementById('attEmpty').style.display = (data||[]).length ? 'none':'block';
+}
+
+async function addAttendance(){
+  const employee_id = document.getElementById('attEmp').value;
+  const att_date = document.getElementById('attDate').value;
+  const status = document.getElementById('attStatus').value;
+  const note = document.getElementById('attNote').value.trim();
+  const msg = document.getElementById('attMsg');
+  if(!employee_id || !att_date){ msg.textContent='Chagua mfanyakazi na tarehe'; msg.className='msg err'; return; }
+  const { error } = await sb.from('hr_attendance').upsert([{ employee_id, att_date, status, note }], { onConflict:'employee_id,att_date' });
+  if(error){ msg.textContent = error.message; msg.className='msg err'; return; }
+  msg.textContent = 'Imehifadhiwa.'; msg.className='msg ok';
+  loadAttendance();
+}
+
+async function loadLeave(){
+  const { data, error } = await sb.from('hr_leave').select('*, hr_employees(full_name)').order('start_date', {ascending:false}).limit(50);
+  const body = document.getElementById('lvTableBody');
+  if(error){ body.innerHTML=''; return; }
+  body.innerHTML = (data||[]).map(r => `
+    <tr><td>${r.hr_employees ? r.hr_employees.full_name : ''}</td><td>${r.leave_type}</td><td>${r.start_date}</td><td>${r.end_date}</td></tr>
+  `).join('');
+  document.getElementById('lvEmpty').style.display = (data||[]).length ? 'none':'block';
+}
+
+async function addLeave(){
+  const employee_id = document.getElementById('lvEmp').value;
+  const leave_type = document.getElementById('lvType').value.trim();
+  const start_date = document.getElementById('lvStart').value;
+  const end_date = document.getElementById('lvEnd').value;
+  const note = document.getElementById('lvNote').value.trim();
+  const msg = document.getElementById('lvMsg');
+  if(!employee_id || !leave_type || !start_date || !end_date){ msg.textContent='Jaza sehemu zote muhimu'; msg.className='msg err'; return; }
+  const { error } = await sb.from('hr_leave').insert([{ employee_id, leave_type, start_date, end_date, note }]);
+  if(error){ msg.textContent = error.message; msg.className='msg err'; return; }
+  msg.textContent = 'Imehifadhiwa.'; msg.className='msg ok';
+  loadLeave();
+}
+
+async function loadPayroll(){
+  const { data, error } = await sb.from('hr_payroll').select('*, hr_employees(full_name)').order('payment_date', {ascending:false}).limit(50);
+  const body = document.getElementById('prTableBody');
+  if(error){ body.innerHTML=''; return; }
+  body.innerHTML = (data||[]).map(r => `
+    <tr><td>${r.hr_employees ? r.hr_employees.full_name : ''}</td><td>${r.period}</td><td>${tzs(r.amount)}</td><td>${r.payment_date}</td></tr>
+  `).join('');
+  document.getElementById('prEmpty').style.display = (data||[]).length ? 'none':'block';
+}
+
+async function addPayroll(){
+  const employee_id = document.getElementById('prEmp').value;
+  const period = document.getElementById('prPeriod').value.trim();
+  const amount = document.getElementById('prAmount').value;
+  const payment_date = document.getElementById('prDate').value;
+  const note = document.getElementById('prNote').value.trim();
+  const msg = document.getElementById('prMsg');
+  if(!employee_id || !period || !amount || !payment_date){ msg.textContent='Jaza sehemu zote muhimu'; msg.className='msg err'; return; }
+  const { error } = await sb.from('hr_payroll').insert([{ employee_id, period, amount, payment_date, note }]);
+  if(error){ msg.textContent = error.message; msg.className='msg err'; return; }
+  msg.textContent = 'Imehifadhiwa.'; msg.className='msg ok';
+  loadPayroll();
+}
+
+async function isCurrentUserActiveAdmin(){
+  const { data: { user } } = await sb.auth.getUser();
+  if(!user) return false;
+  const { data: profile } = await sb.from('mikopo_profiles').select('*').eq('id', user.id).single();
+  return !!(profile && profile.active && ['admin','hr'].includes(profile.role));
+}
+
+async function checkAuth(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(session){
+    if(await isCurrentUserActiveAdmin()){ enterApp(); }
+    else {
+      document.getElementById('authLoading').style.display='none';
+      document.getElementById('loginBox').style.display='none';
+      document.getElementById('deniedBox').style.display='block';
+      document.getElementById('appContent').style.display='none';
+    }
+  } else {
+    document.getElementById('authLoading').style.display='none';
+    document.getElementById('loginBox').style.display='block';
+    document.getElementById('appContent').style.display='none';
+  }
+}
+function enterApp(){
+  document.getElementById('authGate').style.display='none';
+  document.getElementById('appContent').style.display='block';
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('attDate').value = today;
+  document.getElementById('lvStart').value = today;
+  document.getElementById('lvEnd').value = today;
+  document.getElementById('prDate').value = today;
+  document.getElementById('prPeriod').value = today.slice(0,7);
+  loadEmployees().then(()=>{ loadAttendance(); loadLeave(); loadPayroll(); });
+}
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  document.getElementById('loginErr').textContent='';
+  const {error} = await sb.auth.signInWithPassword({email,password:pass});
+  if(error){ document.getElementById('loginErr').textContent = error.message; return; }
+  if(await isCurrentUserActiveAdmin()){ enterApp(); }
+  else {
+    document.getElementById('loginBox').style.display='none';
+    document.getElementById('deniedBox').style.display='block';
+  }
+}
+async function doLogout(){ await sb.auth.signOut(); location.reload(); }
+
+function setLoginGreeting(){
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Habari za Asubuhi' : h < 17 ? 'Habari za Mchana' : 'Habari za Jioni';
+  const el = document.getElementById('loginGreeting');
+  if(el) el.textContent = g;
+}
+function togglePwVisibility(){
+  const input = document.getElementById('loginPass');
+  const btn = document.getElementById('pwEyeBtn');
+  if(!input) return;
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  if(btn) btn.style.opacity = showing ? '1' : '0.55';
+}
+setLoginGreeting();
+applyTheme(localStorage.getItem('hekima_theme') || 'light');
+checkAuth();
+</script>
+</body>
+</html>
