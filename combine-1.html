@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hekima Finance — Combine (Wakala Wote)</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#0a1f36; --panel:#123152; --panel2:#0e2743; --border:#1f3f61;
+    --cyan:#c89a3d; --cyan-dim:rgba(200,154,61,0.16); --green:#1f9d74; --red:#e2645a;
+    --text:#eef2f6; --sub:#93a7ba;
+  }
+  html[data-theme="light"]{ --bg:#f6f3ea; --panel:#ffffff; --panel2:#eceee6; --border:#e4e1d4; --text:#12202f; --sub:#51606c; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding-bottom:60px;}
+  .wrap{max-width:840px;margin:0 auto;padding:16px 12px 40px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap;}
+  .topbar h1{font-size:16px;margin:0;font-weight:700;}
+  .back-link{color:var(--cyan);text-decoration:none;font-size:13px;}
+  .icon-toggle-btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;}
+
+  .auth-gate{position:fixed;inset:0;background:linear-gradient(160deg,#0a1f36 0%, #123152 60%, #0a1f36 100%);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;}
+  .auth-loading{color:#dbe3ea;font-size:13px;}
+  .denied{max-width:380px;background:rgba(255,255,255,0.98);border-radius:20px;padding:30px;text-align:center;color:#12202f;}
+
+  .headbar{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:14px;display:flex;gap:8px;align-items:end;flex-wrap:wrap;}
+  .headbar .f{flex:1;min-width:150px;}
+  .headbar label{display:block;font-size:11px;color:var(--sub);margin-bottom:4px;}
+  .headbar input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:8px;font-size:13px;}
+  .btn{background:var(--cyan);color:#231603;border:none;padding:10px 16px;border-radius:9px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;}
+
+  details.agent-block{background:var(--panel);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden;}
+  details.agent-block summary{padding:14px 16px;cursor:pointer;font-weight:800;font-size:14.5px;list-style:none;display:flex;justify-content:space-between;align-items:center;}
+  details.agent-block summary::-webkit-details-marker{display:none;}
+  details.agent-block summary .grand{font-size:12.5px;color:var(--cyan);font-weight:700;}
+  .agent-body{padding:0 14px 14px;}
+
+  .sheet-section{border-top:1px solid var(--border);padding:12px 0;}
+  .sheet-section h2{margin:0 0 3px;font-size:12.5px;color:var(--cyan);letter-spacing:.3px;}
+  .sheet-section .desc{font-size:11px;color:var(--sub);margin-bottom:8px;}
+  .denom-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+  .denom-cell label{display:block;font-size:10px;color:var(--sub);margin-bottom:3px;}
+  .denom-cell input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 5px;border-radius:6px;font-size:12px;text-align:right;}
+  .totalline{margin-top:8px;font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;background:var(--cyan-dim);padding:7px 9px;border-radius:8px;}
+  .checkline{display:flex;gap:8px;flex-wrap:wrap;}
+  .checkline .f{flex:1;min-width:130px;}
+  .checkline label{display:block;font-size:11px;color:var(--sub);margin-bottom:4px;}
+  .checkline input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 9px;border-radius:8px;font-size:13px;}
+
+  table.log{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px;}
+  table.log th{background:var(--panel2);color:var(--sub);font-size:9.5px;padding:5px 3px;border:1px solid var(--border);}
+  table.log td{padding:3px;border:1px solid var(--border);text-align:center;}
+  table.log input, table.log select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px;border-radius:5px;font-size:10.5px;text-align:right;}
+  table.log select{text-align:left;}
+  .rm-btn{background:var(--red);color:#fff;border:none;border-radius:5px;padding:3px 6px;font-size:10.5px;cursor:pointer;}
+  .addrow-btn{margin-top:7px;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 11px;border-radius:8px;font-size:11.5px;cursor:pointer;}
+  .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .summary-box{background:var(--cyan-dim);border-radius:10px;padding:9px;}
+  .summary-box .lbl{font-size:10px;color:var(--sub);}
+  .summary-box .val{font-size:14px;font-weight:800;margin-top:2px;}
+  .msg{font-size:12px;margin-top:6px;min-height:14px;}
+  .msg.ok{color:var(--green);} .msg.err{color:var(--red);}
+  .save-agent-btn{margin-top:10px;width:100%;background:var(--cyan);color:#231603;border:none;padding:10px;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer;}
+  .locked-note{font-size:12px;color:var(--sub);padding:12px 0;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="auth-gate" id="authGate">
+  <div class="auth-loading" id="authLoading">Loading...</div>
+  <div class="denied" id="deniedBox" style="display:none">
+    <h2 style="margin:0 0 10px;font-size:20px;">Huna ruhusa</h2>
+    <p style="color:#5b6b80;font-size:14px;">Kadi ya Combine ni kwa wenye ruhusa maalum pekee.</p>
+    <a href="portal.html" style="display:inline-block;margin-top:14px;color:#123152;font-weight:600;">‹ Rudi kwenye menyu</a>
+  </div>
+</div>
+
+<div id="appContent" style="display:none">
+<div class="wrap">
+  <div class="topbar">
+    <h1>COMBINE — Wakala Wote</h1>
+    <div style="display:flex;gap:6px;">
+      <a href="portal.html" class="back-link">‹ Menu</a>
+      <button class="icon-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">🌙</button>
+    </div>
+  </div>
+
+  <div class="headbar">
+    <div class="f"><label>Tarehe</label><input id="hDate" type="date" onchange="loadAllAgents()"></div>
+    <button class="btn" onclick="loadAllAgents()">Onyesha Wakala Wote</button>
+  </div>
+
+  <div id="agentsContainer"></div>
+  <div class="locked-note" id="noAgents" style="display:none">Hakuna wakala waliosajiliwa bado.</div>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://euhteovuhdvefzaavlqx.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1aHRlb3Z1aGR2ZWZ6YWF2bHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NjQwNjEsImV4cCI6MjA5NzE0MDA2MX0.gaV1mShFhVHVpxAqCptJsiSr4r-d3_OYvdtH0bpR58Q";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let ME = null;
+const DENOMS = [10000,5000,2000,1000,500,200,100,50];
+const MATUMIZI_CATS = ['Combine 1','Combine 2','Combine 3','Combine THL','Combine *','Office','Others','Posho','MD'];
+let AGENTS = [];
+let STATE = {};
+
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeToggleBtn').textContent = theme==='light' ? '☀️' : '🌙';
+  localStorage.setItem('hekima_theme', theme);
+}
+function toggleTheme(){ applyTheme((localStorage.getItem('hekima_theme')||'light')==='light'?'dark':'light'); }
+
+function denomGridHtml(code, prefix){
+  return DENOMS.map(d => `<div class="denom-cell"><label>${d.toLocaleString()}</label><input id="d-${code}-${prefix}-${d}" type="number" value="0" oninput="recalcAgent('${code}')"></div>`).join('');
+}
+function denomTotal(code, prefix){
+  let t = 0;
+  DENOMS.forEach(d => { const el=document.getElementById(`d-${code}-${prefix}-${d}`); t += (el?+el.value||0:0) * d; });
+  return t;
+}
+
+function logRowHtml(code, kind, i, r){
+  return `<tr>
+    ${DENOMS.map(d => `<td><input type="number" value="${r['d'+d]||0}" oninput="STATE['${code}'].logs.${kind}[${i}].d${d}=+this.value||0; recalcAgent('${code}');"></td>`).join('')}
+    <td id="${code}-${kind}-rowtot-${i}">0</td>
+    <td><input type="text" value="${(r.note||'').replace(/"/g,'&quot;')}" oninput="STATE['${code}'].logs.${kind}[${i}].note=this.value;"></td>
+    <td><button class="rm-btn" onclick="STATE['${code}'].logs.${kind}.splice(${i},1); renderLogTable('${code}','${kind}'); recalcAgent('${code}');">✕</button></td>
+  </tr>`;
+}
+function renderLogTable(code, kind){
+  const body = document.querySelector(`#tbl-${code}-${kind} tbody`);
+  if(!body) return;
+  body.innerHTML = STATE[code].logs[kind].map((r,i) => logRowHtml(code,kind,i,r)).join('');
+  recalcAgent(code);
+}
+function addLogRow(code, kind){
+  STATE[code].logs[kind].push({d10000:0,d5000:0,d2000:0,d1000:0,d500:0,d200:0,d100:0,d50:0,note:'',id:null});
+  renderLogTable(code, kind);
+}
+function logTotal(code, kind){
+  let t=0;
+  STATE[code].logs[kind].forEach((r,i) => {
+    let rt=0; DENOMS.forEach(d => rt += (r['d'+d]||0)*d);
+    const cell = document.getElementById(`${code}-${kind}-rowtot-${i}`);
+    if(cell) cell.textContent = rt.toLocaleString();
+    t += rt;
+  });
+  return t;
+}
+
+function matumiziRowHtml(code, i, r){
+  return `<tr>
+    <td><select onchange="STATE['${code}'].matumizi[${i}].category=this.value;">
+      ${MATUMIZI_CATS.map(c => `<option ${c===r.category?'selected':''}>${c}</option>`).join('')}
+    </select></td>
+    <td><input type="number" value="${r.amount||0}" oninput="STATE['${code}'].matumizi[${i}].amount=+this.value||0; recalcAgent('${code}');"></td>
+    <td><input type="text" value="${(r.note||'').replace(/"/g,'&quot;')}" oninput="STATE['${code}'].matumizi[${i}].note=this.value;"></td>
+    <td><button class="rm-btn" onclick="STATE['${code}'].matumizi.splice(${i},1); renderMatumiziTable('${code}'); recalcAgent('${code}');">✕</button></td>
+  </tr>`;
+}
+function renderMatumiziTable(code){
+  const body = document.querySelector(`#tbl-${code}-matumizi tbody`);
+  if(!body) return;
+  body.innerHTML = STATE[code].matumizi.map((r,i) => matumiziRowHtml(code,i,r)).join('');
+  recalcAgent(code);
+}
+function addMatumiziRow(code){
+  STATE[code].matumizi.push({category:MATUMIZI_CATS[0], amount:0, note:'', id:null});
+  renderMatumiziTable(code);
+}
+function matumiziTotal(code){ return STATE[code].matumizi.reduce((s,r)=>s+(+r.amount||0),0); }
+
+function recalcAgent(code){
+  const mpaka = denomTotal(code,'mpaka');
+  const mwanzoni = denomTotal(code,'mwanzoni');
+  const ongezeko1 = denomTotal(code,'ongezeko1');
+  const ongezeko2 = denomTotal(code,'ongezeko2');
+  const adjust = denomTotal(code,'adjust');
+  const miamala = logTotal(code,'miamala');
+  const marejesho = logTotal(code,'marejesho');
+  const chenji = logTotal(code,'chenji');
+  const matumizi = matumiziTotal(code);
+
+  const set = (id,val) => { const el=document.getElementById(id); if(el) el.textContent = val.toLocaleString(); };
+  set(`tot-${code}-mpaka`, mpaka);
+  set(`tot-${code}-mwanzoni`, mwanzoni);
+  set(`tot-${code}-ongezeko1`, ongezeko1);
+  set(`tot-${code}-miamala`, miamala);
+  set(`tot-${code}-matumizi`, matumizi);
+  set(`tot-${code}-ongezeko2`, ongezeko2);
+  set(`tot-${code}-marejesho`, marejesho);
+  set(`tot-${code}-chenji`, chenji);
+  set(`tot-${code}-adjust`, adjust);
+
+  const combineUsiku = ongezeko2 + marejesho + chenji + adjust;
+  set(`tot-${code}-combineUsiku`, combineUsiku);
+  set(`sum-${code}-toka`, matumizi);
+  set(`sum-${code}-ingia`, ongezeko1+ongezeko2);
+
+  const grandCell = document.getElementById(`grand-${code}`);
+  if(grandCell) grandCell.textContent = 'Taslimu: ' + (mpaka+mwanzoni).toLocaleString();
+}
+
+function agentSheetHtml(a){
+  const code = a.code;
+  return `
+  <details class="agent-block" id="block-${code}">
+    <summary onclick="onAgentOpen('${code}')">
+      <span>${a.name} <span style="color:var(--sub);font-weight:500;">(${code})</span></span>
+      <span class="grand" id="grand-${code}"></span>
+    </summary>
+    <div class="agent-body">
+
+      <div class="sheet-section">
+        <h2>1 · MPAKA ASUBUHI</h2>
+        <div class="desc">Fedha zilizobaki mkononi kutoka jana.</div>
+        <div class="denom-grid">${denomGridHtml(code,'mpaka')}</div>
+        <div class="totalline"><span>JUMLA</span><span id="tot-${code}-mpaka">0</span></div>
+      </div>
+
+      <div class="sheet-section">
+        <h2>2 · PESA MWANZONI</h2>
+        <div class="denom-grid">${denomGridHtml(code,'mwanzoni')}</div>
+        <div class="totalline"><span>JUMLA</span><span id="tot-${code}-mwanzoni">0</span></div>
+      </div>
+
+      <div class="sheet-section">
+        <h2>3 · ONGEZEKO (Asubuhi)</h2>
+        <div class="denom-grid">${denomGridHtml(code,'ongezeko1')}</div>
+        <div class="totalline"><span>JUMLA</span><span id="tot-${code}-ongezeko1">0</span></div>
+      </div>
+
+      <div class="sheet-section">
+        <h2>4 · MIAMALA</h2>
+        <table class="log" id="tbl-${code}-miamala"><thead><tr><th>10000</th><th>5000</th><th>2000</th><th>1000</th><th>500</th><th>200</th><th>100</th><th>50</th><th>Jumla</th><th>Maelezo</th><th></th></tr></thead><tbody></tbody></table>
+        <button class="addrow-btn" onclick="addLogRow('${code}','miamala')">+ Ongeza Muamala</button>
+        <div class="totalline"><span>JUMLA MIAMALA</span><span id="tot-${code}-miamala">0</span></div>
+      </div>
+
+      <div class="sheet-section">
+        <h2>5 · MATUMIZI ASUBUHI</h2>
+        <div class="desc">Combine 1/2/3, Combine THL, Combine *, Office, Others, Posho, MD.</div>
+        <table class="log" id="tbl-${code}-matumizi"><thead><tr><th>Aina</th><th>Kiasi</th><th>Maelezo</th><th></th></tr></thead><tbody></tbody></table>
+        <button class="addrow-btn" onclick="addMatumiziRow('${code}')">+ Ongeza Matumizi</button>
+        <div class="totalline"><span>JUMLA MATUMIZI</span><span id="tot-${code}-matumizi">0</span></div>
+      </div>
+
+      <div class="sheet-section">
+        <h2>6 · PESA ASUBUHI / BAADA YA ASUBUHI</h2>
+        <div class="checkline">
+          <div class="f"><label>Pesa Asubuhi (TZS)</label><input id="in-${code}-pesaAsubuhi" type="number" value="0"></div>
+          <div class="f"><label>Baada ya Asubuhi (TZS)</label><input id="in-${code}-baadaAsubuhi" type="number" value="0"></div>
+        </div>
+      </div>
+
+      <div class="sheet-section">
+        <h2>7 · PESA MCHANA</h2>
+        <div class="checkline"><div class="f"><label>Pesa Mchana (TZS)</label><input id="in-${code}-pesaMchana" type="number" value="0"></div></div>
+      </div>
+
+      <div class="sheet-section">
+        <h2>8 · ONGEZEKO (Mchana)</h2>
+        <div class="denom-grid">${denomGridHtml(code,'ongezeko2')}</div>
+        <div class="totalline"><span>JUMLA</span><span id="tot-${code}-ongezeko2">0</span></div>
+      </div>
+
+      <div class="sheet-section">
+        <h2>9 · MAREJESHO</h2>
+        <table class="log" id="tbl-${code}-marejesho"><thead><tr><th>10000</th><th>5000</th><th>2000</th><th>1000</th><th>500</th><th>200</th><th>100</th><th>50</th><th>Jumla</th><th>Maelezo</th><th></th></tr></thead><tbody></tbody></table>
+        <button class="addrow-btn" onclick="addLogRow('${code}','marejesho')">+ Ongeza Marejesho</button>
+        <div class="totalline"><span>JUMLA MAREJESHO</span><span id="tot-${code}-marejesho">0</span></div>
+      </div>
+
+      <div class="sheet-section">
+        <h2>10 · CHENJI</h2>
+        <table class="log" id="tbl-${code}-chenji"><thead><tr><th>10000</th><th>5000</th><th>2000</th><th>1000</th><th>500</th><th>200</th><th>100</th><th>50</th><th>Jumla</th><th>Maelezo</th><th></th></tr></thead><tbody></tbody></table>
+        <button class="addrow-btn" onclick="addLogRow('${code}','chenji')">+ Ongeza Chenji</button>
+        <div class="totalline"><span>JUMLA CHENJI</span><span id="tot-${code}-chenji">0</span></div>
+      </div>
+
+      <div class="sheet-section">
+        <h2>11 · ADJUST</h2>
+        <div class="denom-grid">${denomGridHtml(code,'adjust')}</div>
+        <div class="totalline"><span>JUMLA</span><span id="tot-${code}-adjust">0</span></div>
+      </div>
+
+      <div class="sheet-section">
+        <h2>12 · PESA USIKU / COMBINE USIKU</h2>
+        <div class="checkline"><div class="f"><label>Pesa Usiku (TZS)</label><input id="in-${code}-pesaUsiku" type="number" value="0"></div></div>
+        <div class="totalline"><span>COMBINE USIKU</span><span id="tot-${code}-combineUsiku">0</span></div>
+      </div>
+
+      <div class="sheet-section">
+        <h2>13 · MUHTASARI WA MWISHO</h2>
+        <div class="summary-grid">
+          <div class="summary-box"><div class="lbl">PESA ILIO TOKA</div><div class="val" id="sum-${code}-toka">0</div></div>
+          <div class="summary-box"><div class="lbl">PESA ILIO INGIA</div><div class="val" id="sum-${code}-ingia">0</div></div>
+        </div>
+        <input id="in-${code}-notes" placeholder="Maelezo ya ziada" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:8px;font-size:13px;margin-top:10px;">
+        <button class="save-agent-btn" onclick="saveAgent('${code}')">Hifadhi Kadi ya ${a.name}</button>
+        <div class="msg" id="msg-${code}"></div>
+      </div>
+
+    </div>
+  </details>`;
+}
+
+let OPENED = {};
+function onAgentOpen(code){
+  if(OPENED[code]) return;
+  OPENED[code] = true;
+  setTimeout(()=>loadAgentData(code), 0);
+}
+
+async function loadAllAgents(){
+  const container = document.getElementById('agentsContainer');
+  const { data: agents } = await sb.from('mikopo_agents').select('*').order('name');
+  AGENTS = agents || [];
+  if(!AGENTS.length){ container.innerHTML=''; document.getElementById('noAgents').style.display='block'; return; }
+  document.getElementById('noAgents').style.display='none';
+  STATE = {};
+  OPENED = {};
+  AGENTS.forEach(a => { STATE[a.code] = { logs:{miamala:[],marejesho:[],chenji:[]}, matumizi:[] }; });
+  container.innerHTML = AGENTS.map(agentSheetHtml).join('');
+  AGENTS.forEach(a => recalcAgent(a.code));
+}
+
+async function loadAgentData(code){
+  const work_date = document.getElementById('hDate').value;
+  const { data: daily } = await sb.from('mkeka_daily').select('*').eq('agent_code', code).eq('work_date', work_date).maybeSingle();
+  ['mpaka','mwanzoni','ongezeko1','ongezeko2','adjust'].forEach(prefix => {
+    DENOMS.forEach(d => {
+      const el = document.getElementById(`d-${code}-${prefix}-${d}`);
+      if(el) el.value = daily ? (daily[`${prefix}_${d}`]||0) : 0;
+    });
+  });
+  const setv = (id,v) => { const el=document.getElementById(id); if(el) el.value = v; };
+  setv(`in-${code}-pesaAsubuhi`, daily?daily.pesa_asubuhi||0:0);
+  setv(`in-${code}-baadaAsubuhi`, daily?daily.baada_asubuhi||0:0);
+  setv(`in-${code}-pesaMchana`, daily?daily.pesa_mchana||0:0);
+  setv(`in-${code}-pesaUsiku`, daily?daily.pesa_usiku||0:0);
+  setv(`in-${code}-notes`, daily?daily.notes||'':'');
+
+  const [mi, ma, mr, ch] = await Promise.all([
+    sb.from('mkeka_miamala').select('*').eq('agent_code',code).eq('work_date',work_date).order('created_at'),
+    sb.from('mkeka_matumizi').select('*').eq('agent_code',code).eq('work_date',work_date).order('created_at'),
+    sb.from('mkeka_marejesho').select('*').eq('agent_code',code).eq('work_date',work_date).order('created_at'),
+    sb.from('mkeka_chenji').select('*').eq('agent_code',code).eq('work_date',work_date).order('created_at'),
+  ]);
+  STATE[code].logs.miamala = (mi.data||[]).map(r=>({...r, note:r.note||''}));
+  STATE[code].logs.marejesho = (mr.data||[]).map(r=>({...r, note:r.note||''}));
+  STATE[code].logs.chenji = (ch.data||[]).map(r=>({...r, note:r.note||''}));
+  STATE[code].matumizi = (ma.data||[]).map(r=>({...r}));
+  renderLogTable(code,'miamala'); renderLogTable(code,'marejesho'); renderLogTable(code,'chenji'); renderMatumiziTable(code);
+  recalcAgent(code);
+}
+
+async function saveAgent(code){
+  const work_date = document.getElementById('hDate').value;
+  const msg = document.getElementById(`msg-${code}`);
+  if(!work_date){ msg.textContent='Chagua tarehe kwanza'; msg.className='msg err'; return; }
+
+  const payload = { agent_code:code, work_date, created_by: ME?ME.id:null, updated_at: new Date().toISOString(),
+    pesa_asubuhi:+document.getElementById(`in-${code}-pesaAsubuhi`).value||0,
+    baada_asubuhi:+document.getElementById(`in-${code}-baadaAsubuhi`).value||0,
+    pesa_mchana:+document.getElementById(`in-${code}-pesaMchana`).value||0,
+    pesa_usiku:+document.getElementById(`in-${code}-pesaUsiku`).value||0,
+    notes:document.getElementById(`in-${code}-notes`).value||null };
+  ['mpaka','mwanzoni','ongezeko1','ongezeko2','adjust'].forEach(prefix => {
+    DENOMS.forEach(d => { payload[`${prefix}_${d}`] = +document.getElementById(`d-${code}-${prefix}-${d}`).value||0; });
+  });
+
+  const { error:e1 } = await sb.from('mkeka_daily').upsert([payload], { onConflict:'agent_code,work_date' });
+
+  await sb.from('mkeka_miamala').delete().eq('agent_code',code).eq('work_date',work_date);
+  await sb.from('mkeka_marejesho').delete().eq('agent_code',code).eq('work_date',work_date);
+  await sb.from('mkeka_chenji').delete().eq('agent_code',code).eq('work_date',work_date);
+  await sb.from('mkeka_matumizi').delete().eq('agent_code',code).eq('work_date',work_date);
+
+  const stripRow = r => { const {id, ...rest} = r; return {...rest, agent_code:code, work_date, created_by: ME?ME.id:null}; };
+  if(STATE[code].logs.miamala.length) await sb.from('mkeka_miamala').insert(STATE[code].logs.miamala.map(stripRow));
+  if(STATE[code].logs.marejesho.length) await sb.from('mkeka_marejesho').insert(STATE[code].logs.marejesho.map(stripRow));
+  if(STATE[code].logs.chenji.length) await sb.from('mkeka_chenji').insert(STATE[code].logs.chenji.map(stripRow));
+  if(STATE[code].matumizi.length) await sb.from('mkeka_matumizi').insert(STATE[code].matumizi.map(stripRow));
+
+  if(e1){ msg.textContent = e1.message; msg.className='msg err'; return; }
+  msg.textContent = 'Imehifadhiwa.'; msg.className='msg ok';
+}
+
+async function isAllowed(){
+  const { data: { user } } = await sb.auth.getUser();
+  if(!user) return false;
+  const { data: profile } = await sb.from('mikopo_profiles').select('*').eq('id', user.id).single();
+  ME = profile;
+  return !!(profile && profile.active && profile.role !== 'agent');
+}
+async function checkAuth(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(session && await isAllowed()){
+    document.getElementById('authGate').style.display='none';
+    document.getElementById('appContent').style.display='block';
+    document.getElementById('hDate').value = new Date().toISOString().slice(0,10);
+    loadAllAgents();
+  } else {
+    document.getElementById('authLoading').style.display='none';
+    document.getElementById('deniedBox').style.display='block';
+  }
+}
+applyTheme(localStorage.getItem('hekima_theme') || 'light');
+checkAuth();
+</script>
+</body>
+</html>
