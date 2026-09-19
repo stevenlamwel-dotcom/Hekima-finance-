@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hekima Finance — Combine (Kadi ya Wakala)</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#0a1f36; --panel:#123152; --panel2:#0e2743; --border:#1f3f61;
+    --cyan:#c89a3d; --cyan-dim:rgba(200,154,61,0.16); --green:#1f9d74; --red:#e2645a;
+    --text:#eef2f6; --sub:#93a7ba;
+  }
+  html[data-theme="light"]{ --bg:#f6f3ea; --panel:#ffffff; --panel2:#eceee6; --border:#e4e1d4; --text:#12202f; --sub:#51606c; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding-bottom:60px;}
+  .wrap{max-width:820px;margin:0 auto;padding:16px 12px 40px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap;}
+  .topbar h1{font-size:16px;margin:0;font-weight:700;}
+  .back-link{color:var(--cyan);text-decoration:none;font-size:13px;}
+  .icon-toggle-btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;}
+
+  .auth-gate{position:fixed;inset:0;background:linear-gradient(160deg,#0a1f36 0%, #123152 60%, #0a1f36 100%);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;}
+  .auth-loading{color:#dbe3ea;font-size:13px;}
+  .denied{max-width:380px;background:rgba(255,255,255,0.98);border-radius:20px;padding:30px;text-align:center;color:#12202f;}
+
+  .headbar{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:14px;display:flex;gap:8px;align-items:end;flex-wrap:wrap;}
+  .headbar .f{flex:1;min-width:130px;}
+  .headbar label{display:block;font-size:11px;color:var(--sub);margin-bottom:4px;}
+  .headbar select, .headbar input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:8px;font-size:13px;}
+  .btn{background:var(--cyan);color:#231603;border:none;padding:10px 16px;border-radius:9px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .btn.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border);}
+
+  .sheet-section{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;}
+  .sheet-section h2{margin:0 0 3px;font-size:13.5px;color:var(--cyan);letter-spacing:.3px;}
+  .sheet-section .desc{font-size:11px;color:var(--sub);margin-bottom:10px;}
+  .denom-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+  .denom-cell label{display:block;font-size:10.5px;color:var(--sub);margin-bottom:3px;}
+  .denom-cell input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 6px;border-radius:6px;font-size:12.5px;text-align:right;}
+  .totalline{margin-top:10px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;background:var(--cyan-dim);padding:8px 10px;border-radius:8px;}
+  .checkline{display:flex;gap:8px;flex-wrap:wrap;}
+  .checkline .f{flex:1;min-width:130px;}
+  .checkline label{display:block;font-size:11px;color:var(--sub);margin-bottom:4px;}
+  .checkline input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 9px;border-radius:8px;font-size:13px;}
+
+  table.log{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:8px;}
+  table.log th{background:var(--panel2);color:var(--sub);font-size:10px;padding:5px 4px;border:1px solid var(--border);}
+  table.log td{padding:4px;border:1px solid var(--border);text-align:center;}
+  table.log input, table.log select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px;border-radius:5px;font-size:11px;text-align:right;}
+  table.log select{text-align:left;}
+  .rm-btn{background:var(--red);color:#fff;border:none;border-radius:5px;padding:4px 7px;font-size:11px;cursor:pointer;}
+  .addrow-btn{margin-top:8px;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:8px;font-size:12px;cursor:pointer;}
+  .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .summary-box{background:var(--cyan-dim);border-radius:10px;padding:10px;}
+  .summary-box .lbl{font-size:10.5px;color:var(--sub);}
+  .summary-box .val{font-size:15px;font-weight:800;margin-top:2px;}
+  .msg{font-size:12px;margin-top:8px;min-height:14px;}
+  .msg.ok{color:var(--green);} .msg.err{color:var(--red);}
+</style>
+</head>
+<body>
+
+<div class="auth-gate" id="authGate">
+  <div class="auth-loading" id="authLoading">Loading...</div>
+  <div class="denied" id="deniedBox" style="display:none">
+    <h2 style="margin:0 0 10px;font-size:20px;">Huna ruhusa</h2>
+    <p style="color:#5b6b80;font-size:14px;">Kadi ya Combine ni kwa wenye ruhusa maalum pekee.</p>
+    <a href="portal.html" style="display:inline-block;margin-top:14px;color:#123152;font-weight:600;">‹ Rudi kwenye menyu</a>
+  </div>
+</div>
+
+<div id="appContent" style="display:none">
+<div class="wrap">
+  <div class="topbar">
+    <h1>COMBINE — Kadi Kamili ya Wakala</h1>
+    <div style="display:flex;gap:6px;">
+      <a href="portal.html" class="back-link">‹ Menu</a>
+      <button class="icon-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">🌙</button>
+    </div>
+  </div>
+
+  <div class="headbar">
+    <div class="f"><label>Agent</label><select id="hAgent" onchange="switchAgent()"></select></div>
+    <div class="f"><label>Tarehe</label><input id="hDate" type="date" onchange="switchAgent()"></div>
+    <button class="btn" onclick="saveDaily()">Hifadhi Kadi</button>
+  </div>
+  <div class="msg" id="topMsg"></div>
+
+  <!-- 1. MPAKA ASUBUHI -->
+  <div class="sheet-section">
+    <h2>1 · MPAKA ASUBUHI</h2>
+    <div class="desc">Fedha zilizobaki mkononi kutoka jana (opening float).</div>
+    <div class="denom-grid" id="grid-mpaka"></div>
+    <div class="totalline"><span>JUMLA MPAKA ASUBUHI</span><span id="tot-mpaka">0</span></div>
+  </div>
+
+  <!-- 2. PESA MWANZONI + MISS -->
+  <div class="sheet-section">
+    <h2>2 · PESA MWANZONI (na MISS)</h2>
+    <div class="desc">Hesabu halisi ya noti asubuhi. MISS = tofauti kati ya Mpaka Asubuhi na Pesa Mwanzoni.</div>
+    <div class="denom-grid" id="grid-mwanzoni"></div>
+    <div class="totalline"><span>JUMLA PESA MWANZONI</span><span id="tot-mwanzoni">0</span></div>
+    <div class="totalline" style="background:transparent;"><span>MISS</span><span id="tot-miss1">0</span></div>
+  </div>
+
+  <!-- 3. ONGEZEKO ASUBUHI -->
+  <div class="sheet-section">
+    <h2>3 · ONGEZEKO (Asubuhi)</h2>
+    <div class="desc">Nyongeza ya mtaji iliyoingizwa asubuhi.</div>
+    <div class="denom-grid" id="grid-ongezeko1"></div>
+    <div class="totalline"><span>JUMLA ONGEZEKO ASUBUHI</span><span id="tot-ongezeko1">0</span></div>
+  </div>
+
+  <!-- 4. MIAMALA (log) -->
+  <div class="sheet-section">
+    <h2>4 · MIAMALA</h2>
+    <div class="desc">Rejesta ya miamala ya siku (kila mstari = muamala mmoja, kwa idadi ya noti).</div>
+    <table class="log" id="tbl-miamala"><thead><tr><th>10000</th><th>5000</th><th>2000</th><th>1000</th><th>500</th><th>200</th><th>100</th><th>50</th><th>Jumla</th><th>Maelezo</th><th></th></tr></thead><tbody></tbody></table>
+    <button class="addrow-btn" onclick="addLogRow('miamala')">+ Ongeza Muamala</button>
+    <div class="totalline"><span>JUMLA MIAMALA</span><span id="tot-miamala">0</span></div>
+  </div>
+
+  <!-- 5. MATUMIZI ASUBUHI (log with category) -->
+  <div class="sheet-section">
+    <h2>5 · MATUMIZI ASUBUHI</h2>
+    <div class="desc">Aina: Combine 1/2/3, Combine THL, Combine *, Office, Others, Posho, MD.</div>
+    <table class="log" id="tbl-matumizi"><thead><tr><th>Aina</th><th>Kiasi</th><th>Maelezo</th><th></th></tr></thead><tbody></tbody></table>
+    <button class="addrow-btn" onclick="addMatumiziRow()">+ Ongeza Matumizi</button>
+    <div class="totalline"><span>JUMLA MATUMIZI</span><span id="tot-matumizi">0</span></div>
+  </div>
+
+  <!-- 6. Checkpoint 2: PESA ASUBUHI / BAADA YA ASUBUHI -->
+  <div class="sheet-section">
+    <h2>6 · PESA ASUBUHI / BAADA YA ASUBUHI</h2>
+    <div class="desc">Ukaguzi wa pesa baada ya miamala na matumizi ya asubuhi.</div>
+    <div class="checkline">
+      <div class="f"><label>Pesa Asubuhi (TZS)</label><input id="in-pesaAsubuhi" type="number" value="0" oninput="recalcAll()"></div>
+      <div class="f"><label>Baada ya Asubuhi (TZS)</label><input id="in-baadaAsubuhi" type="number" value="0" oninput="recalcAll()"></div>
+    </div>
+    <div class="totalline" style="background:transparent;"><span>MISS (Asubuhi→Baada)</span><span id="tot-miss2">0</span></div>
+  </div>
+
+  <!-- 7. PESA MCHANA -->
+  <div class="sheet-section">
+    <h2>7 · PESA MCHANA</h2>
+    <div class="checkline"><div class="f"><label>Pesa Mchana (TZS)</label><input id="in-pesaMchana" type="number" value="0" oninput="recalcAll()"></div></div>
+    <div class="totalline" style="background:transparent;"><span>MISS YA MCHANA</span><span id="tot-miss3">0</span></div>
+  </div>
+
+  <!-- 8. ONGEZEKO MCHANA -->
+  <div class="sheet-section">
+    <h2>8 · ONGEZEKO (Mchana)</h2>
+    <div class="denom-grid" id="grid-ongezeko2"></div>
+    <div class="totalline"><span>JUMLA ONGEZEKO MCHANA</span><span id="tot-ongezeko2">0</span></div>
+  </div>
+
+  <!-- 9. MAREJESHO (log) -->
+  <div class="sheet-section">
+    <h2>9 · MAREJESHO</h2>
+    <table class="log" id="tbl-marejesho"><thead><tr><th>10000</th><th>5000</th><th>2000</th><th>1000</th><th>500</th><th>200</th><th>100</th><th>50</th><th>Jumla</th><th>Maelezo</th><th></th></tr></thead><tbody></tbody></table>
+    <button class="addrow-btn" onclick="addLogRow('marejesho')">+ Ongeza Marejesho</button>
+    <div class="totalline"><span>JUMLA MAREJESHO</span><span id="tot-marejesho">0</span></div>
+  </div>
+
+  <!-- 10. CHENJI (log) -->
+  <div class="sheet-section">
+    <h2>10 · CHENJI</h2>
+    <table class="log" id="tbl-chenji"><thead><tr><th>10000</th><th>5000</th><th>2000</th><th>1000</th><th>500</th><th>200</th><th>100</th><th>50</th><th>Jumla</th><th>Maelezo</th><th></th></tr></thead><tbody></tbody></table>
+    <button class="addrow-btn" onclick="addLogRow('chenji')">+ Ongeza Chenji</button>
+    <div class="totalline"><span>JUMLA CHENJI</span><span id="tot-chenji">0</span></div>
+  </div>
+
+  <!-- 11. ADJUST -->
+  <div class="sheet-section">
+    <h2>11 · ADJUST</h2>
+    <div class="desc">Marekebisho ya mwisho ya siku (ikiwa yapo).</div>
+    <div class="denom-grid" id="grid-adjust"></div>
+    <div class="totalline"><span>JUMLA ADJUST</span><span id="tot-adjust">0</span></div>
+  </div>
+
+  <!-- 12. COMBINE USIKU + PESA USIKU + MISS YA USIKU -->
+  <div class="sheet-section">
+    <h2>12 · COMBINE USIKU / PESA USIKU / MISS YA USIKU</h2>
+    <div class="desc">Combine Usiku = Miss Mchana + Ongezeko Mchana + Marejesho + Chenji + Adjust.</div>
+    <div class="checkline"><div class="f"><label>Pesa Usiku (TZS)</label><input id="in-pesaUsiku" type="number" value="0" oninput="recalcAll()"></div></div>
+    <div class="totalline"><span>COMBINE USIKU</span><span id="tot-combineUsiku">0</span></div>
+    <div class="totalline" style="background:transparent;"><span>MISS YA USIKU</span><span id="tot-missUsiku">0</span></div>
+  </div>
+
+  <!-- 13. Muhtasari wa Mwisho -->
+  <div class="sheet-section">
+    <h2>13 · MUHTASARI WA MWISHO (Pesa Ilio Toka / Ingia)</h2>
+    <div class="summary-grid">
+      <div class="summary-box"><div class="lbl">PESA ILIO TOKA (= Matumizi)</div><div class="val" id="sum-toka">0</div></div>
+      <div class="summary-box"><div class="lbl">PESA ILIO INGIA (= Ongezeko 1+2)</div><div class="val" id="sum-ingia">0</div></div>
+    </div>
+    <div class="field" style="margin-top:10px;"><label style="font-size:11px;color:var(--sub);">Maelezo ya Ziada</label><input id="in-notes" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:8px;font-size:13px;margin-top:4px;"></div>
+    <button class="btn" style="margin-top:10px;" onclick="saveDaily()">Hifadhi Kadi Yote</button>
+    <div class="msg" id="bottomMsg"></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://euhteovuhdvefzaavlqx.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1aHRlb3Z1aGR2ZWZ6YWF2bHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NjQwNjEsImV4cCI6MjA5NzE0MDA2MX0.gaV1mShFhVHVpxAqCptJsiSr4r-d3_OYvdtH0bpR58Q";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let ME = null;
+const DENOMS = [10000,5000,2000,1000,500,200,100,50];
+const MATUMIZI_CATS = ['Combine 1','Combine 2','Combine 3','Combine THL','Combine *','Office','Others','Posho','MD'];
+
+function buildDenomGrid(prefix){
+  const el = document.getElementById('grid-'+prefix);
+  el.innerHTML = DENOMS.map(d => `<div class="denom-cell"><label>${d.toLocaleString()}</label><input id="d-${prefix}-${d}" type="number" value="0" oninput="recalcAll()"></div>`).join('');
+}
+['mpaka','mwanzoni','ongezeko1','ongezeko2','adjust'].forEach(buildDenomGrid);
+
+function denomTotal(prefix){
+  let t = 0;
+  DENOMS.forEach(d => { t += (+document.getElementById(`d-${prefix}-${d}`).value||0) * d; });
+  return t;
+}
+
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeToggleBtn').textContent = theme==='light' ? '☀️' : '🌙';
+  localStorage.setItem('hekima_theme', theme);
+}
+function toggleTheme(){ applyTheme((localStorage.getItem('hekima_theme')||'light')==='light'?'dark':'light'); }
+
+// ---- Transaction log rows (Miamala / Marejesho / Chenji share denom layout) ----
+let LOG_ROWS = { miamala:[], marejesho:[], chenji:[] };
+let MATUMIZI_ROWS = [];
+
+function addLogRow(kind, prefill){
+  const row = prefill || { d10000:0,d5000:0,d2000:0,d1000:0,d500:0,d200:0,d100:0,d50:0, note:'', id:null };
+  LOG_ROWS[kind].push(row);
+  renderLogTable(kind);
+}
+function renderLogTable(kind){
+  const body = document.querySelector(`#tbl-${kind} tbody`);
+  body.innerHTML = LOG_ROWS[kind].map((r,i) => `
+    <tr>
+      ${DENOMS.map(d => `<td><input type="number" value="${r['d'+d]||0}" oninput="LOG_ROWS.${kind}[${i}].d${d}=+this.value||0; recalcAll();"></td>`).join('')}
+      <td id="${kind}-rowtot-${i}">0</td>
+      <td><input type="text" value="${r.note||''}" oninput="LOG_ROWS.${kind}[${i}].note=this.value;"></td>
+      <td><button class="rm-btn" onclick="LOG_ROWS.${kind}.splice(${i},1); renderLogTable('${kind}'); recalcAll();">✕</button></td>
+    </tr>`).join('');
+  recalcAll();
+}
+function logTotal(kind){
+  let t = 0;
+  LOG_ROWS[kind].forEach((r,i) => {
+    let rt = 0; DENOMS.forEach(d => rt += (r['d'+d]||0)*d);
+    const cell = document.getElementById(`${kind}-rowtot-${i}`);
+    if(cell) cell.textContent = rt.toLocaleString();
+    t += rt;
+  });
+  return t;
+}
+
+function addMatumiziRow(prefill){
+  MATUMIZI_ROWS.push(prefill || { category:MATUMIZI_CATS[0], amount:0, note:'', id:null });
+  renderMatumiziTable();
+}
+function renderMatumiziTable(){
+  const body = document.querySelector('#tbl-matumizi tbody');
+  body.innerHTML = MATUMIZI_ROWS.map((r,i) => `
+    <tr>
+      <td><select onchange="MATUMIZI_ROWS[${i}].category=this.value;">
+        ${MATUMIZI_CATS.map(c => `<option ${c===r.category?'selected':''}>${c}</option>`).join('')}
+      </select></td>
+      <td><input type="number" value="${r.amount||0}" oninput="MATUMIZI_ROWS[${i}].amount=+this.value||0; recalcAll();"></td>
+      <td><input type="text" value="${r.note||''}" oninput="MATUMIZI_ROWS[${i}].note=this.value;"></td>
+      <td><button class="rm-btn" onclick="MATUMIZI_ROWS.splice(${i},1); renderMatumiziTable(); recalcAll();">✕</button></td>
+    </tr>`).join('');
+  recalcAll();
+}
+function matumiziTotal(){ return MATUMIZI_ROWS.reduce((s,r)=>s+(+r.amount||0),0); }
+
+function recalcAll(){
+  const mpaka = denomTotal('mpaka');
+  const mwanzoni = denomTotal('mwanzoni');
+  const ongezeko1 = denomTotal('ongezeko1');
+  const ongezeko2 = denomTotal('ongezeko2');
+  const adjust = denomTotal('adjust');
+  const miamala = logTotal('miamala');
+  const marejesho = logTotal('marejesho');
+  const chenji = logTotal('chenji');
+  const matumizi = matumiziTotal();
+
+  document.getElementById('tot-mpaka').textContent = mpaka.toLocaleString();
+  document.getElementById('tot-mwanzoni').textContent = mwanzoni.toLocaleString();
+  document.getElementById('tot-miss1').textContent = (mpaka-mwanzoni).toLocaleString();
+  document.getElementById('tot-ongezeko1').textContent = ongezeko1.toLocaleString();
+  document.getElementById('tot-miamala').textContent = miamala.toLocaleString();
+  document.getElementById('tot-matumizi').textContent = matumizi.toLocaleString();
+  document.getElementById('tot-ongezeko2').textContent = ongezeko2.toLocaleString();
+  document.getElementById('tot-marejesho').textContent = marejesho.toLocaleString();
+  document.getElementById('tot-chenji').textContent = chenji.toLocaleString();
+  document.getElementById('tot-adjust').textContent = adjust.toLocaleString();
+
+  const pesaAsubuhi = +document.getElementById('in-pesaAsubuhi').value||0;
+  const baadaAsubuhi = +document.getElementById('in-baadaAsubuhi').value||0;
+  const pesaMchana = +document.getElementById('in-pesaMchana').value||0;
+  const pesaUsiku = +document.getElementById('in-pesaUsiku').value||0;
+  document.getElementById('tot-miss2').textContent = (pesaAsubuhi-baadaAsubuhi).toLocaleString();
+  const missMchana = baadaAsubuhi - pesaMchana;
+  document.getElementById('tot-miss3').textContent = missMchana.toLocaleString();
+
+  const combineUsiku = missMchana + ongezeko2 + marejesho + chenji + adjust;
+  document.getElementById('tot-combineUsiku').textContent = combineUsiku.toLocaleString();
+  document.getElementById('tot-missUsiku').textContent = (combineUsiku-pesaUsiku).toLocaleString();
+
+  document.getElementById('sum-toka').textContent = matumizi.toLocaleString();
+  document.getElementById('sum-ingia').textContent = (ongezeko1+ongezeko2).toLocaleString();
+}
+
+async function switchAgent(){
+  const agent_code = document.getElementById('hAgent').value;
+  const work_date = document.getElementById('hDate').value;
+  if(!agent_code || !work_date) return;
+  const topMsg = document.getElementById('topMsg'); topMsg.textContent='';
+
+  const { data: daily } = await sb.from('mkeka_daily').select('*').eq('agent_code', agent_code).eq('work_date', work_date).maybeSingle();
+  ['mpaka','mwanzoni','ongezeko1','ongezeko2','adjust'].forEach(prefix => {
+    DENOMS.forEach(d => {
+      const val = daily ? (daily[`${prefix}_${d}`]||0) : 0;
+      document.getElementById(`d-${prefix}-${d}`).value = val;
+    });
+  });
+  document.getElementById('in-pesaAsubuhi').value = daily ? daily.pesa_asubuhi||0 : 0;
+  document.getElementById('in-baadaAsubuhi').value = daily ? daily.baada_asubuhi||0 : 0;
+  document.getElementById('in-pesaMchana').value = daily ? daily.pesa_mchana||0 : 0;
+  document.getElementById('in-pesaUsiku').value = daily ? daily.pesa_usiku||0 : 0;
+  document.getElementById('in-notes').value = daily ? daily.notes||'' : '';
+
+  const [mi, ma, mr, ch] = await Promise.all([
+    sb.from('mkeka_miamala').select('*').eq('agent_code',agent_code).eq('work_date',work_date).order('created_at'),
+    sb.from('mkeka_matumizi').select('*').eq('agent_code',agent_code).eq('work_date',work_date).order('created_at'),
+    sb.from('mkeka_marejesho').select('*').eq('agent_code',agent_code).eq('work_date',work_date).order('created_at'),
+    sb.from('mkeka_chenji').select('*').eq('agent_code',agent_code).eq('work_date',work_date).order('created_at'),
+  ]);
+  LOG_ROWS.miamala = (mi.data||[]).map(r=>({...r, note:r.note||''}));
+  LOG_ROWS.marejesho = (mr.data||[]).map(r=>({...r, note:r.note||''}));
+  LOG_ROWS.chenji = (ch.data||[]).map(r=>({...r, note:r.note||''}));
+  MATUMIZI_ROWS = (ma.data||[]).map(r=>({...r}));
+  renderLogTable('miamala'); renderLogTable('marejesho'); renderLogTable('chenji'); renderMatumiziTable();
+  recalcAll();
+}
+
+async function saveDaily(){
+  const agent_code = document.getElementById('hAgent').value;
+  const work_date = document.getElementById('hDate').value;
+  const topMsg = document.getElementById('topMsg'), bottomMsg = document.getElementById('bottomMsg');
+  if(!agent_code || !work_date){ topMsg.textContent='Chagua agent na tarehe'; topMsg.className='msg err'; return; }
+
+  const payload = { agent_code, work_date, created_by: ME?ME.id:null, updated_at: new Date().toISOString(),
+    pesa_asubuhi:+document.getElementById('in-pesaAsubuhi').value||0,
+    baada_asubuhi:+document.getElementById('in-baadaAsubuhi').value||0,
+    pesa_mchana:+document.getElementById('in-pesaMchana').value||0,
+    pesa_usiku:+document.getElementById('in-pesaUsiku').value||0,
+    notes:document.getElementById('in-notes').value||null };
+  ['mpaka','mwanzoni','ongezeko1','ongezeko2','adjust'].forEach(prefix => {
+    DENOMS.forEach(d => { payload[`${prefix}_${d}`] = +document.getElementById(`d-${prefix}-${d}`).value||0; });
+  });
+
+  const { error:e1 } = await sb.from('mkeka_daily').upsert([payload], { onConflict:'agent_code,work_date' });
+
+  // Replace logs for this agent/date wholesale (simple + reliable)
+  await sb.from('mkeka_miamala').delete().eq('agent_code',agent_code).eq('work_date',work_date);
+  await sb.from('mkeka_marejesho').delete().eq('agent_code',agent_code).eq('work_date',work_date);
+  await sb.from('mkeka_chenji').delete().eq('agent_code',agent_code).eq('work_date',work_date);
+  await sb.from('mkeka_matumizi').delete().eq('agent_code',agent_code).eq('work_date',work_date);
+
+  const stripRow = r => { const {id, ...rest} = r; return {...rest, agent_code, work_date, created_by: ME?ME.id:null}; };
+  if(LOG_ROWS.miamala.length) await sb.from('mkeka_miamala').insert(LOG_ROWS.miamala.map(stripRow));
+  if(LOG_ROWS.marejesho.length) await sb.from('mkeka_marejesho').insert(LOG_ROWS.marejesho.map(stripRow));
+  if(LOG_ROWS.chenji.length) await sb.from('mkeka_chenji').insert(LOG_ROWS.chenji.map(stripRow));
+  if(MATUMIZI_ROWS.length) await sb.from('mkeka_matumizi').insert(MATUMIZI_ROWS.map(stripRow));
+
+  if(e1){ bottomMsg.textContent = e1.message; bottomMsg.className='msg err'; return; }
+  bottomMsg.textContent = 'Kadi ya '+agent_code+' ('+work_date+') imehifadhiwa kikamilifu.'; bottomMsg.className='msg ok';
+  topMsg.textContent=''; 
+  switchAgent();
+}
+
+async function initPage(){
+  document.getElementById('hDate').value = new Date().toISOString().slice(0,10);
+  const { data: agents } = await sb.from('mikopo_agents').select('*').order('name');
+  document.getElementById('hAgent').innerHTML = (agents||[]).map(a => `<option value="${a.code}">${a.name} (${a.code})</option>`).join('');
+  const params = new URLSearchParams(location.search);
+  if(params.get('agent')) document.getElementById('hAgent').value = params.get('agent');
+  if(params.get('date')) document.getElementById('hDate').value = params.get('date');
+  switchAgent();
+}
+
+async function isAllowed(){
+  const { data: { user } } = await sb.auth.getUser();
+  if(!user) return false;
+  const { data: profile } = await sb.from('mikopo_profiles').select('*').eq('id', user.id).single();
+  ME = profile;
+  return !!(profile && profile.active && profile.role !== 'agent');
+}
+async function checkAuth(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(session && await isAllowed()){
+    document.getElementById('authGate').style.display='none';
+    document.getElementById('appContent').style.display='block';
+    initPage();
+  } else {
+    document.getElementById('authLoading').style.display='none';
+    document.getElementById('deniedBox').style.display='block';
+  }
+}
+applyTheme(localStorage.getItem('hekima_theme') || 'light');
+checkAuth();
+</script>
+</body>
+</html>
