@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hekima Finance — Ripoti za Kila Siku</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#0a1f36; --panel:#123152; --panel2:#0e2743; --border:#1f3f61;
+    --gold:#c89a3d; --gold-dim:rgba(200,154,61,0.16); --green:#1f9d74; --red:#e2645a;
+    --text:#eef2f6; --sub:#93a7ba;
+  }
+  html[data-theme="light"]{ --bg:#f6f3ea; --panel:#ffffff; --panel2:#eceee6; --border:#e4e1d4; --text:#12202f; --sub:#51606c; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding-bottom:30px;}
+  .wrap{max-width:640px;margin:0 auto;padding:14px 12px 30px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .topbar h1{font-size:16px;margin:0;font-weight:800;}
+  .back-link{color:var(--gold);text-decoration:none;font-size:13px;font-weight:600;}
+
+  .auth-gate{position:fixed;inset:0;background:linear-gradient(160deg,#0a1f36 0%,#123152 60%,#0a1f36 100%);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;}
+  .auth-loading{color:#dbe3ea;font-size:13px;text-align:center;max-width:320px;line-height:1.5;}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;}
+  .card h2{font-size:13.5px;margin:0 0 10px;font-weight:800;}
+  .empty{font-size:13px;color:var(--sub);text-align:center;padding:24px 10px;}
+  .field{margin-bottom:10px;}
+  .field label{display:block;font-size:11px;color:var(--sub);margin-bottom:4px;}
+  .field textarea, .field input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:8px;font-size:13px;font-family:inherit;}
+  .field textarea{min-height:64px;resize:vertical;}
+  .btn{background:var(--gold);color:#231603;border:none;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer;width:100%;}
+  .btn:disabled{opacity:.55;}
+  .msg{font-size:12px;margin-top:8px;min-height:15px;}
+  .msg.ok{color:var(--green);} .msg.err{color:var(--red);}
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px;}
+  .stat{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:9px;text-align:center;}
+  .stat .lbl{font-size:10px;color:var(--sub);}
+  .stat .val{font-size:16px;font-weight:800;margin-top:3px;}
+  .stat.good .val{color:var(--green);} .stat.bad .val{color:var(--red);}
+  .rep{border:1px solid var(--border);border-radius:11px;padding:11px;margin-top:9px;background:var(--panel2);}
+  .rep .rh{display:flex;justify-content:space-between;font-weight:800;font-size:13px;}
+  .rep .rp{font-size:11px;color:var(--gold);margin-top:2px;}
+  .rep .rl{font-size:12px;margin-top:7px;line-height:1.5;}
+  .rep .rl b{color:var(--sub);font-weight:700;}
+  .datebar{display:flex;gap:6px;margin-bottom:10px;}
+  .datebar input{flex:1;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:9px;}
+  .already{background:var(--gold-dim);border:1px solid var(--gold);border-radius:9px;padding:9px 10px;font-size:12px;margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<div class="auth-gate" id="authGate"><div class="auth-loading" id="authLoading">Inapakia...</div></div>
+
+<div id="appContent" style="display:none">
+  <div class="wrap">
+    <div class="topbar">
+      <h1>Ripoti za Kila Siku</h1>
+      <a href="portal.html" class="back-link">‹ Menu</a>
+    </div>
+
+    <div class="card">
+      <h2 id="myReportTitle">Ripoti Yangu ya Leo</h2>
+      <div id="alreadyBanner" class="already" style="display:none">Tayari umetuma ripoti ya leo. Ukibonyeza "Hifadhi" tena, itasasisha iliyopo.</div>
+      <div id="statsBox" style="display:none">
+        <div class="stat-row">
+          <div class="stat good"><div class="lbl">Wateja Wazuri</div><div class="val" id="statGood">0</div></div>
+          <div class="stat bad"><div class="lbl">Wateja Wabovu</div><div class="val" id="statBad">0</div></div>
+          <div class="stat"><div class="lbl">Mtaji Mchafu</div><div class="val" id="statDirty">0</div></div>
+        </div>
+      </div>
+      <div class="field"><label>Changamoto</label><textarea id="repChallenges" placeholder="Changamoto ulizokutana nazo leo..."></textarea></div>
+      <div class="field"><label>Mpango Kazi</label><textarea id="repPlan" placeholder="Mpango wako wa kazi..."></textarea></div>
+      <div class="field"><label>Mengine (hiari)</label><textarea id="repOther" placeholder="Maelezo mengine..."></textarea></div>
+      <button class="btn" id="repSaveBtn" onclick="saveReport()">Hifadhi Ripoti</button>
+      <div class="msg" id="repMsg"></div>
+    </div>
+
+    <div class="card" id="inboxCard" style="display:none">
+      <h2>Ripoti Nilizopokea</h2>
+      <div class="datebar">
+        <input type="date" id="inboxDate" onchange="loadInbox()">
+      </div>
+      <div id="inboxList"></div>
+      <div class="empty" id="inboxEmpty" style="display:none">Hakuna ripoti kwa tarehe hii.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://euhteovuhdvefzaavlqx.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1aHRlb3Z1aGR2ZWZ6YWF2bHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NjQwNjEsImV4cCI6MjA5NzE0MDA2MX0.gaV1mShFhVHVpxAqCptJsiSr4r-d3_OYvdtH0bpR58Q";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmt(n){ return (Number(n)||0).toLocaleString('en-US'); }
+function todayStr(){ return new Date().toLocaleDateString('sv-SE'); }
+
+async function loadMyReport(){
+  const { data, error } = await sb.rpc('my_report_for', { p_date: todayStr() });
+  const row = (data||[])[0];
+  if(row){
+    document.getElementById('alreadyBanner').style.display = 'block';
+    document.getElementById('repChallenges').value = row.challenges || '';
+    document.getElementById('repPlan').value = row.work_plan || '';
+    document.getElementById('repOther').value = row.other_notes || '';
+    if(row.good_clients !== null){
+      document.getElementById('statsBox').style.display = 'block';
+      document.getElementById('statGood').textContent = row.good_clients;
+      document.getElementById('statBad').textContent = row.bad_clients;
+      document.getElementById('statDirty').textContent = fmt(row.dirty_capital);
+    }
+  }
+}
+
+async function saveReport(){
+  const msg = document.getElementById('repMsg');
+  const challenges = document.getElementById('repChallenges').value.trim() || null;
+  const work_plan = document.getElementById('repPlan').value.trim() || null;
+  const other_notes = document.getElementById('repOther').value.trim() || null;
+  document.getElementById('repSaveBtn').disabled = true;
+  msg.textContent = 'Inahifadhi...'; msg.className = 'msg';
+  const { error } = await sb.rpc('submit_staff_report', { p_challenges: challenges, p_work_plan: work_plan, p_other_notes: other_notes });
+  document.getElementById('repSaveBtn').disabled = false;
+  if(error){ msg.className='msg err'; msg.textContent = 'Imeshindwa: '+error.message; return; }
+  msg.className='msg ok'; msg.textContent = 'Imehifadhiwa ✓';
+  loadMyReport();
+}
+
+async function loadInbox(){
+  const date = document.getElementById('inboxDate').value || todayStr();
+  const { data, error } = await sb.rpc('list_reports_to_me', { p_date: date });
+  const box = document.getElementById('inboxList');
+  if(error){ box.innerHTML=''; return; }
+  const rows = data || [];
+  document.getElementById('inboxEmpty').style.display = rows.length ? 'none' : 'block';
+  box.innerHTML = rows.map(r => `
+    <div class="rep">
+      <div class="rh"><span>${esc(r.full_name)}</span><span>${esc(r.report_date)}</span></div>
+      <div class="rp">${esc(r.position||'')}</div>
+      ${r.good_clients!==null ? `
+        <div class="stat-row" style="margin-top:8px;">
+          <div class="stat good"><div class="lbl">Wazuri</div><div class="val">${r.good_clients}</div></div>
+          <div class="stat bad"><div class="lbl">Wabovu</div><div class="val">${r.bad_clients}</div></div>
+          <div class="stat"><div class="lbl">Mtaji Mchafu</div><div class="val">${fmt(r.dirty_capital)}</div></div>
+        </div>` : ''}
+      ${r.challenges ? `<div class="rl"><b>Changamoto:</b> ${esc(r.challenges)}</div>` : ''}
+      ${r.work_plan ? `<div class="rl"><b>Mpango Kazi:</b> ${esc(r.work_plan)}</div>` : ''}
+      ${r.other_notes ? `<div class="rl"><b>Mengine:</b> ${esc(r.other_notes)}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+async function init(){
+  try{
+    const {data:{session}} = await sb.auth.getSession();
+    if(!session){ location.replace('portal.html'); return; }
+    document.getElementById('authGate').style.display='none';
+    document.getElementById('appContent').style.display='block';
+    await loadMyReport();
+    const { data: inboxCheck } = await sb.rpc('list_reports_to_me', { p_date: todayStr() });
+    if(inboxCheck !== null){
+      document.getElementById('inboxCard').style.display = 'block';
+      document.getElementById('inboxDate').value = todayStr();
+      loadInbox();
+    }
+  }catch(e){
+    document.getElementById('authLoading').innerHTML = 'Hitilafu: '+esc(e.message||e);
+  }
+}
+init();
+</script>
+</body>
+</html>

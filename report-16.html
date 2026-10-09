@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hekima Finance — Report</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  :root{
+    --bg:#0a1f36; --panel:#123152; --panel2:#0e2743; --border:#1f3f61;
+    --cyan:#c89a3d; --cyan-dim:rgba(200,154,61,0.16);
+    --green:#1f9d74; --red:#e2645a; --text:#eef2f6; --sub:#93a7ba;
+  }
+  html[data-theme="light"]{
+    --bg:#f5f6f1; --panel:#ffffff; --panel2:#eceee6; --border:#dee1d7;
+    --text:#12202f; --sub:#51606c;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding-bottom:60px;}
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 40px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;flex-wrap:wrap;}
+  .topbar h1{font-size:17px;margin:0;font-weight:600;}
+  .refresh-btn{background:var(--panel);border:1px solid var(--border);color:var(--cyan);padding:8px 14px;border-radius:10px;font-size:13px;cursor:pointer;}
+  .icon-toggle-btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;}
+  .gendate{font-size:11px;color:var(--sub);margin-bottom:18px;}
+
+  .auth-gate{
+    position:fixed;inset:0;
+    background:radial-gradient(120% 90% at 12% 0%, rgba(31,157,116,0.32), transparent 55%),
+      radial-gradient(120% 90% at 88% 100%, rgba(200,154,61,0.28), transparent 55%),
+      linear-gradient(160deg,#0a1f36 0%, #123152 60%, #0a1f36 100%);
+    display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
+  }
+  .auth-loading{color:#dbe3ea;font-size:13px;text-align:center;}
+  .login-box{width:100%;max-width:380px;background:rgba(255,255,255,0.98);border:1px solid rgba(255,255,255,0.4);border-radius:26px;padding:32px 26px 26px;box-shadow:0 30px 70px rgba(0,0,0,0.35);}
+  .login-greeting{font-size:13px;font-weight:600;color:#b9863a;margin-bottom:6px;}
+  .login-box h2{margin:0 0 4px;font-size:26px;font-weight:800;color:#12202f;}
+  .login-box p{margin:0 0 22px;font-size:13.5px;color:#5b6b80;}
+  .login-label{display:block;font-size:12.5px;color:#51606c;font-weight:600;margin:0 0 6px;}
+  .login-field{position:relative;margin-bottom:16px;}
+  .login-field .fico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#8a97a6;}
+  .login-input{width:100%;background:#f5f6f4;border:1.5px solid #e1e4dd;color:#12202f;padding:13px 14px 13px 42px;border-radius:12px;font-size:15px;}
+  .login-input:focus{outline:none;border-color:#c89a3d;background:#fff;}
+  .pw-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#8a97a6;cursor:pointer;padding:7px;display:flex;}
+  .login-btn{width:100%;background:#0a1f36;color:#fff;border:none;padding:15px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+  .login-btn:active{background:#123152;}
+  .login-err{color:#c0392b;font-size:12.5px;margin-top:12px;min-height:14px;text-align:center;}
+  .login-help{text-align:center;margin-top:16px;font-size:13px;}
+  .login-help a{color:#123152;text-decoration:none;font-weight:600;}
+  .login-foot{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:12px;color:rgba(255,255,255,0.55);}
+  .logout-link{font-size:11px;color:var(--sub);cursor:pointer;text-decoration:underline;margin-left:10px;}
+
+  .section{margin-bottom:26px;}
+  .section-label{text-transform:uppercase;font-size:12px;letter-spacing:1.2px;color:var(--sub);font-weight:700;margin:0 0 10px 2px;}
+  .kpi-row{display:flex;gap:10px;margin-bottom:10px;}
+  .kpi{flex:1;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center;}
+  .kpi .n{font-size:20px;font-weight:700;} .kpi .l{font-size:11px;color:var(--sub);margin-top:3px;}
+  .kpi .n.green{color:var(--green);} .kpi .n.red{color:var(--red);}
+
+  .table-wrap{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--panel);}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  thead th{background:var(--panel2);color:var(--sub);text-transform:uppercase;font-size:10px;letter-spacing:0.5px;padding:9px 10px;text-align:left;}
+  tbody td{padding:9px 10px;border-top:1px solid var(--border);}
+  tbody tr.total-row td{font-weight:700;border-top:2px solid var(--cyan);}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;}
+  td.green{color:var(--green);font-weight:600;} td.red{color:var(--red);font-weight:600;}
+  .state-msg{text-align:center;color:var(--sub);font-size:13px;padding:30px 0;}
+  .chart-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;}
+  .chart-card canvas{max-height:220px;}
+
+  @media (min-width:768px){
+    .wrap{max-width:1080px;}
+    table{font-size:13.5px;}
+    thead th{padding:10px 12px;} tbody td{padding:10px 12px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-gate" id="authGate">
+  <div class="auth-loading" id="authLoading">Loading...</div>
+  <div class="login-box" id="loginBox" style="display:none">
+    <div class="login-greeting" id="loginGreeting">Habari</div>
+    <h2>Ingia</h2>
+    <p>Tumia akaunti yako ya Hekima Finance kuingia.</p>
+    <label class="login-label" for="loginEmail">Barua pepe</label>
+    <div class="login-field">
+      <svg class="fico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9 6 9-6M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/></svg>
+      <input class="login-input" id="loginEmail" type="email" placeholder="jina@hekimafinance.co.tz">
+    </div>
+    <label class="login-label" for="loginPass">Nywila</label>
+    <div class="login-field">
+      <svg class="fico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <input class="login-input" id="loginPass" type="password" placeholder="••••••••">
+      <button type="button" class="pw-eye" id="pwEyeBtn" onclick="togglePwVisibility()" aria-label="Onyesha nywila">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Ingia</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-help"><a href="mailto:stevenlamwel@gmail.com">Umesahau nywila? Wasiliana na msimamizi</a></div>
+  </div>
+  <div class="login-foot">Hekima Finance &middot; Iringa, Tanzania</div>
+</div>
+
+<div id="appContent" style="display:none">
+<div class="wrap">
+  <div class="topbar">
+    <h1 data-i18n="rp_title">Report</h1>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      <a href="portal.html" style="color:var(--cyan);text-decoration:none;font-size:13px;" data-i18n="t_menu">‹ Menu</a>
+      <button class="icon-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">🌙</button>
+      <button class="icon-toggle-btn" onclick="toggleLang()" id="langToggleBtn">EN</button>
+      <button class="refresh-btn" onclick="loadReport()" data-i18n="db_refresh">↻ Refresh</button><span class="logout-link" onclick="doLogout()" data-i18n="t_logout">Log Out</span>
+    </div>
+  </div>
+  <div class="gendate" id="genDate"></div>
+  <div id="reportBody"><div class="state-msg">Loading data...</div></div>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://euhteovuhdvefzaavlqx.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1aHRlb3Z1aGR2ZWZ6YWF2bHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NjQwNjEsImV4cCI6MjA5NzE0MDA2MX0.gaV1mShFhVHVpxAqCptJsiSr4r-d3_OYvdtH0bpR58Q";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const DAY = 86400000;
+
+function tzs(n){ return Math.round(n).toLocaleString('en-US') + " TZS"; }
+function statusOf(loan){ return (Date.now() > Date.parse(loan.d_kamilisha) + DAY) ? 'chafu' : 'safi'; }
+function deniBaki(loan){ return Math.max(0, Number(loan.jumla) - (loan.mikopo_payments||[]).reduce((s,p)=>s+Number(p.kiasi),0)); }
+
+/* ---------------- THEME (dark/light) ---------------- */
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeToggleBtn').textContent = theme==='light' ? '☀️' : '🌙';
+  localStorage.setItem('hekima_theme', theme);
+}
+function toggleTheme(){
+  const cur = localStorage.getItem('hekima_theme') || 'light';
+  applyTheme(cur === 'dark' ? 'light' : 'dark');
+}
+
+/* ---------------- LANGUAGE (EN/SW) ---------------- */
+const HK_TR = {
+  en: {
+    t_menu:"‹ Menu", t_logout:"Log Out", db_refresh:"↻ Refresh",
+    rp_title:"Report", rp_generated:"Generated:", rp_summary:"Summary", rp_total_clients:"Total Clients",
+    rp_money_out:"Money Out With Active Loans", rp_good_loans:"Good Loans", rp_bad_loans:"Bad Loans",
+    rp_charts:"Charts", rp_clients_per_agent:"Clients per Agent", rp_capital_per_agent:"Active/Overdue Capital per Agent",
+    rp_owing_paid:"Owing / Paid Off", rp_agent_summary:"Agent Summary", rp_agent:"Agent", rp_clients:"Clients",
+    rp_bad:"Bad", rp_overdue_capital:"Overdue Capital", rp_active_capital:"Active Capital", rp_total:"TOTAL",
+    rp_still_owing:"Still Owing", rp_paid_off:"Paid Off", rp_clients_by_area:"Number of Clients by Area",
+    rp_area:"Area", rp_unspecified:"Unspecified", rp_loading:"Loading data..."
+  },
+  sw: {
+    t_menu:"‹ Menyu", t_logout:"Toka", db_refresh:"↻ Onyesha Upya",
+    rp_title:"Ripoti", rp_generated:"Imetengenezwa:", rp_summary:"Muhtasari", rp_total_clients:"Jumla ya Wateja",
+    rp_money_out:"Fedha Zilizopo kwa Mikopo Hai", rp_good_loans:"Mikopo Mizuri", rp_bad_loans:"Mikopo Mibaya",
+    rp_charts:"Michoro", rp_clients_per_agent:"Wateja kwa Kila Wakala", rp_capital_per_agent:"Mtaji Hai/Uliochelewa kwa Wakala",
+    rp_owing_paid:"Wenye Deni / Waliomaliza", rp_agent_summary:"Muhtasari wa Wakala", rp_agent:"Wakala", rp_clients:"Wateja",
+    rp_bad:"Mibaya", rp_overdue_capital:"Mtaji Uliochelewa", rp_active_capital:"Mtaji Hai", rp_total:"JUMLA",
+    rp_still_owing:"Bado Wana Deni", rp_paid_off:"Wamemaliza", rp_clients_by_area:"Idadi ya Wateja kwa Eneo",
+    rp_area:"Eneo", rp_unspecified:"Haijaainishwa", rp_loading:"Inapakia..."
+  }
+};
+function t(key){ const lang = localStorage.getItem('hekima_lang') || 'en'; return (HK_TR[lang] && HK_TR[lang][key]) || HK_TR.en[key] || key; }
+function applyLang(lang){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    if(HK_TR[lang] && HK_TR[lang][key]) el.textContent = HK_TR[lang][key];
+  });
+  document.getElementById('langToggleBtn').textContent = lang==='en' ? 'EN' : 'SW';
+  localStorage.setItem('hekima_lang', lang);
+}
+function toggleLang(){
+  const cur = localStorage.getItem('hekima_lang') || 'en';
+  applyLang(cur === 'en' ? 'sw' : 'en');
+  loadReport();
+}
+
+async function loadReport(){
+  document.getElementById('genDate').textContent = t('rp_generated') + " " + new Date().toLocaleString('en-GB');
+  document.getElementById('reportBody').innerHTML = `<div class="state-msg">${t('rp_loading')}</div>`;
+  try{
+    const [{data: agents, error:e1}, {data: clients, error:e2}] = await Promise.all([
+      sb.from('mikopo_agents').select('*').order('code'),
+      sb.from('mikopo_clients').select('*, mikopo_loans(*, mikopo_payments(*))'),
+    ]);
+    if(e1) throw e1; if(e2) throw e2;
+
+    const A = {};
+    (agents||[]).forEach(a=> A[a.code] = { name:a.name, clients:0, deniBaki:0, mizuri:0, mibaya:0, active:0, pasive:0 });
+
+    let wenyePesa = 0, wasioNaPesa = 0;
+    (clients||[]).forEach(c=>{
+      const activeLoans = (c.mikopo_loans||[]).filter(l=> deniBaki(l) > 1);
+      if(activeLoans.length > 0) wenyePesa++; else wasioNaPesa++;
+
+      if(!c.agent_code || !A[c.agent_code]) return;
+      const bucket = A[c.agent_code];
+      if(activeLoans.length>0) bucket.clients += 1;
+      activeLoans.forEach(l=>{
+        const bal = deniBaki(l);
+        const mchafu = statusOf(l)==='chafu';
+        bucket.deniBaki += bal;
+        if(mchafu){ bucket.mibaya += 1; bucket.pasive += bal; } else { bucket.mizuri += 1; bucket.active += bal; }
+      });
+    });
+
+    const codes = Object.keys(A);
+    const totalClients = codes.reduce((s,k)=>s+A[k].clients,0);
+    const totalDeni = codes.reduce((s,k)=>s+A[k].deniBaki,0);
+    const totalMizuri = codes.reduce((s,k)=>s+A[k].mizuri,0);
+    const totalMibaya = codes.reduce((s,k)=>s+A[k].mibaya,0);
+    const totalActive = codes.reduce((s,k)=>s+A[k].active,0);
+    const totalPasive = codes.reduce((s,k)=>s+A[k].pasive,0);
+
+    const byEneo = {};
+    (clients||[]).forEach(c=>{ const key = c.eneo || t('rp_unspecified'); byEneo[key] = (byEneo[key]||0)+1; });
+    const eneoRows = Object.entries(byEneo).sort((a,b)=> b[1]-a[1]);
+
+    document.getElementById('reportBody').innerHTML = `
+      <div class="section">
+        <div class="section-label">${t('rp_summary')}</div>
+        <div class="kpi-row">
+          <div class="kpi"><div class="n">${totalClients}</div><div class="l">${t('rp_total_clients')}</div></div>
+          <div class="kpi"><div class="n">${tzs(totalDeni)}</div><div class="l">${t('rp_money_out')}</div></div>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi"><div class="n green">${totalMizuri}</div><div class="l">${t('rp_good_loans')}</div></div>
+          <div class="kpi"><div class="n red">${totalMibaya}</div><div class="l">${t('rp_bad_loans')}</div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">${t('rp_charts')}</div>
+        <div class="chart-card"><canvas id="chartWateja"></canvas></div>
+        <div class="chart-card"><canvas id="chartMtaji"></canvas></div>
+        <div class="chart-card"><canvas id="chartPesa"></canvas></div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">${t('rp_agent_summary')}</div>
+        <div class="table-wrap"><table><thead><tr>
+          <th>${t('rp_agent')}</th>
+          <th style="text-align:right">${t('rp_clients')}</th>
+          <th style="text-align:right">${t('rp_bad')}</th>
+          <th style="text-align:right">${t('rp_overdue_capital')}</th>
+          <th style="text-align:right">${t('rp_active_capital')}</th>
+        </tr></thead><tbody>
+          ${codes.map(k=>`<tr>
+            <td>${A[k].name}</td>
+            <td class="num">${A[k].clients}</td>
+            <td class="num red">${A[k].mibaya}</td>
+            <td class="num red">${tzs(A[k].pasive)}</td>
+            <td class="num green">${tzs(A[k].active)}</td>
+          </tr>`).join('')}
+          <tr class="total-row">
+            <td>${t('rp_total')}</td>
+            <td class="num">${totalClients}</td>
+            <td class="num red">${totalMibaya}</td>
+            <td class="num red">${tzs(totalPasive)}</td>
+            <td class="num green">${tzs(totalActive)}</td>
+          </tr>
+        </tbody></table></div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">${t('rp_owing_paid')}</div>
+        <div class="kpi-row">
+          <div class="kpi"><div class="n">${wenyePesa}</div><div class="l">${t('rp_still_owing')}</div></div>
+          <div class="kpi"><div class="n">${wasioNaPesa}</div><div class="l">${t('rp_paid_off')}</div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">${t('rp_clients_by_area')}</div>
+        <div class="table-wrap"><table><thead><tr><th>${t('rp_area')}</th><th style="text-align:right">${t('rp_clients')}</th></tr></thead><tbody>
+          ${eneoRows.map(([eneo,count])=>`<tr><td>${eneo}</td><td class="num">${count}</td></tr>`).join('')}
+        </tbody></table></div>
+      </div>
+    `;
+
+    renderCharts(codes, A, wenyePesa, wasioNaPesa);
+  } catch(err){
+    document.getElementById('reportBody').innerHTML = '<div class="state-msg">Failed to load: '+(err.message||err)+'</div>';
+  }
+}
+
+let chartWateja, chartMtaji, chartPesa;
+function renderCharts(codes, A, wenyePesa, wasioNaPesa){
+  const labels = codes.map(k=>A[k].name);
+  const gridColor = 'rgba(255,255,255,0.06)';
+  Chart.defaults.color = '#7c8aa0';
+  Chart.defaults.font.size = 11;
+
+  if(chartWateja) chartWateja.destroy();
+  chartWateja = new Chart(document.getElementById('chartWateja'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label: t('rp_clients'), data: codes.map(k=>A[k].clients), backgroundColor: '#22d3ee', borderRadius: 6 }] },
+    options: { plugins:{ title:{ display:true, text:t('rp_clients_per_agent'), color:'#e6edf5' }, legend:{ display:false } },
+      scales:{ x:{ grid:{ color: gridColor } }, y:{ grid:{ color: gridColor }, beginAtZero:true, ticks:{ precision:0 } } } }
+  });
+
+  if(chartMtaji) chartMtaji.destroy();
+  chartMtaji = new Chart(document.getElementById('chartMtaji'), {
+    type: 'bar',
+    data: { labels, datasets: [
+      { label: t('rp_active_capital'), data: codes.map(k=>A[k].active), backgroundColor: '#34d399', borderRadius: 6 },
+      { label: t('rp_overdue_capital'), data: codes.map(k=>A[k].pasive), backgroundColor: '#f87171', borderRadius: 6 },
+    ]},
+    options: { plugins:{ title:{ display:true, text:t('rp_capital_per_agent'), color:'#e6edf5' } },
+      scales:{ x:{ stacked:true, grid:{ color: gridColor } }, y:{ stacked:true, grid:{ color: gridColor }, beginAtZero:true } } }
+  });
+
+  if(chartPesa) chartPesa.destroy();
+  chartPesa = new Chart(document.getElementById('chartPesa'), {
+    type: 'doughnut',
+    data: { labels: [t('rp_still_owing'), t('rp_paid_off')], datasets: [{ data: [wenyePesa, wasioNaPesa], backgroundColor: ['#fbbf24','#34d399'] }] },
+    options: { plugins:{ title:{ display:true, text:t('rp_owing_paid'), color:'#e6edf5' } } }
+  });
+}
+
+let ME = null;
+
+async function isCurrentUserAdmin(){
+  const { data: { user } } = await sb.auth.getUser();
+  if(!user) return false;
+  const { data: profile } = await sb.from('mikopo_profiles').select('*').eq('id', user.id).single();
+  ME = profile;
+  return !!(profile && profile.active);
+}
+
+async function checkAuth(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(session){
+    if(await isCurrentUserAdmin()){ enterApp(); }
+    else {
+      await sb.auth.signOut();
+      document.getElementById('authLoading').style.display='none';
+      document.getElementById('loginBox').style.display='block';
+      document.getElementById('appContent').style.display='none';
+      document.getElementById('loginErr').textContent = 'This account is not active. Contact the admin.';
+    }
+  } else {
+    document.getElementById('authLoading').style.display='none';
+    document.getElementById('loginBox').style.display='block';
+    document.getElementById('appContent').style.display='none';
+  }
+}
+function enterApp(){
+  document.getElementById('authGate').style.display='none';
+  document.getElementById('appContent').style.display='block';
+  loadReport();
+}
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  document.getElementById('loginErr').textContent='';
+  const {error} = await sb.auth.signInWithPassword({email,password:pass});
+  if(error){ document.getElementById('loginErr').textContent = error.message; return; }
+  if(await isCurrentUserAdmin()){ enterApp(); }
+  else {
+    await sb.auth.signOut();
+    document.getElementById('loginErr').textContent = 'This account is not active. Contact the admin.';
+  }
+}
+async function doLogout(){ await sb.auth.signOut(); location.reload(); }
+
+function setLoginGreeting(){
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Habari za Asubuhi' : h < 17 ? 'Habari za Mchana' : 'Habari za Jioni';
+  const el = document.getElementById('loginGreeting');
+  if(el) el.textContent = g;
+}
+function togglePwVisibility(){
+  const input = document.getElementById('loginPass');
+  const btn = document.getElementById('pwEyeBtn');
+  if(!input) return;
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  if(btn) btn.style.opacity = showing ? '1' : '0.55';
+}
+setLoginGreeting();
+applyTheme(localStorage.getItem('hekima_theme') || 'light');
+applyLang(localStorage.getItem('hekima_lang') || 'en');
+checkAuth();
+</script>
+</body>
+</html>

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hekima Finance — Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#0a1f36; --panel:#123152; --panel2:#0e2743; --border:#1f3f61;
+    --cyan:#c89a3d; --cyan-dim:rgba(200,154,61,0.16);
+    --green:#1f9d74; --red:#e2645a; --text:#eef2f6; --sub:#93a7ba;
+  }
+  html[data-theme="light"]{
+    --bg:#f5f6f1; --panel:#ffffff; --panel2:#eceee6; --border:#dee1d7;
+    --text:#12202f; --sub:#51606c;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding-bottom:60px;}
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 40px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:8px;flex-wrap:wrap;}
+  .topbar h1{font-size:17px;margin:0;font-weight:600;}
+  .refresh-btn{background:var(--panel);border:1px solid var(--border);color:var(--cyan);padding:8px 14px;border-radius:10px;font-size:13px;cursor:pointer;}
+  .icon-toggle-btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;}
+
+  .auth-gate{
+    position:fixed;inset:0;
+    background:radial-gradient(120% 90% at 12% 0%, rgba(31,157,116,0.32), transparent 55%),
+      radial-gradient(120% 90% at 88% 100%, rgba(200,154,61,0.28), transparent 55%),
+      linear-gradient(160deg,#0a1f36 0%, #123152 60%, #0a1f36 100%);
+    display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
+  }
+  .auth-loading{color:#dbe3ea;font-size:13px;text-align:center;}
+  .login-box{width:100%;max-width:380px;background:rgba(255,255,255,0.98);border:1px solid rgba(255,255,255,0.4);border-radius:26px;padding:32px 26px 26px;box-shadow:0 30px 70px rgba(0,0,0,0.35);}
+  .login-greeting{font-size:13px;font-weight:600;color:#b9863a;margin-bottom:6px;}
+  .login-box h2{margin:0 0 4px;font-size:26px;font-weight:800;color:#12202f;}
+  .login-box p{margin:0 0 22px;font-size:13.5px;color:#5b6b80;}
+  .login-label{display:block;font-size:12.5px;color:#51606c;font-weight:600;margin:0 0 6px;}
+  .login-field{position:relative;margin-bottom:16px;}
+  .login-field .fico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#8a97a6;}
+  .login-input{width:100%;background:#f5f6f4;border:1.5px solid #e1e4dd;color:#12202f;padding:13px 14px 13px 42px;border-radius:12px;font-size:15px;}
+  .login-input:focus{outline:none;border-color:#c89a3d;background:#fff;}
+  .pw-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#8a97a6;cursor:pointer;padding:7px;display:flex;}
+  .login-btn{width:100%;background:#0a1f36;color:#fff;border:none;padding:15px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+  .login-btn:active{background:#123152;}
+  .login-err{color:#c0392b;font-size:12.5px;margin-top:12px;min-height:14px;text-align:center;}
+  .login-help{text-align:center;margin-top:16px;font-size:13px;}
+  .login-help a{color:#123152;text-decoration:none;font-weight:600;}
+  .login-foot{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:12px;color:rgba(255,255,255,0.55);}
+  .logout-link{font-size:11px;color:var(--sub);cursor:pointer;text-decoration:underline;margin-left:10px;}
+
+  .mtaji-card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:20px;padding:20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+  .mtaji-left{display:flex;align-items:center;gap:14px;}
+  .mtaji-icon{width:44px;height:44px;border-radius:12px;background:var(--cyan-dim);display:flex;align-items:center;justify-content:center;color:var(--cyan);flex-shrink:0;}
+  .mtaji-title{font-weight:600;font-size:15px;}
+  .mtaji-sub{font-size:12px;color:var(--sub);margin-top:2px;}
+  .mtaji-value{font-size:24px;font-weight:700;letter-spacing:-0.5px;text-align:right;}
+
+  .kpi-row{display:flex;gap:10px;margin-bottom:20px;}
+  .kpi{flex:1;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center;}
+  .kpi .n{font-size:19px;font-weight:700;}
+  .kpi .l{font-size:10.5px;color:var(--sub);margin-top:3px;}
+  .kpi .n.green{color:var(--green);} .kpi .n.red{color:var(--red);}
+
+  .section-label{text-transform:uppercase;font-size:12px;letter-spacing:1.5px;color:var(--sub);font-weight:700;margin:0 0 12px 4px;}
+  .analysis-panel{position:relative;border:1px solid var(--border);border-radius:16px;padding:14px;background:rgba(255,255,255,0.01);}
+  .analysis-panel::before, .analysis-panel::after{content:"";position:absolute;top:-1px;width:22px;height:22px;border-top:2px solid var(--cyan);}
+  .analysis-panel::before{left:-1px;border-left:2px solid var(--cyan);border-top-left-radius:10px;}
+  .analysis-panel::after{right:-1px;border-right:2px solid var(--cyan);border-top-right-radius:10px;}
+
+  .agent-card{background:var(--panel);border-radius:14px;overflow:hidden;margin-bottom:14px;}
+  .agent-card:last-child{margin-bottom:0;}
+  .agent-head{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;}
+  .agent-badge{background:var(--cyan-dim);color:var(--cyan);font-weight:700;font-size:12px;padding:5px 10px;border-radius:8px;letter-spacing:0.5px;}
+  .agent-name{font-size:15px;font-weight:600;}
+  .agent-row{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border);font-size:14px;}
+  .agent-row .lbl{color:var(--sub);font-size:13px;}
+  .val-count{font-weight:600;}
+  .val-green{color:var(--green);font-weight:700;font-variant-numeric:tabular-nums;}
+  .val-red{color:var(--red);font-weight:700;font-variant-numeric:tabular-nums;}
+  .val-total{font-weight:700;font-variant-numeric:tabular-nums;}
+  .chapa-row{padding:12px 16px 14px;border-top:1px solid var(--border);}
+  .chapa-btn{display:inline-flex;align-items:center;gap:8px;background:transparent;border:1px solid var(--cyan);color:var(--cyan);padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;}
+
+  .state-msg{text-align:center;color:var(--sub);font-size:13px;padding:30px 0;}
+  .footnote{font-size:11px;color:var(--sub);text-align:center;margin-top:24px;line-height:1.6;}
+  @media print{ body{background:#fff;color:#000;} .refresh-btn,.chapa-btn{display:none;} }
+
+  @media (min-width:768px){
+    .wrap{max-width:1080px;}
+    #agentList{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;align-items:start;}
+    .agent-card{margin-bottom:0;}
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-gate" id="authGate">
+  <div class="auth-loading" id="authLoading">Loading...</div>
+  <div class="login-box" id="loginBox" style="display:none">
+    <div class="login-greeting" id="loginGreeting">Habari</div>
+    <h2>Ingia</h2>
+    <p>Tumia akaunti yako ya Hekima Finance kuingia.</p>
+    <label class="login-label" for="loginEmail">Barua pepe</label>
+    <div class="login-field">
+      <svg class="fico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9 6 9-6M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/></svg>
+      <input class="login-input" id="loginEmail" type="email" placeholder="jina@hekimafinance.co.tz">
+    </div>
+    <label class="login-label" for="loginPass">Nywila</label>
+    <div class="login-field">
+      <svg class="fico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <input class="login-input" id="loginPass" type="password" placeholder="••••••••">
+      <button type="button" class="pw-eye" id="pwEyeBtn" onclick="togglePwVisibility()" aria-label="Onyesha nywila">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Ingia</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-help"><a href="mailto:stevenlamwel@gmail.com">Umesahau nywila? Wasiliana na msimamizi</a></div>
+  </div>
+  <div class="login-foot">Hekima Finance &middot; Iringa, Tanzania</div>
+</div>
+
+<div id="appContent" style="display:none">
+<div class="wrap">
+  <div class="topbar">
+    <h1 data-i18n="db_title">Hekima Finance</h1>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      <a href="portal.html" style="color:var(--cyan);text-decoration:none;font-size:13px;" data-i18n="t_menu">‹ Menu</a>
+      <button class="icon-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">🌙</button>
+      <button class="icon-toggle-btn" onclick="toggleLang()" id="langToggleBtn">EN</button>
+      <button class="refresh-btn" onclick="loadDashboard()" data-i18n="db_refresh">↻ Refresh</button><span class="logout-link" onclick="doLogout()" data-i18n="t_logout">Log Out</span>
+    </div>
+  </div>
+
+  <div class="mtaji-card">
+    <div class="mtaji-left">
+      <div class="mtaji-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 7l9 5 9-5-9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg></div>
+      <div><div class="mtaji-title" data-i18n="db_total_capital">Total Capital</div><div class="mtaji-sub" data-i18n="db_capital_sub">Money currently circulating</div></div>
+    </div>
+    <div class="mtaji-value" id="jumlaMtaji">…</div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="n" id="kpiWateja">…</div><div class="l" data-i18n="db_total_clients">Total Clients</div></div>
+    <div class="kpi"><div class="n green" id="kpiSafi">…</div><div class="l" data-i18n="db_active_capital">Active Capital</div></div>
+    <div class="kpi"><div class="n red" id="kpiChafu">…</div><div class="l" data-i18n="db_overdue_capital">Overdue Capital</div></div>
+  </div>
+
+  <div class="section-label" data-i18n="db_agent_breakdown">Agent Breakdown</div>
+  <div class="analysis-panel"><div id="agentList"><div class="state-msg" data-i18n="db_loading">Loading data...</div></div></div>
+
+  <div class="footnote" id="footnote"></div>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://euhteovuhdvefzaavlqx.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1aHRlb3Z1aGR2ZWZ6YWF2bHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NjQwNjEsImV4cCI6MjA5NzE0MDA2MX0.gaV1mShFhVHVpxAqCptJsiSr4r-d3_OYvdtH0bpR58Q";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const DAY = 86400000;
+
+function tzs(n){ return Math.round(n).toLocaleString('en-US') + " TZS"; }
+function statusOf(loan){ return (Date.now() > Date.parse(loan.d_kamilisha) + DAY) ? 'chafu' : 'safi'; }
+function deniBaki(loan){ return Math.max(0, Number(loan.jumla) - (loan.mikopo_payments||[]).reduce((s,p)=>s+Number(p.kiasi),0)); }
+
+/* ---------------- THEME (dark/light) ---------------- */
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeToggleBtn').textContent = theme==='light' ? '☀️' : '🌙';
+  localStorage.setItem('hekima_theme', theme);
+}
+function toggleTheme(){
+  const cur = localStorage.getItem('hekima_theme') || 'light';
+  applyTheme(cur === 'dark' ? 'light' : 'dark');
+}
+
+/* ---------------- LANGUAGE (EN/SW) ---------------- */
+const HK_TR = {
+  en: {
+    t_menu:"‹ Menu", t_logout:"Log Out",
+    db_title:"Hekima Finance", db_refresh:"↻ Refresh", db_total_capital:"Total Capital",
+    db_capital_sub:"Money currently circulating (active loans only)", db_total_clients:"Total Clients",
+    db_active_capital:"Active Capital", db_overdue_capital:"Overdue Capital", db_agent_breakdown:"Agent Breakdown",
+    db_loading:"Loading data...", db_no_data:"No data yet.", db_clients:"Clients", db_active_loans:"Active Loans",
+    db_total:"Total", db_print:"🖨️ Print", db_live_data:"Live data —"
+  },
+  sw: {
+    t_menu:"‹ Menyu", t_logout:"Toka",
+    db_title:"Hekima Finance", db_refresh:"↻ Onyesha Upya", db_total_capital:"Mtaji Jumla",
+    db_capital_sub:"Fedha zinazozunguka sasa (mikopo hai pekee)", db_total_clients:"Jumla ya Wateja",
+    db_active_capital:"Mtaji Hai", db_overdue_capital:"Mtaji Uliochelewa", db_agent_breakdown:"Uchambuzi wa Wakala",
+    db_loading:"Inapakia...", db_no_data:"Hakuna data bado.", db_clients:"Wateja", db_active_loans:"Mikopo Hai",
+    db_total:"Jumla", db_print:"🖨️ Chapisha", db_live_data:"Data ya sasa —"
+  }
+};
+function t(key){ const lang = localStorage.getItem('hekima_lang') || 'en'; return (HK_TR[lang] && HK_TR[lang][key]) || HK_TR.en[key] || key; }
+function applyLang(lang){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    if(HK_TR[lang] && HK_TR[lang][key]) el.textContent = HK_TR[lang][key];
+  });
+  document.getElementById('langToggleBtn').textContent = lang==='en' ? 'EN' : 'SW';
+  localStorage.setItem('hekima_lang', lang);
+}
+function toggleLang(){
+  const cur = localStorage.getItem('hekima_lang') || 'en';
+  applyLang(cur === 'en' ? 'sw' : 'en');
+  loadDashboard();
+}
+
+async function loadDashboard(){
+  document.getElementById('jumlaMtaji').textContent = "…";
+  document.getElementById('agentList').innerHTML = `<div class="state-msg">${t('db_loading')}</div>`;
+  try{
+    const [{data: agents, error:e1}, {data: clients, error:e2}] = await Promise.all([
+      sb.from('mikopo_agents').select('*').order('code'),
+      sb.from('mikopo_clients').select('*, mikopo_loans(*, mikopo_payments(*))'),
+    ]);
+    if(e1) throw e1; if(e2) throw e2;
+
+    const buckets = {}; (agents||[]).forEach(a=> buckets[a.code] = {name:a.name, clientCount:0, loanCount:0, safi:0, chafu:0});
+
+    let totalSafi=0, totalChafu=0, totalActiveLoans=0;
+    (clients||[]).forEach(c=>{
+      const activeLoans = (c.mikopo_loans||[]).filter(l=> deniBaki(l) > 0);
+      if(activeLoans.length===0) return;
+      if(c.agent_code && buckets[c.agent_code]) buckets[c.agent_code].clientCount += 1;
+      activeLoans.forEach(l=>{
+        const bal = deniBaki(l);
+        const st = statusOf(l);
+        totalActiveLoans += 1;
+        if(st==='safi') totalSafi += bal; else totalChafu += bal;
+        if(c.agent_code && buckets[c.agent_code]){
+          buckets[c.agent_code].loanCount += 1;
+          if(st==='safi') buckets[c.agent_code].safi += bal; else buckets[c.agent_code].chafu += bal;
+        }
+      });
+    });
+
+    document.getElementById('jumlaMtaji').textContent = tzs(totalSafi+totalChafu);
+    document.getElementById('kpiWateja').textContent = (clients||[]).length;
+    document.getElementById('kpiSafi').textContent = tzs(totalSafi);
+    document.getElementById('kpiChafu').textContent = tzs(totalChafu);
+
+    const codes = Object.keys(buckets).filter(c=>buckets[c].loanCount>0);
+    const listEl = document.getElementById('agentList');
+    listEl.innerHTML = codes.length===0 ? `<div class="state-msg">${t('db_no_data')}</div>` :
+      codes.map(code=>{
+        const b = buckets[code];
+        return `
+        <div class="agent-card">
+          <div class="agent-head"><span class="agent-badge">${code}</span><span class="agent-name">${b.name}</span></div>
+          <div class="agent-row"><span class="lbl">${t('db_clients')}</span><span class="val-count">${b.clientCount}</span></div>
+          <div class="agent-row"><span class="lbl">${t('db_active_loans')}</span><span class="val-count">${b.loanCount}</span></div>
+          <div class="agent-row"><span class="lbl">${t('db_active_capital')}</span><span class="val-green">${tzs(b.safi)}</span></div>
+          <div class="agent-row"><span class="lbl">${t('db_overdue_capital')}</span><span class="val-red">${tzs(b.chafu)}</span></div>
+          <div class="agent-row"><span class="lbl">${t('db_total')}</span><span class="val-total">${tzs(b.safi+b.chafu)}</span></div>
+          <div class="chapa-row"><button class="chapa-btn" onclick="window.print()">${t('db_print')}</button></div>
+        </div>`;
+      }).join('');
+
+    document.getElementById('footnote').textContent = t('db_live_data') + " " + new Date().toLocaleString('en-GB');
+  } catch(err){
+    document.getElementById('jumlaMtaji').textContent = "Error";
+    document.getElementById('agentList').innerHTML = '<div class="state-msg">Failed to load: '+(err.message||err)+'</div>';
+  }
+}
+
+let ME = null;
+
+async function isCurrentUserAdmin(){
+  const { data: { user } } = await sb.auth.getUser();
+  if(!user) return false;
+  const { data: profile } = await sb.from('mikopo_profiles').select('*').eq('id', user.id).single();
+  ME = profile;
+  return !!(profile && profile.active);
+}
+
+async function checkAuth(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(session){
+    if(await isCurrentUserAdmin()){ enterApp(); }
+    else {
+      await sb.auth.signOut();
+      document.getElementById('authLoading').style.display='none';
+      document.getElementById('loginBox').style.display='block';
+      document.getElementById('appContent').style.display='none';
+      document.getElementById('loginErr').textContent = 'This account is not active. Contact the admin.';
+    }
+  } else {
+    document.getElementById('authLoading').style.display='none';
+    document.getElementById('loginBox').style.display='block';
+    document.getElementById('appContent').style.display='none';
+  }
+}
+function enterApp(){
+  document.getElementById('authGate').style.display='none';
+  document.getElementById('appContent').style.display='block';
+  loadDashboard();
+}
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  document.getElementById('loginErr').textContent='';
+  const {error} = await sb.auth.signInWithPassword({email,password:pass});
+  if(error){ document.getElementById('loginErr').textContent = error.message; return; }
+  if(await isCurrentUserAdmin()){ enterApp(); }
+  else {
+    await sb.auth.signOut();
+    document.getElementById('loginErr').textContent = 'This account is not active. Contact the admin.';
+  }
+}
+async function doLogout(){ await sb.auth.signOut(); location.reload(); }
+
+function setLoginGreeting(){
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Habari za Asubuhi' : h < 17 ? 'Habari za Mchana' : 'Habari za Jioni';
+  const el = document.getElementById('loginGreeting');
+  if(el) el.textContent = g;
+}
+function togglePwVisibility(){
+  const input = document.getElementById('loginPass');
+  const btn = document.getElementById('pwEyeBtn');
+  if(!input) return;
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  if(btn) btn.style.opacity = showing ? '1' : '0.55';
+}
+setLoginGreeting();
+applyTheme(localStorage.getItem('hekima_theme') || 'light');
+applyLang(localStorage.getItem('hekima_lang') || 'en');
+checkAuth();
+</script>
+</body>
+</html>
