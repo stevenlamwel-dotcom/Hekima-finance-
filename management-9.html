@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hekima Finance — Management Department</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#0a1f36; --panel:#123152; --panel2:#0e2743; --border:#1f3f61;
+    --cyan:#c89a3d; --cyan-dim:rgba(200,154,61,0.16);
+    --green:#1f9d74; --red:#e2645a; --text:#eef2f6; --sub:#93a7ba;
+  }
+  html[data-theme="light"]{
+    --bg:#f5f6f1; --panel:#ffffff; --panel2:#eceee6; --border:#dee1d7;
+    --text:#12202f; --sub:#51606c;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding-bottom:60px;}
+  .wrap{max-width:760px;margin:0 auto;padding:20px 16px 40px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:8px;flex-wrap:wrap;}
+  .topbar h1{font-size:17px;margin:0;font-weight:600;}
+  .icon-toggle-btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;}
+  .back-link{color:var(--cyan);text-decoration:none;font-size:13px;}
+  .logout-link{font-size:11px;color:var(--sub);cursor:pointer;text-decoration:underline;margin-left:10px;}
+
+  .auth-gate{
+    position:fixed;inset:0;
+    background:radial-gradient(120% 90% at 12% 0%, rgba(31,157,116,0.32), transparent 55%),
+      radial-gradient(120% 90% at 88% 100%, rgba(200,154,61,0.28), transparent 55%),
+      linear-gradient(160deg,#0a1f36 0%, #123152 60%, #0a1f36 100%);
+    display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
+  }
+  .auth-loading{color:#dbe3ea;font-size:13px;text-align:center;}
+  .login-box{width:100%;max-width:380px;background:rgba(255,255,255,0.98);border:1px solid rgba(255,255,255,0.4);border-radius:26px;padding:32px 26px 26px;box-shadow:0 30px 70px rgba(0,0,0,0.35);}
+  .login-greeting{font-size:13px;font-weight:600;color:#b9863a;margin-bottom:6px;}
+  .login-box h2{margin:0 0 4px;font-size:26px;font-weight:800;color:#12202f;}
+  .login-box p{margin:0 0 22px;font-size:13.5px;color:#5b6b80;}
+  .login-label{display:block;font-size:12.5px;color:#51606c;font-weight:600;margin:0 0 6px;}
+  .login-field{position:relative;margin-bottom:16px;}
+  .login-field .fico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#8a97a6;}
+  .login-input{width:100%;background:#f5f6f4;border:1.5px solid #e1e4dd;color:#12202f;padding:13px 14px 13px 42px;border-radius:12px;font-size:15px;}
+  .login-input:focus{outline:none;border-color:#c89a3d;background:#fff;}
+  .pw-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#8a97a6;cursor:pointer;padding:7px;display:flex;}
+  .login-btn{width:100%;background:#0a1f36;color:#fff;border:none;padding:15px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+  .login-btn:active{background:#123152;}
+  .login-err{color:#c0392b;font-size:12.5px;margin-top:12px;min-height:14px;text-align:center;}
+  .login-help{text-align:center;margin-top:16px;font-size:13px;}
+  .login-help a{color:#123152;text-decoration:none;font-weight:600;}
+  .login-foot{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:12px;color:rgba(255,255,255,0.55);}
+  .denied{max-width:380px;background:rgba(255,255,255,0.98);border-radius:20px;padding:30px;text-align:center;color:#12202f;}
+
+  .tabs{display:flex;gap:8px;margin-bottom:18px;overflow-x:auto;padding-bottom:2px;}
+  .tab{flex:none;padding:10px 16px;border-radius:10px;background:var(--panel);border:1px solid var(--border);color:var(--sub);font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap;}
+  .tab.active{background:var(--cyan);color:#231603;border-color:var(--cyan);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px;}
+  .card h3{margin:0 0 12px;font-size:15px;}
+  .field{margin-bottom:10px;}
+  .field label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px;}
+  .field input, .field select, .field textarea{
+    width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    padding:10px 12px;border-radius:9px;font-size:14px;
+  }
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .btn{background:var(--cyan);color:#231603;border:none;padding:11px 18px;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer;}
+  .btn.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border);}
+  .msg{font-size:12.5px;margin-top:8px;min-height:14px;}
+  .msg.err{color:var(--red);}
+  .msg.ok{color:var(--green);}
+  .empty{color:var(--sub);font-size:13px;padding:14px 0;text-align:center;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;color:var(--sub);font-weight:600;font-size:11.5px;padding:8px 8px;border-bottom:1px solid var(--border);}
+  td{padding:8px 8px;border-bottom:1px solid var(--border);}
+  .scrollx{overflow-x:auto;}
+  .badge{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;}
+  .badge.active{background:rgba(31,157,116,0.15);color:var(--green);}
+  .badge.inactive{background:rgba(226,100,90,0.15);color:var(--red);}
+  .report-item{border-bottom:1px solid var(--border);padding:10px 0;font-size:13px;}
+  .report-item:last-child{border-bottom:none;}
+  .report-item .meta{color:var(--sub);font-size:11.5px;margin-bottom:4px;}
+  .kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+  .kpi-box{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;}
+  .kpi-box .num{font-size:22px;font-weight:800;}
+  .kpi-box .lbl{font-size:11.5px;color:var(--sub);margin-top:2px;}
+  .lock-note{font-size:12px;color:var(--sub);padding:10px 0;}
+</style>
+</head>
+<body>
+
+<div class="auth-gate" id="authGate">
+  <div class="auth-loading" id="authLoading">Loading...</div>
+  <div class="login-box" id="loginBox" style="display:none">
+    <div class="login-greeting" id="loginGreeting">Habari</div>
+    <h2>Ingia</h2>
+    <p>Tumia akaunti yako ya Hekima Finance kuingia.</p>
+    <label class="login-label" for="loginEmail">Barua pepe</label>
+    <div class="login-field">
+      <svg class="fico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9 6 9-6M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/></svg>
+      <input class="login-input" id="loginEmail" type="email" placeholder="jina@hekimafinance.co.tz">
+    </div>
+    <label class="login-label" for="loginPass">Nywila</label>
+    <div class="login-field">
+      <svg class="fico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <input class="login-input" id="loginPass" type="password" placeholder="••••••••">
+      <button type="button" class="pw-eye" id="pwEyeBtn" onclick="togglePwVisibility()" aria-label="Onyesha nywila">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Ingia</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-help"><a href="mailto:stevenlamwel@gmail.com">Umesahau nywila? Wasiliana na msimamizi</a></div>
+  </div>
+  <div class="denied" id="deniedBox" style="display:none">
+    <h2 style="margin:0 0 10px;font-size:20px;">Huna ruhusa</h2>
+    <p style="color:#5b6b80;font-size:14px;">Sehemu ya Management inapatikana kwa uongozi mkuu pekee.</p>
+    <a href="portal.html" style="display:inline-block;margin-top:14px;color:#123152;font-weight:600;">‹ Rudi kwenye menyu</a>
+  </div>
+  <div class="login-foot">Hekima Finance &middot; Iringa, Tanzania</div>
+</div>
+
+<div id="appContent" style="display:none">
+<div class="wrap">
+  <div class="topbar">
+    <h1>Management Department</h1>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      <a href="portal.html" class="back-link">‹ Menu</a>
+      <button class="icon-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">🌙</button>
+      <span class="logout-link" onclick="doLogout()">Log Out</span>
+    </div>
+  </div>
+  <p style="font-size:12.5px;color:var(--sub);margin-top:-8px;">Ofisi kuu ya Hekima Finance. Hupokea ripoti kutoka Operations na kutoka idara zote, na hutoa mamlaka ya ufikiaji.</p>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="reports" onclick="switchTab('reports')">Ripoti za Operations</div>
+    <div class="tab" data-tab="users" onclick="switchTab('users')">Watumiaji &amp; Ruhusa</div>
+    <div class="tab" data-tab="vyeo" onclick="switchTab('vyeo')">Vyeo (Positions)</div>
+    <div class="tab" data-tab="debts" onclick="switchTab('debts')">Madeni ya Wafanyakazi</div>
+    <div class="tab" data-tab="payroll" onclick="switchTab('payroll')">Payroll</div>
+    <div class="tab" data-tab="futa" onclick="switchTab('futa')">Futa (CEO)</div>
+    <div class="tab" data-tab="muundo" onclick="switchTab('muundo')">Muundo wa Timu</div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="panel active" id="panel-reports">
+    <div class="card">
+      <h3>Ripoti Kutoka Operations Department</h3>
+      <div id="reportsList"></div>
+      <div class="empty" id="reportsEmpty" style="display:none">Bado hakuna ripoti kutoka Operations.</div>
+    </div>
+  </div>
+
+  <!-- USERS / PERMISSIONS -->
+  <div class="panel" id="panel-users">
+    <div class="card">
+      <h3>Tengeneza Akaunti Mpya ya Kuingia</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Weka Agent Code tu kama huyu ni Agent/Zone Manager/Supervisor anayehitaji kuonekana kwenye Client List/Combine.</p>
+      <div class="field"><label>Jina Kamili</label><input id="mgAcName" placeholder="Jina la mtumiaji"></div>
+      <div class="field"><label>Agent Code (hiari)</label><input id="mgAcAgentCode" style="text-transform:uppercase" placeholder="mfano: JUM"></div>
+      <div class="field"><label>Email</label><input id="mgAcEmail" type="email" placeholder="example@gmail.com"></div>
+      <div class="field"><label>Password</label><input id="mgAcPass" type="password" placeholder="Angalau herufi 6"></div>
+      <button class="btn" id="mgAcBtn" onclick="mgCreateAccount()">Tengeneza Akaunti</button>
+      <div class="msg" id="mgAcMsg"></div>
+    </div>
+    <div class="card" id="superAdminOnlyCard">
+      <h3>Mpe Mtu Mamlaka ya Usimamizi</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Mamlaka ya "Admin Mdogo" (Manager) haimpi ufikiaji sawa na Admin Mkuu — anaweza kuzuiwa kwenye idara fulani.</p>
+      <div class="field"><label>Mtumiaji</label><select id="userSelect"></select></div>
+      <div class="field"><label>Jukumu (Role)</label>
+        <select id="userRole">
+          <option value="agent">Agent (Loans pekee)</option>
+          <option value="hr">HR Officer</option>
+          <option value="operations">Operations Officer</option>
+          <option value="manager">Manager (Admin Mdogo)</option>
+          <option value="admin">Admin Mkuu (Ufikiaji Wote)</option>
+        </select>
+      </div>
+      <div class="field"><label>Idara Anazoruhusiwa (kwa Manager/Agent, hiari)</label>
+        <input id="userDepts" placeholder="mfano: Loans, Operations, Combine">
+        <p style="font-size:11px;color:var(--sub);margin:4px 0 0;">Andika "Combine" ili kumpa mtu ruhusa ya kuona/kuhariri Combine (hazina ya ofisi) chini ya Loans Department.</p>
+      </div>
+      <button class="btn" onclick="updateUserRole()">Hifadhi Ruhusa</button>
+      <div class="msg" id="userMsg"></div>
+    </div>
+
+    <div class="card">
+      <h3>Orodha ya Watumiaji</h3>
+      <div class="scrollx"><table>
+        <thead><tr><th>Jina</th><th>Email</th><th>Role</th><th>Hali</th></tr></thead>
+        <tbody id="usersTableBody"></tbody>
+      </table></div>
+      <div class="empty" id="usersEmpty" style="display:none">Hakuna watumiaji.</div>
+    </div>
+  </div>
+
+  <!-- VYEO / POSITIONS -->
+  <div class="panel" id="panel-vyeo">
+    <div class="card">
+      <h3>Weka Cheo cha Mfanyakazi</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Hii inaamua nani anaonekana kwenye Chain of Command na nani anaweza kufungua Management (CEO na Managing Director pekee).</p>
+      <div class="field"><label>Mtumiaji</label><select id="posUserSelect"></select></div>
+      <div class="field"><label>Cheo</label>
+        <select id="posPosition">
+          <option>CEO</option>
+          <option>Managing Director</option>
+          <option>Operations Director</option>
+          <option>Finance Director</option>
+          <option>Human Resources Director</option>
+          <option>Supervisor</option>
+          <option>Zone Manager</option>
+          <option>Agent</option>
+        </select>
+      </div>
+      <div class="field"><label>Idara</label><input id="posDept" placeholder="mfano: Operations"></div>
+      <div class="field"><label>Anaripoti Kwa (Msimamizi)</label><select id="posSupervisor"><option value="">— Hakuna —</option></select></div>
+      <div class="row2">
+        <div class="field"><label>Simu</label><input id="posPhone" placeholder="0xxxxxxxxx"></div>
+        <div class="field"><label>Tarehe ya Kuajiriwa</label><input id="posHireDate" type="date"></div>
+      </div>
+      <button class="btn" onclick="savePosition()">Hifadhi Cheo</button>
+      <div class="msg" id="posMsg"></div>
+    </div>
+    <div class="card">
+      <h3>Orodha ya Vyeo</h3>
+      <div class="scrollx"><table>
+        <thead><tr><th>Jina / Email</th><th>Cheo</th><th>Idara</th><th>Anaripoti Kwa</th></tr></thead>
+        <tbody id="vyeoTableBody"></tbody>
+      </table></div>
+      <div class="empty" id="vyeoEmpty" style="display:none">Hakuna vyeo vilivyowekwa bado.</div>
+    </div>
+  </div>
+
+  <!-- MADENI YA WAFANYAKAZI -->
+  <div class="panel" id="panel-debts">
+    <div class="card">
+      <h3>Mtiririko wa Madeni</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Kila deni linafuatiliwa hadi liishe. Makato ya kila mwezi unayoweka hapa yanajazwa yenyewe kwenye Payroll (unaweza kuyabadilisha mwezi husika).</p>
+      <div id="mdList"><div class="empty">Inapakia...</div></div>
+      <div class="msg" id="mdMsg"></div>
+    </div>
+    <div class="card">
+      <h3>Maombi Yanayosubiri (kutoka HR)</h3>
+      <div id="debtPendingList"></div>
+      <div class="empty" id="debtPendingEmpty" style="display:none">Hakuna ombi linalosubiri.</div>
+    </div>
+    <div class="card">
+      <h3>Weka Deni/Faini Moja kwa Moja</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Hii inaidhinishwa papo hapo, bila kupitia HR.</p>
+      <div class="field"><label>Mfanyakazi</label><select id="dcEmp"></select></div>
+      <div class="field"><label>Aina</label>
+        <select id="dcKind"><option value="hasara">Hasara</option><option value="faini">Faini</option><option value="mkopo">Mkopo</option><option value="nyingine">Nyingine</option></select>
+      </div>
+      <div class="field"><label>Kiasi (TZS)</label><input id="dcAmount" type="number" min="1"></div>
+      <div class="field"><label>Maelezo (hiari)</label><input id="dcNote"></div>
+      <button class="btn" id="dcBtn" onclick="ceoAddDebtDirect()">Hifadhi Deni</button>
+      <div class="msg" id="dcMsg"></div>
+    </div>
+    <div class="card">
+      <h3>Madeni Yote</h3>
+      <div class="scrollx"><table>
+        <thead><tr><th>Jina</th><th>Aina</th><th>Kiasi</th><th>Kilichobaki</th><th>Chanzo</th><th>Hali</th></tr></thead>
+        <tbody id="debtAllTableBody"></tbody>
+      </table></div>
+      <div class="empty" id="debtAllEmpty" style="display:none">Hakuna madeni bado.</div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-payroll">
+    <div class="card">
+      <h3>Tengeneza Payroll ya Mwezi</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Wewe unaamua kiasi cha kila mfanyakazi. Makato ya madeni yanajazwa kutoka ratiba ya deni (unaweza kubadilisha). Kisha unamtumia HR kuhakiki, na BALANCE ndio wanalipa.</p>
+      <div class="row2">
+        <div class="field"><label>Mwezi</label><input id="mpPeriod" type="month"></div>
+        <div class="field"><label>&nbsp;</label><button class="btn" onclick="mpCreate()" style="width:100%">Tengeneza</button></div>
+      </div>
+      <div class="msg" id="mpMsg"></div>
+    </div>
+    <div class="card"><h3>Payroll Zote</h3><div id="mpRuns"><div class="empty">Inapakia...</div></div></div>
+    <div class="card" id="mpDetailCard" style="display:none"><h3 id="mpDetailTitle"></h3><div id="mpDetail"></div><div class="msg" id="mpDetailMsg"></div></div>
+  </div>
+
+  <div class="panel" id="panel-muundo">
+    <div class="card">
+      <h3>Muundo wa Timu</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Bandika muundo kutoka Excel au PDF, mstari mmoja kwa agent, safu zikitenganishwa na <b>|</b>. Mpangilio: TAWI | ENEO | UPDATE | AG CODE | NO | AGENT | ZONE MANAGER. Safu zisizo na taarifa acha wazi.</p>
+      <div class="field"><label>Kichwa cha PDF</label><input id="muTitle" placeholder="BRANCH AGENT STRUCTURE"></div>
+      <div class="field"><label>Maelezo madogo (hiari)</label><input id="muSub" placeholder="Muundo kamili wa timu"></div>
+      <div class="field"><label>Bandika mistari hapa</label><textarea id="muPaste" rows="6" style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:8px;font-family:inherit;font-size:12.5px;" placeholder="DSM | BUNJU B | UPDATE 1 | MRM | 1 | MARIAM | MAXIMO"></textarea></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn" onclick="muApply('replace')">Badilisha orodha yote</button>
+        <button class="btn secondary" onclick="muApply('append')">Ongeza mistari</button>
+      </div>
+      <div class="msg" id="muMsg"></div>
+    </div>
+    <div class="card">
+      <h3 id="muCount">Muundo wa sasa</h3>
+      <div id="muPreview"><div class="empty">Inapakia...</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
+        <button class="btn" onclick="muSave()">Hifadhi muundo</button>
+        <button class="btn secondary" onclick="muPdf()">Pakua PDF</button>
+      </div>
+      <div class="msg" id="muSaveMsg"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-futa">
+    <div class="card">
+      <p style="font-size:12px;color:var(--sub);margin:0;">Sehemu hii ni ya CEO pekee. Kila ufutaji unaandikwa kwenye kumbukumbu (audit log) na database inakataa mtu mwingine. Utaombwa kuandika FUTA kuthibitisha.</p>
+    </div>
+    <div class="card"><h3>Futa Mfanyakazi</h3><div id="fEmps"><div class="empty">Fungua tab hii kupakia...</div></div></div>
+    <div class="card"><h3>Futa Account</h3><div id="fAccts"></div></div>
+    <div class="card">
+      <h3>Futa Mteja / Historia ya Malipo</h3>
+      <div class="field"><input id="fClientQ" placeholder="Tafuta jina la mteja..." oninput="fSearchClients()"></div>
+      <div id="fClients"></div>
+    </div>
+    <div class="msg" id="fMsg"></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://euhteovuhdvefzaavlqx.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1aHRlb3Z1aGR2ZWZ6YWF2bHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NjQwNjEsImV4cCI6MjA5NzE0MDA2MX0.gaV1mShFhVHVpxAqCptJsiSr4r-d3_OYvdtH0bpR58Q";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let CURRENT_ROLE = null;
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+name));
+  if(name==='debts'){ loadDebtsEmp(); loadPendingDebtRequests(); loadAllDebts(); mdLoad(); }
+  if(name==='payroll'){ mpLoadRuns(); }
+  if(name==='futa'){ fLoadAll(); }
+  if(name==='muundo'){ muLoad(); }
+}
+
+async function loadDebtsEmp(){
+  const { data, error } = await sb.from('mikopo_profiles').select('id, full_name, email').eq('active', true).order('full_name');
+  if(error) return;
+  document.getElementById('dcEmp').innerHTML = (data||[]).map(p => `<option value="${p.id}">${p.full_name||p.email}</option>`).join('');
+}
+
+async function openDebtLetter(path){
+  const { data, error } = await sb.storage.from('debt-letters').createSignedUrl(path, 300);
+  if(error){ alert('Imeshindwa kufungua barua: '+error.message); return; }
+  window.open(data.signedUrl, '_blank');
+}
+
+async function loadPendingDebtRequests(){
+  const box = document.getElementById('debtPendingList');
+  const { data, error } = await sb.rpc('list_all_debts', { p_status: 'inasubiri' });
+  if(error){ box.innerHTML=''; document.getElementById('debtPendingEmpty').style.display='block'; return; }
+  const rows = (data||[]).filter(r=>r.source==='hr_request' || r.source==='staff_loan_request');
+  document.getElementById('debtPendingEmpty').style.display = rows.length ? 'none' : 'block';
+  box.innerHTML = rows.map(r => `
+    <div style="border:1px solid var(--border);border-radius:10px;padding:10px;margin-top:8px;">
+      <div style="display:flex;justify-content:space-between;font-weight:700;"><span>${r.full_name}</span><span>${Number(r.amount).toLocaleString('en-US')}</span></div>
+      <div style="font-size:11.5px;color:var(--sub);margin-top:3px;">${r.kind} · Imeombwa na ${r.requested_by_name||'-'}${r.note?' · '+r.note:''}</div>
+      ${r.letter_path ? `<a href="#" onclick="openDebtLetter('${r.letter_path}');return false;" style="font-size:12px;color:var(--gold);display:inline-block;margin-top:6px;">📄 Fungua Barua ya Kukiri Deni</a>` : `<div style="font-size:11px;color:var(--sub);margin-top:4px;">Ombi la mkopo la mfanyakazi mwenyewe</div>`}
+      <div style="display:flex;gap:8px;margin-top:9px;">
+        <button onclick="decideDebtRequest('${r.id}',true)" style="flex:1;background:var(--green);border:none;color:#052015;padding:9px;border-radius:8px;font-weight:700;cursor:pointer;">Kubali</button>
+        <button onclick="decideDebtRequest('${r.id}',false)" style="flex:1;background:var(--red);border:none;color:#2a0805;padding:9px;border-radius:8px;font-weight:700;cursor:pointer;">Kataa</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function decideDebtRequest(id, approve){
+  const { error } = await sb.rpc('ceo_decide_debt_request', { p_id: id, p_approve: approve, p_note: null });
+  if(error){ alert('Imeshindwa: '+error.message); return; }
+  loadPendingDebtRequests(); loadAllDebts();
+}
+
+async function ceoAddDebtDirect(){
+  const msg = document.getElementById('dcMsg');
+  msg.className='msg'; msg.textContent='';
+  const profile_id = document.getElementById('dcEmp').value;
+  const kind = document.getElementById('dcKind').value;
+  const amount = parseFloat(document.getElementById('dcAmount').value);
+  const note = document.getElementById('dcNote').value.trim() || null;
+  if(!profile_id || !amount || amount<=0){ msg.className='msg err'; msg.textContent='Chagua mfanyakazi na kiasi sahihi.'; return; }
+  document.getElementById('dcBtn').disabled = true;
+  const { error } = await sb.rpc('ceo_add_debt_direct', { p_profile_id: profile_id, p_kind: kind, p_amount: amount, p_note: note });
+  document.getElementById('dcBtn').disabled = false;
+  if(error){ msg.className='msg err'; msg.textContent='Hitilafu: '+error.message; return; }
+  msg.className='msg ok'; msg.textContent='✓ Deni limehifadhiwa.';
+  document.getElementById('dcAmount').value=''; document.getElementById('dcNote').value='';
+  loadAllDebts();
+}
+
+async function loadAllDebts(){
+  const body = document.getElementById('debtAllTableBody');
+  const { data, error } = await sb.rpc('list_all_debts');
+  if(error){ body.innerHTML=''; return; }
+  const rows = data||[];
+  const srcLbl = { dwo:'DWO', hr_request:'HR', ceo_direct:'CEO' };
+  body.innerHTML = rows.map(r => `
+    <tr><td>${r.full_name}</td><td>${r.kind}</td><td>${Number(r.amount).toLocaleString('en-US')}</td>
+    <td>${Number(r.balance).toLocaleString('en-US')}</td><td>${srcLbl[r.source]||r.source}</td>
+    <td><span class="badge ${r.status==='imekubaliwa'?'active':(r.status==='imekataliwa'?'inactive':'')}">${r.status}</span></td></tr>
+  `).join('');
+  document.getElementById('debtAllEmpty').style.display = rows.length ? 'none' : 'block';
+}
+
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeToggleBtn').textContent = theme==='light' ? '☀️' : '🌙';
+  localStorage.setItem('hekima_theme', theme);
+}
+function toggleTheme(){
+  const cur = localStorage.getItem('hekima_theme') || 'light';
+  applyTheme(cur === 'light' ? 'dark' : 'light');
+}
+
+async function loadKpis(){
+  const [{count:empCount}, {count:loanCount}, {count:clientCount}] = await Promise.all([
+    sb.from('hr_employees').select('*', {count:'exact', head:true}),
+    sb.from('mikopo_loans').select('*', {count:'exact', head:true}).eq('status','active'),
+    sb.from('mikopo_clients').select('*', {count:'exact', head:true})
+  ]);
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi-box"><div class="num">${empCount ?? '—'}</div><div class="lbl">Wafanyakazi Waliosajiliwa</div></div>
+    <div class="kpi-box"><div class="num">${loanCount ?? '—'}</div><div class="lbl">Mikopo Inayoendelea</div></div>
+  `;
+}
+
+async function loadReports(){
+  const { data, error } = await sb.from('ops_reports').select('*').order('created_at', {ascending:false}).limit(50);
+  const list = document.getElementById('reportsList');
+  if(error){ list.innerHTML=''; return; }
+  const statusLabel = { draft:'Rasimu', sent:'Mpya — Haijathibitishwa', acknowledged:'Imethibitishwa' };
+  list.innerHTML = (data||[]).map(r => `
+    <div class="report-item">
+      <div class="meta">Kipindi ${r.period} · <span class="badge ${r.status==='acknowledged'?'active':'inactive'}">${statusLabel[r.status]||r.status}</span></div>
+      <div><b>Utekelezaji:</b> ${r.execution_summary||'—'}</div>
+      ${r.implementation_plan ? `<div><b>Mipango:</b> ${r.implementation_plan}</div>` : ''}
+      ${r.vision_notes ? `<div><b>Dira:</b> ${r.vision_notes}</div>` : ''}
+      ${r.kpi_notes ? `<div><b>KPIs:</b> ${r.kpi_notes}</div>` : ''}
+      ${r.status !== 'acknowledged' ? `<button class="btn secondary" style="margin-top:8px;" onclick="ackReport('${r.id}')">Thibitisha Kupokea</button>` : ''}
+    </div>`).join('');
+  document.getElementById('reportsEmpty').style.display = (data||[]).length ? 'none':'block';
+}
+
+async function ackReport(id){
+  const { data:{ user } } = await sb.auth.getUser();
+  const { error } = await sb.from('ops_reports').update({ status:'acknowledged', acknowledged_by:user?user.id:null }).eq('id', id);
+  if(error){ alert(error.message); return; }
+  loadReports();
+}
+
+async function mgCreateAccount(){
+  const msg = document.getElementById('mgAcMsg');
+  msg.className='msg'; msg.textContent='';
+  const full_name = document.getElementById('mgAcName').value.trim();
+  const agent_code = document.getElementById('mgAcAgentCode').value.trim().toUpperCase() || null;
+  const email = document.getElementById('mgAcEmail').value.trim();
+  const password = document.getElementById('mgAcPass').value;
+  if(!full_name || !email || !password || password.length < 6){
+    msg.className='msg err'; msg.textContent='Jaza jina, email na password (angalau herufi 6).';
+    return;
+  }
+  document.getElementById('mgAcBtn').disabled = true;
+  try{
+    if(agent_code){
+      const { data: existing } = await sb.from('mikopo_agents').select('code').eq('code', agent_code).maybeSingle();
+      if(!existing){
+        const { error: agErr } = await sb.from('mikopo_agents').insert({ code: agent_code, name: full_name });
+        if(agErr) throw agErr;
+      }
+    }
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-agent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ email, password, full_name, agent_code })
+    });
+    const result = await res.json();
+    if(!res.ok || result.error) throw new Error(result.error || 'Hitilafu isiyojulikana');
+    msg.className='msg ok'; msg.textContent='✓ Akaunti imetengenezwa. Mpe email na password hii.';
+    document.getElementById('mgAcName').value=''; document.getElementById('mgAcAgentCode').value='';
+    document.getElementById('mgAcEmail').value=''; document.getElementById('mgAcPass').value='';
+    loadUsers();
+  } catch(err){
+    msg.className='msg err'; msg.textContent='Hitilafu: '+(err.message||err);
+  } finally {
+    document.getElementById('mgAcBtn').disabled = false;
+  }
+}
+
+async function loadUsers(){
+  const { data, error } = await sb.from('mikopo_profiles').select('*').order('full_name');
+  const body = document.getElementById('usersTableBody');
+  if(error){ body.innerHTML=''; return; }
+  body.innerHTML = (data||[]).map(u => `
+    <tr><td>${u.full_name||'—'}</td><td>${u.email||''}</td><td>${u.role}${u.allowed_depts && u.allowed_depts.length ? ' ('+u.allowed_depts.join(', ')+')' : ''}</td>
+    <td><span class="badge ${u.active?'active':'inactive'}">${u.active?'Active':'Inactive'}</span></td></tr>
+  `).join('');
+  document.getElementById('usersEmpty').style.display = (data||[]).length ? 'none':'block';
+  document.getElementById('userSelect').innerHTML = (data||[]).map(u => `<option value="${u.id}">${u.full_name||u.email} (${u.role})</option>`).join('');
+  const label = u => `${u.full_name||'—'} · ${u.email||'bila email'}${u.agent_code ? ' · '+u.agent_code : ''}`;
+  document.getElementById('posUserSelect').innerHTML = (data||[]).map(u => `<option value="${u.id}">${label(u)}</option>`).join('');
+  document.getElementById('posSupervisor').innerHTML = '<option value="">— Hakuna —</option>' + (data||[]).map(u => `<option value="${u.id}">${label(u)}</option>`).join('');
+}
+
+async function loadVyeo(){
+  const { data, error } = await sb.rpc('list_staff_directory');
+  const body = document.getElementById('vyeoTableBody');
+  if(error){ body.innerHTML=''; document.getElementById('vyeoEmpty').style.display='block'; document.getElementById('vyeoEmpty').textContent='Imeshindwa kupakia: '+error.message; return; }
+  const rows = (data||[]).filter(r=>r.position);
+  body.innerHTML = rows.map(r => `
+    <tr><td>${r.full_name||'—'}<div style="font-size:11px;color:var(--sub)">${r.email||''}</div></td><td>${r.position}</td><td>${r.department||'—'}</td><td>${r.supervisor_name||'—'}</td></tr>
+  `).join('');
+  document.getElementById('vyeoEmpty').style.display = rows.length ? 'none':'block';
+}
+
+async function savePosition(){
+  const msg = document.getElementById('posMsg');
+  const profileId = document.getElementById('posUserSelect').value;
+  if(!profileId){ msg.textContent='Chagua mtumiaji'; msg.className='msg err'; return; }
+  const position = document.getElementById('posPosition').value;
+  const department = document.getElementById('posDept').value.trim() || null;
+  const supervisorId = document.getElementById('posSupervisor').value || null;
+  const phone = document.getElementById('posPhone').value.trim() || null;
+  const hireDate = document.getElementById('posHireDate').value || null;
+  const { error } = await sb.rpc('set_staff_position', {
+    p_profile_id: profileId, p_position: position, p_department: department,
+    p_supervisor_id: supervisorId, p_phone: phone, p_hire_date: hireDate
+  });
+  if(error){ msg.textContent = error.message; msg.className='msg err'; return; }
+  msg.textContent = 'Cheo kimehifadhiwa.'; msg.className='msg ok';
+  loadVyeo();
+}
+
+async function updateUserRole(){
+  if(CURRENT_ROLE !== 'admin'){ document.getElementById('userMsg').textContent='Ni Admin Mkuu pekee anayeweza kubadilisha ruhusa.'; document.getElementById('userMsg').className='msg err'; return; }
+  const id = document.getElementById('userSelect').value;
+  const role = document.getElementById('userRole').value;
+  const deptsRaw = document.getElementById('userDepts').value.trim();
+  const allowed_depts = deptsRaw ? deptsRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  const msg = document.getElementById('userMsg');
+  if(!id){ msg.textContent='Chagua mtumiaji'; msg.className='msg err'; return; }
+  const { error } = await sb.from('mikopo_profiles').update({ role, allowed_depts }).eq('id', id);
+  if(error){ msg.textContent = error.message; msg.className='msg err'; return; }
+  msg.textContent = 'Ruhusa zimehifadhiwa.'; msg.className='msg ok';
+  document.getElementById('userDepts').value='';
+  loadUsers();
+}
+
+async function checkAuth(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(session){
+    const { data: isTop, error } = await sb.rpc('current_top_management');
+    if(isTop && !error){ CURRENT_ROLE = 'admin'; enterApp(); }
+    else {
+      document.getElementById('authLoading').style.display='none';
+      document.getElementById('loginBox').style.display='none';
+      document.getElementById('deniedBox').style.display='block';
+      document.getElementById('appContent').style.display='none';
+    }
+  } else {
+    document.getElementById('authLoading').style.display='none';
+    document.getElementById('loginBox').style.display='block';
+    document.getElementById('appContent').style.display='none';
+  }
+}
+function enterApp(){
+  document.getElementById('authGate').style.display='none';
+  document.getElementById('appContent').style.display='block';
+  if(CURRENT_ROLE !== 'admin'){
+    const card = document.getElementById('superAdminOnlyCard');
+    card.innerHTML = '<h3>Mpe Mtu Mamlaka ya Usimamizi</h3><div class="lock-note">🔒 Sehemu hii ni ya Admin Mkuu pekee. Wewe una mamlaka ya Manager (mdogo) — unaweza kuona ripoti na watumiaji, lakini si kubadilisha ruhusa.</div>';
+  }
+  loadKpis();
+  loadReports();
+  loadUsers();
+  loadVyeo();
+}
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  document.getElementById('loginErr').textContent='';
+  const {error} = await sb.auth.signInWithPassword({email,password:pass});
+  if(error){ document.getElementById('loginErr').textContent = error.message; return; }
+  const role = await isCurrentUserActiveAdmin();
+  if(role){ CURRENT_ROLE = role; enterApp(); }
+  else {
+    document.getElementById('loginBox').style.display='none';
+    document.getElementById('deniedBox').style.display='block';
+  }
+}
+async function doLogout(){ await sb.auth.signOut(); location.reload(); }
+
+function setLoginGreeting(){
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Habari za Asubuhi' : h < 17 ? 'Habari za Mchana' : 'Habari za Jioni';
+  const el = document.getElementById('loginGreeting');
+  if(el) el.textContent = g;
+}
+function togglePwVisibility(){
+  const input = document.getElementById('loginPass');
+  const btn = document.getElementById('pwEyeBtn');
+  if(!input) return;
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  if(btn) btn.style.opacity = showing ? '1' : '0.55';
+}
+setLoginGreeting();
+applyTheme(localStorage.getItem('hekima_theme') || 'light');
+checkAuth();
+</script>
+
+<script>
+/* ======== Mtiririko wa Madeni, Payroll ya CEO, na Futa (CEO) ======== */
+const mE = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const mN = n => (Number(n)||0).toLocaleString('en-US');
+function mSay(id, text, ok){ const el=document.getElementById(id); if(!el) return; el.className='msg'+(ok===true?' ok':(ok===false?' err':'')); el.textContent=text||''; }
+function mConfirmDelete(what){ return (prompt(`Utafuta ${what}. Hatua hii haiwezi kurudishwa.\nAndika FUTA kuthibitisha:`)||'').trim().toUpperCase()==='FUTA'; }
+
+/* ---- Madeni ---- */
+async function mdLoad(){
+  const box=document.getElementById('mdList'); if(!box) return;
+  const { data, error } = await sb.rpc('debts_overview');
+  if(error){ box.innerHTML='<div class="empty">Sehemu hii bado haijawekwa kwenye database (SQL ya Sehemu 2 haijaendeshwa).</div>'; return; }
+  const rows=data||[];
+  box.innerHTML = rows.length ? rows.map(d=>{
+    const paid=Number(d.amount)-Number(d.balance), pct=d.amount>0?Math.min(100,Math.round(paid/d.amount*100)):0;
+    const done = d.status==='imekubaliwa' && Number(d.balance)<=0;
+    const chip = d.status==='inasubiri' ? ['Inasubiri idhini','var(--sub)'] : d.status==='imekataliwa' ? ['Limekataliwa','var(--red)'] : done ? ['Limeisha ✓','var(--green)'] : ['Linaendelea','var(--cyan)'];
+    const hist=(d.deductions||[]).map(x=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0;border-top:1px solid var(--border);">
+      <span style="color:var(--sub);">${new Date(x.at).toLocaleDateString('en-GB')} · ${mE(x.note||'Kato')}</span>
+      <span>-${mN(x.amount)} <a href="#" style="color:var(--red);margin-left:8px;" onclick="mdDelDeduction('${x.id}');return false;">futa</a></span></div>`).join('');
+    return `<div style="border-top:1px solid var(--border);padding:12px 0;">
+      <div style="display:flex;justify-content:space-between;gap:8px;"><b>${mE(d.full_name)} <span style="color:var(--sub);font-weight:400;">· ${mE(d.kind)}</span></b><span style="font-size:11px;font-weight:700;color:${chip[1]};">${chip[0]}</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:8px 0;font-size:12px;">
+        <div style="background:var(--panel2);border-radius:8px;padding:7px;"><div style="color:var(--sub);font-size:10.5px;">Deni</div><b>${mN(d.amount)}</b></div>
+        <div style="background:var(--panel2);border-radius:8px;padding:7px;"><div style="color:var(--sub);font-size:10.5px;">Limelipwa</div><b>${mN(paid)}</b></div>
+        <div style="background:var(--panel2);border-radius:8px;padding:7px;"><div style="color:var(--sub);font-size:10.5px;">Limebaki</div><b style="color:${done?'var(--green)':'var(--red)'};">${mN(d.balance)}</b></div>
+      </div>
+      <div style="height:6px;background:var(--panel2);border-radius:3px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:var(--green);"></div></div>
+      ${d.status==='imekubaliwa' && !done ? `<div style="display:flex;gap:8px;align-items:center;margin:10px 0 4px;flex-wrap:wrap;">
+        <span style="font-size:12px;color:var(--sub);">Kato kwa mwezi</span>
+        <input type="number" min="0" id="mdInst-${d.id}" value="${d.monthly_deduction||''}" placeholder="0" style="width:110px;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:7px;">
+        <button class="btn secondary" style="padding:6px 12px;font-size:12px;" onclick="mdSaveInst('${d.id}')">Hifadhi</button>
+        <span style="font-size:11.5px;color:var(--sub);">${d.months_left?('Miezi '+d.months_left+' imebaki'):'Weka kato ili kuona miezi'}</span></div>` : ''}
+      ${hist?`<div style="margin-top:6px;">${hist}</div>`:''}
+      <div style="text-align:right;margin-top:6px;"><a href="#" style="color:var(--red);font-size:12px;" onclick="mdDelDebt('${d.id}','${mE(d.full_name).replace(/'/g,'')}');return false;">Futa deni (CEO)</a></div>
+    </div>`;
+  }).join('') : '<div class="empty">Hakuna madeni bado.</div>';
+}
+async function mdSaveInst(id){
+  const v=parseFloat(document.getElementById('mdInst-'+id).value)||0;
+  const { error } = await sb.rpc('debt_set_installment',{ p_debt_id:id, p_monthly:v });
+  if(error){ mSay('mdMsg','Imeshindwa: '+error.message,false); return; }
+  mSay('mdMsg','Kato la kila mwezi limehifadhiwa ✓',true); mdLoad();
+}
+async function mdDelDeduction(id){
+  if(!mConfirmDelete('historia hii ya kato (salio la deni litarudi)')) return;
+  const { error } = await sb.rpc('ceo_delete_debt_deduction',{ p_deduction_id:id });
+  if(error){ mSay('mdMsg','Imeshindwa: '+error.message,false); return; }
+  mSay('mdMsg','Imefutwa ✓',true); mdLoad(); if(typeof loadAllDebts==='function') loadAllDebts();
+}
+async function mdDelDebt(id, who){
+  if(!mConfirmDelete('deni la '+who)) return;
+  const { error } = await sb.rpc('ceo_delete_debt',{ p_debt_id:id });
+  if(error){ mSay('mdMsg','Imeshindwa: '+error.message,false); return; }
+  mSay('mdMsg','Deni limefutwa ✓',true); mdLoad(); if(typeof loadAllDebts==='function') loadAllDebts();
+}
+
+/* ---- Payroll (CEO) ---- */
+let MP_RUNS=[], MP_OPEN=null;
+const MP_ST={rasimu:['Rasimu (CEO)','var(--sub)'],kwa_hr:['Inasubiri HR','var(--cyan)'],imehakikiwa:['Imehakikiwa - inasubiri Balance','var(--cyan)'],imelipwa:['Imelipwa ✓','var(--green)']};
+async function mpLoadRuns(){
+  const per=document.getElementById('mpPeriod'); if(per && !per.value) per.value=new Date().toLocaleDateString('sv-SE').slice(0,7);
+  const box=document.getElementById('mpRuns');
+  const { data, error } = await sb.rpc('payroll_list_runs');
+  if(error){ box.innerHTML='<div class="empty">Sehemu hii bado haijawekwa kwenye database (SQL ya Sehemu 2 haijaendeshwa).</div>'; return; }
+  MP_RUNS=data||[];
+  box.innerHTML = MP_RUNS.length ? MP_RUNS.map(r=>{
+    const st=MP_ST[r.status]||[r.status,'var(--sub)'];
+    return `<div style="border-top:1px solid var(--border);padding:10px 0;">
+      <div style="display:flex;justify-content:space-between;"><b>${mE(r.period)}</b><span style="font-size:11px;font-weight:700;color:${st[1]};">${st[0]}</span></div>
+      <div style="font-size:12px;color:var(--sub);margin:4px 0;">Wafanyakazi ${r.employees} · Mshahara ${mN(r.total_gross)} · Makato ${mN(r.total_deductions)} · <b style="color:var(--text);">Atapata ${mN(r.total_net)}</b></div>
+      ${r.hr_note?`<div style="font-size:12px;color:var(--red);margin-bottom:4px;">HR: ${mE(r.hr_note)}</div>`:''}
+      <div style="display:flex;gap:8px;"><button class="btn secondary" style="padding:6px 12px;font-size:12px;" onclick="mpOpen('${r.id}')">Fungua</button>
+      ${r.status!=='imelipwa'?`<button class="btn secondary" style="padding:6px 12px;font-size:12px;color:var(--red);" onclick="mpDelete('${r.id}','${mE(r.period)}')">Futa</button>`:''}</div>
+    </div>`;
+  }).join('') : '<div class="empty">Hakuna payroll bado.</div>';
+}
+async function mpCreate(){
+  const per=document.getElementById('mpPeriod').value;
+  if(!per){ mSay('mpMsg','Chagua mwezi.',false); return; }
+  const { data, error } = await sb.rpc('payroll_create_run',{ p_period: per });
+  if(error){ mSay('mpMsg','Imeshindwa: '+error.message,false); return; }
+  mSay('mpMsg','Payroll ya '+per+' imetengenezwa ✓',true);
+  await mpLoadRuns(); mpOpen(data);
+}
+async function mpOpen(runId){
+  MP_OPEN=runId;
+  const run=MP_RUNS.find(r=>r.id===runId)||{}; const edit = run.status==='rasimu';
+  const { data, error } = await sb.rpc('payroll_run_items',{ p_run_id: runId });
+  const card=document.getElementById('mpDetailCard'), box=document.getElementById('mpDetail');
+  card.style.display='block';
+  document.getElementById('mpDetailTitle').textContent='Payroll ya '+(run.period||'');
+  if(error){ box.innerHTML=''; mSay('mpDetailMsg',error.message,false); return; }
+  box.innerHTML = (data||[]).map(it=>{
+    const ded = {}; (it.deductions||[]).forEach(x=>ded[x.debt_id]=x.amount);
+    const debts=(it.open_debts||[]).map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;margin-top:5px;">
+      <span style="color:var(--sub);">Kato: ${mE(d.kind)} (limebaki ${mN(d.balance)})</span>
+      ${edit?`<input type="number" min="0" data-debt="${d.debt_id}" data-item="${it.item_id}" value="${ded[d.debt_id]||0}" oninput="mpRecalc('${it.item_id}')" style="width:100px;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:5px 7px;border-radius:7px;">`:`<b>${mN(ded[d.debt_id]||0)}</b>`}</div>`).join('');
+    return `<div style="border-top:1px solid var(--border);padding:11px 0;" data-it="${it.item_id}">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><b>${mE(it.full_name)} <span style="color:var(--sub);font-weight:400;font-size:11.5px;">${mE(it.job_position||'')}</span></b>
+        ${edit?`<input type="number" min="0" id="mpG-${it.item_id}" value="${it.gross}" oninput="mpRecalc('${it.item_id}')" style="width:120px;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:7px;text-align:right;">`:`<b>${mN(it.gross)}</b>`}</div>
+      ${debts}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:13px;"><span>Anapata: <b id="mpNet-${it.item_id}">${mN(it.net)}</b></span>
+        ${edit?`<button class="btn secondary" style="padding:5px 12px;font-size:12px;" onclick="mpSaveItem('${it.item_id}')">Hifadhi</button>`:''}</div>
+    </div>`;
+  }).join('') + (edit ? `<div style="margin-top:12px;"><button class="btn" style="width:100%" onclick="mpSubmit('${runId}')">Tuma kwa HR kuhakiki</button><p style="font-size:11.5px;color:var(--sub);margin:6px 0 0;">Hifadhi kila mfanyakazi kwanza. Baada ya kutuma, huwezi kubadilisha mpaka HR arudishe.</p></div>` : '');
+  mSay('mpDetailMsg','');
+  card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function mpDeds(itemId){
+  return [...document.querySelectorAll(`input[data-item="${itemId}"]`)].map(i=>({ debt_id:i.dataset.debt, amount: parseFloat(i.value)||0 })).filter(x=>x.amount>0);
+}
+function mpRecalc(itemId){
+  const g=parseFloat(document.getElementById('mpG-'+itemId).value)||0;
+  const d=mpDeds(itemId).reduce((s,x)=>s+x.amount,0);
+  const el=document.getElementById('mpNet-'+itemId); el.textContent=mN(g-d); el.style.color = (g-d)<0 ? 'var(--red)' : '';
+}
+async function mpSaveItem(itemId){
+  const g=parseFloat(document.getElementById('mpG-'+itemId).value)||0;
+  const { error } = await sb.rpc('payroll_set_item',{ p_item_id:itemId, p_gross:g, p_deductions: mpDeds(itemId) });
+  if(error){ mSay('mpDetailMsg','Imeshindwa: '+error.message,false); return; }
+  mSay('mpDetailMsg','Imehifadhiwa ✓',true); mpLoadRuns();
+}
+async function mpSubmit(runId){
+  if(!confirm('Kutuma payroll hii kwa HR? Huwezi kuibadilisha baada ya kutuma.')) return;
+  const { error } = await sb.rpc('payroll_submit',{ p_run_id:runId });
+  if(error){ mSay('mpDetailMsg','Imeshindwa: '+error.message,false); return; }
+  mSay('mpDetailMsg','Imetumwa kwa HR ✓',true); await mpLoadRuns(); mpOpen(runId);
+}
+async function mpDelete(runId, period){
+  if(!mConfirmDelete('payroll ya '+period)) return;
+  const { error } = await sb.rpc('ceo_delete_payroll_run',{ p_run_id:runId });
+  if(error){ mSay('mpMsg','Imeshindwa: '+error.message,false); return; }
+  document.getElementById('mpDetailCard').style.display='none'; mSay('mpMsg','Payroll imefutwa ✓',true); mpLoadRuns();
+}
+
+/* ---- Futa (CEO) ---- */
+async function fLoadAll(){ fLoadEmps(); fLoadAccts(); fSearchClients(); }
+async function fLoadEmps(){
+  const { data, error } = await sb.from('hr_employees').select('id, full_name, position, status').order('full_name');
+  const box=document.getElementById('fEmps'); if(error){ box.innerHTML='<div class="empty">'+mE(error.message)+'</div>'; return; }
+  box.innerHTML=(data||[]).map(e=>`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding:8px 0;font-size:13px;"><span>${mE(e.full_name)} <span style="color:var(--sub);font-size:11.5px;">${mE(e.position||'')}</span></span>
+    <button class="btn secondary" style="padding:5px 11px;font-size:12px;color:var(--red);" onclick="fDel('ceo_delete_hr_employee',{p_employee_id:'${e.id}'},'mfanyakazi ${mE(e.full_name).replace(/'/g,'')}',fLoadEmps)">Futa</button></div>`).join('') || '<div class="empty">Hakuna wafanyakazi.</div>';
+}
+async function fLoadAccts(){
+  const { data, error } = await sb.from('mikopo_profiles').select('id, full_name, email, role, active').order('full_name');
+  const box=document.getElementById('fAccts'); if(error){ box.innerHTML='<div class="empty">'+mE(error.message)+'</div>'; return; }
+  box.innerHTML=(data||[]).map(a=>`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding:8px 0;font-size:13px;"><span>${mE(a.full_name||a.email)} <span style="color:var(--sub);font-size:11.5px;">${mE(a.role||'')}${a.active?'':' · hai'}</span></span>
+    <button class="btn secondary" style="padding:5px 11px;font-size:12px;color:var(--red);" onclick="fDel('ceo_delete_account',{p_profile_id:'${a.id}'},'account ya ${mE(a.full_name||a.email).replace(/'/g,'')}',fLoadAccts)">Futa</button></div>`).join('') || '<div class="empty">Hakuna accounts.</div>';
+}
+async function fSearchClients(){
+  const q=(document.getElementById('fClientQ').value||'').trim(); const box=document.getElementById('fClients');
+  if(q.length<2){ box.innerHTML='<div class="empty">Andika angalau herufi 2 kutafuta.</div>'; return; }
+  const { data, error } = await sb.from('mikopo_clients').select('id, jina, agent_code').ilike('jina','%'+q+'%').order('jina').limit(15);
+  if(error){ box.innerHTML='<div class="empty">'+mE(error.message)+'</div>'; return; }
+  box.innerHTML=(data||[]).map(c=>`<div style="border-top:1px solid var(--border);padding:8px 0;font-size:13px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;"><span>${mE(c.jina)} <span style="color:var(--sub);font-size:11.5px;">${mE(c.agent_code||'')}</span></span>
+    <span style="display:flex;gap:6px;"><button class="btn secondary" style="padding:5px 11px;font-size:12px;" onclick="fPayments('${c.id}')">Malipo</button>
+    <button class="btn secondary" style="padding:5px 11px;font-size:12px;color:var(--red);" onclick="fDel('ceo_delete_client',{p_client_id:'${c.id}'},'mteja ${mE(c.jina).replace(/'/g,'')} pamoja na mikopo na malipo yake yote',fSearchClients)">Futa</button></span></div>
+    <div id="fPay-${c.id}"></div></div>`).join('') || '<div class="empty">Hakuna mteja aliyepatikana.</div>';
+}
+async function fPayments(cid){
+  const { data, error } = await sb.from('mikopo_payments').select('id, kiasi, tarehe').eq('client_id',cid).order('tarehe',{ascending:false}).limit(40);
+  const box=document.getElementById('fPay-'+cid); if(error){ box.innerHTML=mE(error.message); return; }
+  box.innerHTML=(data||[]).map(p=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0 3px 10px;"><span style="color:var(--sub);">${new Date(p.tarehe).toLocaleDateString('en-GB')}</span><span>${mN(p.kiasi)} <a href="#" style="color:var(--red);margin-left:8px;" onclick="fDel('ceo_delete_payment',{p_payment_id:'${p.id}'},'malipo ya ${mN(p.kiasi)}',()=>fPayments('${cid}'));return false;">futa</a></span></div>`).join('') || '<div style="font-size:12px;color:var(--sub);padding:4px 10px;">Hakuna malipo.</div>';
+}
+async function fDel(fn, args, what, reload){
+  if(!mConfirmDelete(what)) return;
+  const { error } = await sb.rpc(fn, args);
+  if(error){ mSay('fMsg','Imeshindwa: '+error.message,false); return; }
+  mSay('fMsg','Imefutwa ✓',true); reload && reload();
+}
+</script>
+<script>
+/* ======== Muundo wa Timu: PDF (inapakiwa maktaba ya PDF pale tu unapobonyeza kupakua) ======== */
+let _orgLibsP = null;
+function orgLoadLibs(){
+  if(_orgLibsP) return _orgLibsP;
+  const add = src => new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=()=>rej(new Error('Imeshindwa kupakia maktaba ya PDF')); document.head.appendChild(s); });
+  _orgLibsP = add('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+    .then(()=>add('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'))
+    .catch(e=>{ _orgLibsP=null; throw e; });
+  return _orgLibsP;
+}
+async function orgDownloadPdf(meta, rows){
+  await orgLoadLibs();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'landscape', unit:'pt', format:'a4' });
+  const NAVY=[10,31,54], GOLD=[200,154,61], PAPER=[245,246,241], INK=[18,32,47], MUTED=[90,104,120];
+  const title = (meta && meta.title) || 'BRANCH AGENT STRUCTURE';
+  const subtitle = (meta && meta.subtitle) || '';
+  const stamp = new Date().toLocaleString('en-GB');
+  const body = (rows||[]).map(r=>[r.branch||'', r.area||'', r.update_grp||'', r.ag_code||'', r.agent_no||'', r.agent_name||'', r.zone_manager||'']);
+  doc.autoTable({
+    head: [['BRANCH','AREA','UPDATE','AG CODE','NO','AGENT','ZONE MANAGER']],
+    body,
+    startY: 86, margin: { left: 30, right: 30, top: 86, bottom: 40 },
+    styles: { fontSize: 8, cellPadding: 4, textColor: INK, lineColor: [222,225,215], lineWidth: 0.3 },
+    headStyles: { fillColor: NAVY, textColor: GOLD, fontStyle: 'bold', halign: 'left' },
+    alternateRowStyles: { fillColor: PAPER },
+    didDrawPage: data => {
+      doc.setFillColor(...NAVY); doc.rect(0, 0, doc.internal.pageSize.getWidth(), 66, 'F');
+      doc.setFillColor(...GOLD); doc.rect(0, 66, doc.internal.pageSize.getWidth(), 3, 'F');
+      doc.setTextColor(...GOLD); doc.setFont(undefined,'bold'); doc.setFontSize(16); doc.text(title, 30, 34);
+      doc.setTextColor(238,242,246); doc.setFont(undefined,'normal'); doc.setFontSize(9);
+      doc.text(subtitle || 'Muundo kamili wa timu', 30, 50);
+      doc.setTextColor(...MUTED); doc.setFontSize(7.5);
+      doc.text('Imetengenezwa: ' + stamp + ' · Ukurasa ' + data.pageNumber, 30, doc.internal.pageSize.getHeight() - 18);
+      doc.text('Hekima Finance · Management', doc.internal.pageSize.getWidth() - 30, doc.internal.pageSize.getHeight() - 18, { align:'right' });
+    }
+  });
+  const safe = title.replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_|_$/g,'') || 'Muundo';
+  doc.save(safe + '_' + new Date().toISOString().slice(0,10) + '.pdf');
+}
+</script>
+
+<script>
+/* ======== Muundo wa Timu: kuhariri, kuhifadhi, onyesho na PDF ======== */
+let MU_ROWS=[], MU_META={title:'BRANCH AGENT STRUCTURE', subtitle:''};
+const muE = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function muMsg(id,t,ok){ const el=document.getElementById(id); if(!el) return; el.className='msg'+(ok===true?' ok':(ok===false?' err':'')); el.textContent=t||''; }
+function muParse(text){
+  const out=[];
+  String(text||'').split(/\r?\n/).forEach(line=>{
+    const raw=line.trim(); if(!raw) return;
+    const cols = raw.includes('|') ? raw.split('|') : raw.split('\t');
+    const c = cols.map(x=>x.trim().replace(/^[—–-]+$/,''));
+    if(/^branch$|^tawi$|ag\s*code/i.test(c[0]||'') || /ag code/i.test(raw)) return;
+    if(!c[0]) return;
+    out.push({ branch:c[0], area:c[1]||'', update_grp:c[2]||'', ag_code:(c[3]||'').toUpperCase(), agent_no:c[4]||'', agent_name:c[5]||'', zone_manager:c[6]||'' });
+  });
+  return out;
+}
+function muApply(mode){
+  const rows=muParse(document.getElementById('muPaste').value);
+  if(!rows.length){ muMsg('muMsg','Hakuna mistari sahihi. Tumia | kutenganisha safu.',false); return; }
+  MU_ROWS = mode==='replace' ? rows : MU_ROWS.concat(rows);
+  document.getElementById('muPaste').value='';
+  muMsg('muMsg', (mode==='replace'?'Orodha imebadilishwa: ':'Mistari imeongezwa: ')+rows.length+' · Bonyeza "Hifadhi muundo" kuhifadhi.', true);
+  muRender();
+}
+function muDelRow(i){ MU_ROWS.splice(i,1); muRender(); }
+function muRender(){
+  const t=document.getElementById('muTitle'), st=document.getElementById('muSub');
+  if(t && !t.dataset.set){ t.value = MU_META.title||''; t.dataset.set='1'; }
+  if(st && !st.dataset.set){ st.value = MU_META.subtitle||''; st.dataset.set='1'; }
+  document.getElementById('muCount').textContent = 'Muundo wa sasa · agents '+MU_ROWS.length;
+  const box=document.getElementById('muPreview');
+  if(!MU_ROWS.length){ box.innerHTML='<div class="empty">Bado hakuna mistari. Bandika muundo hapo juu.</div>'; return; }
+  const branches={};
+  MU_ROWS.forEach((r,i)=>{ (branches[r.branch]=branches[r.branch]||[]).push({r,i}); });
+  box.innerHTML = Object.keys(branches).map(b=>{
+    const list=branches[b];
+    return `<div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--cyan);color:#231603;padding:7px 10px;border-radius:8px;font-weight:800;font-size:13px;"><span>${muE(b)}</span><span>${list.length} agents</span></div>
+      <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;">
+        <thead><tr style="color:var(--sub);text-align:left;border-bottom:1px solid var(--border);"><th style="padding:5px;">AREA</th><th style="padding:5px;">UPDATE</th><th style="padding:5px;">AG CODE</th><th style="padding:5px;">NO</th><th style="padding:5px;">AGENT</th><th style="padding:5px;">ZONE MANAGER</th><th></th></tr></thead>
+        <tbody>${list.map(x=>`<tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:5px;">${muE(x.r.area)}</td><td style="padding:5px;">${muE(x.r.update_grp)}</td><td style="padding:5px;font-weight:700;">${muE(x.r.ag_code)}</td>
+          <td style="padding:5px;">${muE(x.r.agent_no)}</td><td style="padding:5px;">${muE(x.r.agent_name)}</td><td style="padding:5px;color:var(--cyan);">${muE(x.r.zone_manager)}</td>
+          <td style="padding:5px;text-align:right;"><a href="#" style="color:var(--red);font-size:11px;" onclick="muDelRow(${x.i});return false;">futa</a></td></tr>`).join('')}</tbody>
+      </table></div></div>`;
+  }).join('');
+}
+async function muLoad(){
+  const { data, error } = await sb.rpc('org_get');
+  if(error){ document.getElementById('muPreview').innerHTML='<div class="empty">Sehemu hii bado haijawekwa kwenye database (SQL ya Sehemu 7 haijaendeshwa).</div>'; return; }
+  MU_META={title:data.title||'BRANCH AGENT STRUCTURE', subtitle:data.subtitle||''};
+  MU_ROWS=(data.rows||[]).map(r=>({branch:r.branch||'',area:r.area||'',update_grp:r.update_grp||'',ag_code:r.ag_code||'',agent_no:r.agent_no||'',agent_name:r.agent_name||'',zone_manager:r.zone_manager||''}));
+  const t=document.getElementById('muTitle'), st=document.getElementById('muSub');
+  if(t){ t.dataset.set=''; } if(st){ st.dataset.set=''; }
+  muRender();
+}
+async function muSave(){
+  const title=document.getElementById('muTitle').value.trim(), sub=document.getElementById('muSub').value.trim();
+  if(!MU_ROWS.length){ muMsg('muSaveMsg','Hakuna mistari ya kuhifadhi.',false); return; }
+  const { data, error } = await sb.rpc('org_save',{ p_title:title, p_subtitle:sub, p_rows: MU_ROWS.map((r,i)=>({...r, sort_order:i+1})) });
+  if(error){ muMsg('muSaveMsg','Imeshindwa: '+error.message,false); return; }
+  MU_META={title:title||'BRANCH AGENT STRUCTURE', subtitle:sub};
+  const dups=(data.duplicate_codes||[]);
+  muMsg('muSaveMsg', 'Muundo umehifadhiwa ✓ (mistari '+data.saved+')' + (dups.length ? ' · Onyo: AG code zinajirudia: '+dups.join(', ') : ''), dups.length?null:true);
+}
+async function muPdf(){
+  const title=document.getElementById('muTitle').value.trim();
+  if(!MU_ROWS.length){ muMsg('muSaveMsg','Hakuna mistari ya kupakua.',false); return; }
+  try{ await orgDownloadPdf({title:title||MU_META.title, subtitle:document.getElementById('muSub').value.trim()||MU_META.subtitle}, MU_ROWS); }
+  catch(e){ muMsg('muSaveMsg','Imeshindwa kutengeneza PDF: '+e.message,false); }
+}
+</script>
+</body>
+</html>
