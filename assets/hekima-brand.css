@@ -1,0 +1,53 @@
+/* HEKIMA FINANCE — rangi rasmi za logo (tokens) */
+:root{
+  --hk-navy:#001848;        /* navy ya logo: vichwa, maandishi muhimu */
+  --hk-navy-deep:#00183c;   /* background ya giza */
+  --hk-navy-panel:#0b2a5b;  /* kadi kwenye mandhari ya giza */
+  --hk-navy-line:#1d3f74;   /* mistari/mipaka kwenye giza */
+  --hk-green:#008454;       /* kijani cha duara la logo */
+  --hk-gold:#cc9c24;        /* dhahabu ya mishale na FINANCE */
+  --hk-gold-light:#d8b460;  /* dhahabu nyepesi kwa maandishi kwenye giza */
+  --hk-white:#ffffff;
+  --hk-mist:#f4f6f8;        /* background nyepesi */
+  --hk-mist-2:#e9edf3;      /* kadi/visanduku vya pili kwenye nyepesi */
+  --hk-mist-line:#dfe4ec;   /* mistari kwenye nyepesi */
+}
+
+/* ===== Vipengele vya pamoja (design system) ===== */
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text,#eef2f6);-webkit-font-smoothing:antialiased;}
+h1,h2,h3{letter-spacing:-.01em;}
+button,.btn{font-family:inherit;transition:transform .08s ease,box-shadow .15s ease,background .15s ease;}
+button:active,.btn:active{transform:scale(.98);}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--hk-gold,#cc9c24);outline-offset:2px;}
+.btn.primary,button.primary{background:var(--hk-green,#008454);color:#fff;border:none;}
+.btn.gold,button.gold{background:var(--hk-gold,#cc9c24);color:#1d1400;border:none;}
+table{border-collapse:separate;border-spacing:0;}
+th{font-weight:700;letter-spacing:.02em;}
+input,select,textarea{font-family:inherit;}
+::selection{background:rgba(204,156,36,.35);}
+@media (max-width:640px){
+  body{font-size:15px;}
+  h1{font-size:22px;}
+  table{font-size:13px;}
+  .card,.panel,.bx-kpi{border-radius:14px;}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+
+/* ===== Usomaji: maandishi ya chini, viungo vya kurudi, hero ya kuingia ===== */
+.login-foot,.footnote{color:var(--hk-gold-light,#d8b460)!important;opacity:1!important;}
+html[data-theme="light"] .login-foot,html[data-theme="light"] .footnote{color:var(--hk-navy,#001848)!important;}
+.back-link{color:var(--hk-gold-light,#d8b460)!important;}
+html[data-theme="light"] .back-link{color:#7a5a10!important;}
+.brand-loc{color:var(--sub)!important;}
+html[data-theme="light"] .brand-loc{color:#51606c!important;}
+
+/* ===== Hero ya ukurasa wa kuingia (navy ya logo) ===== */
+.hero{background:linear-gradient(160deg,#00183c 0%,#0b2a5b 100%) !important;}
+.hero-eyebrow{color:var(--hk-gold-light,#d8b460)!important;}
+/* ===== Thamani za fedha kwenye Combine na vichupo vilivyochaguliwa ===== */
+.sv{color:var(--hk-gold-light,#d8b460)!important;}
+html[data-theme="light"] .sv{color:#7a5a10!important;}
+.tabs button.active{background:var(--hk-gold,#cc9c24)!important;color:#1d1400!important;border-color:var(--hk-gold,#cc9c24)!important;}
+/* ===== Lebo ndogo za Combine (sub-h) ===== */
+.sub-h{color:var(--hk-gold-light,#d8b460)!important;}
+html[data-theme="light"] .sub-h{color:#5c4308!important;}
