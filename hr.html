@@ -127,7 +127,7 @@
 </style>
 <link rel="stylesheet" href="assets/hekima-brand.css">
 <link rel="stylesheet" href="assets/hekima-topbar.css">
-</head>
+<link rel="stylesheet" href="assets/hekima-shell.css"><script defer src="assets/hekima-shell.js"></script></head>
 <body>
 <div class="hk-wm" aria-hidden="true"></div>
 
@@ -221,6 +221,10 @@
       </div>
       <div class="field"><label>Makazi</label><input id="empResidence" placeholder="Mtaa, Kata, Wilaya"></div>
       <div class="field"><label>Msimamizi (Tupo Chini ya Kiongozi Gani)</label><select id="empSupervisor"><option value="">— Hakuna —</option></select></div>
+      <h3 style="margin:16px 0 10px;font-size:13.5px;color:var(--sub);">Nyaraka (zinahitajika kwa uthibitisho wa CEO)</h3>
+      <div class="field"><label>Picha ya mfanyakazi</label><input id="empPhoto" type="file" accept="image/*"></div>
+      <div class="field"><label>Nakala ya NIDA (picha au PDF)</label><input id="empIdFile" type="file" accept="image/*,application/pdf"></div>
+      <div class="field"><label>Mkataba (PDF au picha)</label><input id="empContractFile" type="file" accept="image/*,application/pdf"></div>
       <h3 style="margin:16px 0 10px;font-size:13.5px;color:var(--sub);">Mkataba wa Kazi</h3>
       <div class="row2">
         <div class="field"><label>Aina ya Mkataba</label>
@@ -502,6 +506,8 @@ async function loadEmployees(){
   loadPerformanceReports();
 }
 
+let _wf=null;
+async function wfReady(){ if(_wf!==null) return _wf; try{ const a=await sb.from('hr_employees').select('approval_status').limit(1); const b=await sb.storage.from('employee-files').list('',{limit:1}); _wf=!a.error && !b.error; }catch(e){ _wf=false; } return _wf; }
 async function addEmployee(){
   const full_name = document.getElementById('empName').value.trim();
   const phone = document.getElementById('empPhone').value.trim();
@@ -520,12 +526,24 @@ async function addEmployee(){
   const contract_notes = document.getElementById('empContractNotes').value.trim() || null;
   const msg = document.getElementById('empMsg');
   if(!full_name){ msg.textContent='Jina linahitajika'; msg.className='msg err'; return; }
-  const { error } = await sb.from('hr_employees').insert([{
-    full_name, phone, email, position, department, hire_date, base_salary, status:'active',
-    national_id, agent_code, residence, supervisor_id, contract_type, contract_start, contract_end, contract_notes
-  }]);
-  if(error){ msg.textContent = error.message; msg.className='msg err'; return; }
-  msg.textContent = 'Imehifadhiwa.'; msg.className='msg ok';
+  const wf = await wfReady();
+  const eid = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
+  const base = { full_name, phone, email, position, department, hire_date, base_salary, national_id, agent_code, residence, supervisor_id, contract_type, contract_start, contract_end, contract_notes };
+  if(wf && eid){
+    const ph = document.getElementById('empPhoto').files[0], idf = document.getElementById('empIdFile').files[0], cf = document.getElementById('empContractFile').files[0];
+    if(!ph || !idf || !cf){ msg.textContent='Pakia picha, nakala ya NIDA na mkataba.'; msg.className='msg err'; return; }
+    msg.textContent='Inapakia nyaraka...'; msg.className='msg';
+    const up = async (f, name)=>{ const ext=(f.name.split('.').pop()||'bin').toLowerCase().replace(/[^a-z0-9]/g,''); const path=eid+'/'+name+'.'+ext; const r=await sb.storage.from('employee-files').upload(path,f,{upsert:true,contentType:f.type||undefined}); if(r.error) throw r.error; return path; };
+    try{ base.photo_url=await up(ph,'photo'); base.id_file_path=await up(idf,'nida'); base.contract_file_path=await up(cf,'contract'); }catch(ex){ msg.textContent='Imeshindwa kupakia: '+ex.message; msg.className='msg err'; return; }
+    base.id = eid;
+    const r = await sb.rpc('hr_register_employee', { p: base });
+    if(r.error){ msg.textContent = r.error.message; msg.className='msg err'; return; }
+  } else {
+    const { error } = await sb.from('hr_employees').insert([Object.assign({ status:'active' }, base)]);
+    if(error){ msg.textContent = error.message; msg.className='msg err'; return; }
+  }
+  msg.textContent = wf ? 'Imetumwa kwa CEO kuthibitishwa.' : 'Imehifadhiwa.'; msg.className='msg ok';
+  ['empPhoto','empIdFile','empContractFile'].forEach(function(i){ var x=document.getElementById(i); if(x) x.value=''; });
   ['empName','empPhone','empEmail','empPosition','empSalary','empNatId','empAgentCode','empResidence','empContractStart','empContractEnd','empContractNotes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('empContractType').value='';
   document.getElementById('empSupervisor').value='';
@@ -575,7 +593,7 @@ async function renderProfiles(){
           <div style="font-weight:700;font-size:14.5px;">${e.full_name}</div>
           <div style="font-size:12px;color:var(--sub);">${e.position||'—'} · ${e.department}</div>
         </div>
-        <span class="badge ${e.registered_access?'active':'inactive'}">${e.registered_access?'Amesajiliwa':'Hajasajiliwa'}</span>
+        ${e.approval_status==='pending'?'<span class="badge inactive">Inasubiri CEO</span> ':(e.approval_status==='rejected'?'<span class="badge inactive">Imekataliwa</span> ':'')}<span class="badge ${e.registered_access?'active':'inactive'}">${e.registered_access?'Amesajiliwa':'Hajasajiliwa'}</span>
       </div>
       <div style="margin-top:10px;font-size:12.5px;line-height:1.8;">
         <div><b>Kitambulisho:</b> ${e.national_id||'—'}</div>
@@ -587,8 +605,8 @@ async function renderProfiles(){
       </div>
       ${miss.length ? `<div class="msg err" style="margin-top:8px;">⚠ Mapungufu kwenye profile: ${miss.join(', ')}</div>` : `<div class="msg ok" style="margin-top:8px;">✓ Profile Kamili</div>`}
       <div style="display:flex;gap:8px;margin-top:10px;">
-        <button class="btn secondary" style="flex:1;" onclick="toggleAccess('${e.id}', ${!e.registered_access})">${e.registered_access ? 'Zuia Ufikiaji' : 'Sajili Ufikiaji'}</button>
-        ${!e.registered_access ? `<button class="btn secondary" style="flex:1;" onclick='openCreateAcctForm(${JSON.stringify(e.id)}, ${JSON.stringify(e.full_name)}, ${JSON.stringify(e.agent_code||"")})'>Tengeneza Akaunti</button>` : ''}
+        ${(e.approval_status==='pending'||e.approval_status==='rejected') ? '' : `<button class="btn secondary" style="flex:1;" onclick="toggleAccess('${e.id}', ${!e.registered_access})">${e.registered_access ? 'Zuia Ufikiaji' : 'Sajili Ufikiaji'}</button>`}
+        ${(!e.registered_access && (e.approval_status==null || e.approval_status==='approved')) ? `<button class="btn secondary" style="flex:1;" onclick='openCreateAcctForm(${JSON.stringify(e.id)}, ${JSON.stringify(e.full_name)}, ${JSON.stringify(e.agent_code||"")})'>Tengeneza Akaunti</button>` : ''}
       </div>
     </div>`;
   }).join('');
