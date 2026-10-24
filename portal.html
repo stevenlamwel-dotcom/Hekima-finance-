@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><style id="hkLdCss">#hkLoader{position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;transition:opacity .35s}#hkLoader.out{opacity:0;pointer-events:none}#hkLoader .r{position:relative;width:min(62vw,260px);height:min(62vw,260px);display:flex;align-items:center;justify-content:center}#hkLoader .r::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(26,91,255,0) 0%,rgba(26,91,255,.15) 35%,#1a5bff 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 5px));mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 5px));animation:hkspin 1.3s linear infinite;filter:drop-shadow(0 0 12px #1a5bff)}#hkLoader b{position:relative;color:#fff;font:800 clamp(22px,7vw,34px)/1 "Trebuchet MS",system-ui,sans-serif;font-variant:small-caps;letter-spacing:1px}@keyframes hkspin{to{transform:rotate(360deg)}}#authLoading{opacity:0!important}html:not(.hk-ready) #authGate>*{visibility:hidden}#authGate>*{animation:hkfs 0s 9s forwards}@keyframes hkfs{to{visibility:visible}}#hkLoader{animation:hkgone 0s 10s forwards}@keyframes hkgone{to{opacity:0;visibility:hidden;pointer-events:none}}.hk-hide{display:none!important}.lg-ic{filter:grayscale(1) brightness(1.7)}.auth-gate{align-content:center!important;overflow-y:auto}.lg-h,.lg-sub{max-width:100%;overflow-wrap:anywhere}.hk-emo{filter:grayscale(1) brightness(1.7)}html[data-theme="light"] .hk-emo{filter:grayscale(1) brightness(.45)}#idaraScreen .mini-top,#updatesScreen .mini-top,#loansMenuScreen .mini-top,#historyScreen .mini-top,#capitalScreen .mini-top,#idaraScreen>a[onclick*="showHome"]{display:none!important}</style><script id="hkLdJs">(function(){var d=document,t0=Date.now(),done=false,L=d.createElement("div");L.id="hkLoader";L.innerHTML='<div class="r"><b>Loading...</b></div>';d.documentElement.appendChild(L);d.addEventListener("DOMContentLoaded",function(){if(!L.isConnected)(d.body||d.documentElement).appendChild(L)});
+<head><style id="hkLdCss">#hkLoader{position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;transition:opacity .35s}#hkLoader.out{opacity:0;pointer-events:none}#hkLoader .r{position:relative;width:min(62vw,260px);height:min(62vw,260px);display:flex;align-items:center;justify-content:center}#hkLoader .r::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(26,91,255,0) 0%,rgba(26,91,255,.15) 35%,#1a5bff 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 5px));mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 5px));animation:hkspin 1.3s linear infinite;filter:drop-shadow(0 0 12px #1a5bff)}#hkLoader b{position:relative;color:#fff;font:800 clamp(22px,7vw,34px)/1 "Trebuchet MS",system-ui,sans-serif;font-variant:small-caps;letter-spacing:1px}@keyframes hkspin{to{transform:rotate(360deg)}}#authLoading{opacity:0!important}html:not(.hk-ready) #authGate>*{visibility:hidden}#authGate>*{animation:hkfs 0s 9s forwards}@keyframes hkfs{to{visibility:visible}}#hkLoader{animation:hkgone 0s 10s forwards}@keyframes hkgone{to{opacity:0;visibility:hidden;pointer-events:none}}.hk-hide{display:none!important}body:not([data-screen="home"]) #onlineList{display:none!important}.lg-ic{filter:grayscale(1) brightness(1.7)}.auth-gate{align-content:center!important;overflow-y:auto}.lg-h,.lg-sub{max-width:100%;overflow-wrap:anywhere}.hk-emo{filter:grayscale(1) brightness(1.7)}html[data-theme="light"] .hk-emo{filter:grayscale(1) brightness(.45)}#idaraScreen .mini-top,#updatesScreen .mini-top,#loansMenuScreen .mini-top,#historyScreen .mini-top,#capitalScreen .mini-top,#idaraScreen>a[onclick*="showHome"]{display:none!important}</style><script id="hkLdJs">(function(){var d=document,t0=Date.now(),done=false,L=d.createElement("div");L.id="hkLoader";L.innerHTML='<div class="r"><b>Loading...</b></div>';d.documentElement.appendChild(L);d.addEventListener("DOMContentLoaded",function(){if(!L.isConnected)(d.body||d.documentElement).appendChild(L)});
 function hide(){if(done)return;done=true;d.documentElement.classList.add("hk-ready");var w=Math.max(0,250-(Date.now()-t0));setTimeout(function(){L.classList.add("out");setTimeout(function(){L.style.display="none"},400)},w)}
 function show(){done=false;t0=Date.now();L.style.display="flex";L.classList.remove("out");L.style.animation="none";void L.offsetWidth;L.style.animation="";setTimeout(hide,7000)}
 function ready(){var g=d.getElementById("authGate");if(!g||g.style.display==="none")return true;var a=d.getElementById("authLoading");return !a||getComputedStyle(a).display==="none"}
@@ -474,7 +474,7 @@ addEventListener("beforeunload",show)})();</script>
   <div id="loansMenuScreen">
     <a class="back-link" href="#" onclick="showIdara();return false;">‹ Idara Zetu</a>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 10px;"><div style="display:flex;align-items:center;gap:10px;"><img src="assets/hekima-emblem.png" alt="Hekima" style="width:36px;height:36px;border-radius:10px;background:#fff;object-fit:contain;"><div style="font-weight:800;font-size:14px;letter-spacing:.5px;color:var(--text);">HEKIMA FINANCE</div></div><div style="display:flex;gap:6px;"><button class="icon-toggle-btn" onclick="toggleTheme()">🌙</button><button class="icon-toggle-btn" onclick="toggleLang()">EN</button></div></div>
+    <div class="hk-hide" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 10px;"><div style="display:flex;align-items:center;gap:10px;"><img src="assets/hekima-emblem.png" alt="Hekima" style="width:36px;height:36px;border-radius:10px;background:#fff;object-fit:contain;"><div style="font-weight:800;font-size:14px;letter-spacing:.5px;color:var(--text);">HEKIMA FINANCE</div></div><div style="display:flex;gap:6px;"><button class="icon-toggle-btn" onclick="toggleTheme()">🌙</button><button class="icon-toggle-btn" onclick="toggleLang()">EN</button></div></div>
     <div class="brand-row" style="display:none;">
       <div class="brand-mark"><img src="assets/hekima-emblem.png" alt="Hekima Finance"></div>
       <div>
@@ -549,7 +549,7 @@ addEventListener("beforeunload",show)})();</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <div id="updatesScreen" style="display:none;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px;">
+    <div class="hk-hide" style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px;">
       <a href="#" onclick="showLoansMenu();return false;" style="font-size:12px;color:var(--cyan,#cc9c24);text-decoration:none;">‹ Finance Department</a>
       <div style="display:flex;gap:6px;"><button class="icon-toggle-btn" onclick="toggleTheme()">🌙</button><button class="icon-toggle-btn" onclick="toggleLang()">EN</button></div>
     </div>
@@ -609,7 +609,7 @@ addEventListener("beforeunload",show)})();</script>
     
   </div>
   <div id="historyScreen" style="display:none;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px;">
+    <div class="hk-hide" style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px;">
       <a href="#" onclick="showHome();return false;" style="font-size:12px;color:var(--cyan,#cc9c24);text-decoration:none;">‹ Nyumbani</a>
       <div style="display:flex;gap:6px;"><button class="icon-toggle-btn" onclick="toggleTheme()">🌙</button><button class="icon-toggle-btn" onclick="toggleLang()">EN</button></div>
     </div>
@@ -619,7 +619,7 @@ addEventListener("beforeunload",show)})();</script>
     <div id="historyDetail" style="display:none;"></div>
   </div>
   <div id="capitalScreen" style="display:none;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px;">
+    <div class="hk-hide" style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px;">
       <a href="#" onclick="showHome();return false;" style="font-size:12px;color:var(--cyan,#cc9c24);text-decoration:none;">‹ Nyumbani</a>
       <div style="display:flex;gap:6px;"><button class="icon-toggle-btn" onclick="toggleTheme()">🌙</button><button class="icon-toggle-btn" onclick="toggleLang()">EN</button></div>
     </div>
@@ -940,6 +940,7 @@ function applyScreen(name){
   show('homeScreen', name==='home'); show('idaraScreen', name==='idara'); show('loansMenuScreen', name==='loans'); show('updatesScreen', name==='updates'); show('historyScreen', name==='history'); show('capitalScreen', name==='capital');
   { const ol=document.getElementById('onlineList'); if(ol && name!=='home') ol.style.display='none'; }
   if(name==='loans' && typeof applyLoansPermissions==='function') applyLoansPermissions();
+  document.body.setAttribute('data-screen',name);
   window.scrollTo(0,0);
 }
 function setScreen(name, push){
