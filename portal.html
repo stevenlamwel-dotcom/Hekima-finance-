@@ -1107,54 +1107,75 @@ async function printSalarySlip(period, empId){
   const [yy,mm]=String(d.period).split('-'); const per=(names[parseInt(mm,10)-1]||mm)+' '+yy;
   const dedRows=(d.deductions||[]).map((x,i)=>`<tr><td class="c">${i+1}</td><td class="c">${e(x.label)}</td><td class="r">${m(x.amount)}</td><td class="r">${m(x.remaining)}</td></tr>`).join('') || '<tr><td class="c">—</td><td class="c">Hakuna makato</td><td class="r">0</td><td class="r">—</td></tr>';
   const w=window.open('','_blank');
+  const LOGO = new URL('assets/hekima-logo.png', location.href).href;
   w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Salary Slip ${e(d.period)}</title><style>
-  body{font-family:Arial,Helvetica,sans-serif;color:#1f2d33;margin:0;background:#fff}
-  .page{max-width:720px;margin:0 auto}
-  .top{display:flex;height:150px}
-  .top .l{flex:1;background:#8fa3a3;padding:22px 26px;color:#fff;clip-path:polygon(0 0,100% 0,78% 100%,0 100%)}
-  .top .r{flex:1;background:#365a61;padding:22px 26px;color:#fff;text-align:right}
-  .title{font-size:34px;font-weight:900;letter-spacing:1px;margin:0 0 10px}
-  .meta{font-size:13px;line-height:1.7}
-  .brand{font-size:20px;font-weight:800;letter-spacing:1px}
-  .emp{display:flex;justify-content:space-between;padding:16px 26px 4px;font-size:13px;line-height:1.9}
-  .emp b{display:inline-block;width:130px}
-  h3{font-size:18px;letter-spacing:.5px;color:#365a61;margin:20px 26px 8px;font-weight:800}
-  table{width:calc(100% - 52px);margin:0 26px;border-collapse:collapse;font-size:13px}
-  th{background:#8fa3a3;color:#fff;padding:9px;font-weight:700}
-  td{padding:9px;border-bottom:1px solid #e3e3e3}
+  @page{size:A4;margin:0}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#2c4a50;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .page{width:210mm;min-height:297mm;margin:0 auto;position:relative;overflow:hidden;background:#fff;padding-bottom:30mm}
+  .top{position:relative;height:54mm}
+  .top .bl,.top .br{position:absolute;inset:0}
+  .top .bl{background:#8fa3a3;clip-path:polygon(0 0,60% 0,50% 100%,0 100%)}
+  .top .br{background:#365a61;clip-path:polygon(60% 0,100% 0,100% 100%,50% 100%)}
+  .top .lt{position:absolute;left:10mm;top:12mm;color:#fff}
+  .title{font-size:40px;font-weight:900;letter-spacing:1px;margin:0 0 8px;text-shadow:2px 2px 0 rgba(0,0,0,.18)}
+  .meta{font-size:13px;line-height:1.8}
+  .meta b{display:inline-block;width:92px;font-weight:700}
+  .top .rt{position:absolute;right:8mm;top:7mm;width:44%;color:#fff;text-align:center}
+  .logo{width:20mm;height:20mm;background:#fff;border-radius:4mm;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .logo img{width:100%;height:100%;object-fit:contain}
+  .brand{font-size:21px;font-weight:800;letter-spacing:1px}
+  .rt .meta{margin-top:4px;font-size:12px;line-height:1.6;opacity:.95}
+  .emp{display:flex;justify-content:space-between;padding:8mm 10mm 2mm;font-size:13px;line-height:1.9}
+  .emp b{display:inline-block;width:34mm;color:#365a61}
+  h3{font-size:20px;letter-spacing:.5px;color:#365a61;margin:8mm 10mm 3mm;font-weight:800;text-transform:uppercase}
+  table{width:calc(100% - 20mm);margin:0 10mm;border-collapse:collapse;font-size:13px}
+  th{background:#8fa3a3;color:#fff;padding:10px;font-weight:700;text-transform:uppercase}
+  td{padding:10px;font-weight:700;color:#365a61}
+  tr:nth-child(even) td{background:#e6e6e6}
   .c{text-align:center}.r{text-align:right}
-  .tot td{background:#8fa3a3;color:#fff;font-weight:800}
-  .net{margin:20px 26px 0;display:flex;background:#365a61;color:#fff;font-weight:800;font-size:16px}
-  .net div{padding:14px 16px}.net .a{flex:1}.net .b{background:#2f4e54;min-width:170px;text-align:right}
-  .debt{margin:14px 26px 0;border:1px solid #365a61;border-radius:8px;padding:12px 16px;font-size:14px}
-  .sig{display:flex;justify-content:space-between;margin:34px 26px 40px;font-size:13px}
-  .sig div{width:44%;text-align:center}
-  .line{border-top:1px dotted #365a61;margin-top:36px;padding-top:6px;font-style:italic}
-  @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  .tot td{background:#8fa3a3!important;color:#fff;font-weight:800}
+  .tot td:first-child{background:transparent!important}
+  .net{margin:7mm 10mm 0;display:flex;gap:6px}
+  .net div{background:#365a61;color:#fff;font-weight:800;padding:14px 16px}
+  .net .a{flex:1;font-size:18px}.net .b{font-size:20px;min-width:62mm;text-align:center}
+  .debt{margin:5mm 10mm 0;border:1px solid #365a61;border-radius:6px;padding:10px 14px;font-size:13px;color:#365a61}
+  .sg{display:flex;justify-content:space-between;gap:8mm;margin:10mm 10mm 0;font-size:13px;font-style:italic;color:#365a61}
+  .sg>div{flex:1}
+  .sg .pm{line-height:1.9}.sg .pm b{font-weight:800}
+  .sg .sl{text-align:center}.sg .sl b{display:block;font-weight:800}
+  .line{border-top:1px dotted #365a61;margin-top:16mm;padding-top:6px;font-weight:700}
+  .f1,.f2{position:absolute;bottom:0;left:0}
+  .f1{width:120mm;height:14mm;background:#8fa3a3;clip-path:polygon(0 0,86% 0,100% 100%,0 100%)}
+  .f2{width:104mm;height:9mm;background:#365a61;clip-path:polygon(0 0,86% 0,100% 100%,0 100%)}
   </style></head><body><div class="page">
-  <img src="assets/hekima-emblem.png" alt="HEKIMA FINANCE" style="height:64px;display:block;margin:14px 26px 0;">
-  <div class="top">
-    <div class="l"><div class="title">SALARY SLIP</div><div class="meta">Pay Period &nbsp;: ${e(per)}<br>Payment date : ${e(pay)}</div></div>
-    <div class="r"><div class="brand">HEKIMA FINANCE</div><div class="meta" style="margin-top:14px;">Records System<br>Iringa, Tanzania</div></div>
+  <div class="top"><div class="bl"></div><div class="br"></div>
+    <div class="lt"><div class="title">SALARY SLIP</div><div class="meta"><b>Pay Period</b>: ${e(per)}<br><b>Payment date</b>: ${e(pay)}</div></div>
+    <div class="rt"><div class="logo"><img src="${LOGO}" alt="HEKIMA FINANCE" onerror="this.style.display='none'"></div><div class="brand">HEKIMA FINANCE</div><div class="meta">Records System<br>Iringa, Tanzania</div></div>
   </div>
   <div class="emp"><div>
     <div><b>Employee Name</b>: ${e(d.employee.name)}</div>
     <div><b>Department</b>: ${e(d.employee.department||'—')}</div>
     <div><b>Position</b>: ${e(d.employee.position||'—')}</div>
     <div><b>Employee code</b>: ${e(d.employee.code)}</div>
-  </div><div style="text-align:right;font-size:12px;">Slip no.<br><b>${e(d.slip_no)}</b></div></div>
-  <h3>INCOME DETAILS</h3>
-  <table><tr><th class="c">NO</th><th class="c">INFORMATION</th><th class="r">AMOUNT (TZS)</th></tr>
-    <tr><td class="c">1</td><td class="c">Mshahara wa mwezi</td><td class="r">${m(d.gross)}</td></tr>
-    <tr class="tot"><td></td><td class="r">TOTAL REVENUE</td><td class="r">${m(d.gross)}</td></tr></table>
-  <h3>DEDUCTION DETAILS</h3>
-  <table><tr><th class="c">NO</th><th class="c">INFORMATION</th><th class="r">AMOUNT (TZS)</th><th class="r">DEBT LEFT</th></tr>
+  </div><div style="text-align:right;font-size:12px;color:#365a61;">Slip no.<br><b>${e(d.slip_no)}</b></div></div>
+  <h3>Income Details</h3>
+  <table><tr><th class="c">No</th><th class="c">Information</th><th class="r">Amount (TZS)</th></tr>
+    <tr><td class="c">1</td><td class="c">Basic Salary (Mshahara wa mwezi)</td><td class="r">${m(d.gross)}</td></tr>
+    <tr class="tot"><td></td><td class="r">TOTAL REVENUE</td><td class="r">TZS ${m(d.gross)}</td></tr></table>
+  <h3>Deduction Details</h3>
+  <table><tr><th class="c">No</th><th class="c">Information</th><th class="r">Amount (TZS)</th><th class="r">Debt left</th></tr>
     ${dedRows}
-    <tr class="tot"><td></td><td class="r">TOTAL DEDUCTIONS</td><td class="r">${m(d.total_deductions)}</td><td></td></tr></table>
+    <tr class="tot"><td></td><td class="r">TOTAL DEDUCTIONS</td><td class="r">TZS ${m(d.total_deductions)}</td><td></td></tr></table>
   <div class="net"><div class="a">NET SALARY RECEIVED</div><div class="b">TZS ${m(d.net)}</div></div>
   <div class="debt"><b>Deni la ofisi linalobaki:</b> TZS ${m(d.outstanding_debt)}</div>
-  <div class="sig"><div><div class="line">(Approved by: HR)</div></div><div><div class="line">(Accepted by: ${e(d.employee.name)})</div></div></div>
-  </div><script>window.onload=()=>window.print();<\/script></body></html>`);
+  <div class="sg">
+    <div class="pm"><b>Payment Method :</b><br>Cash (Ofisini)<br>${e(d.employee.name)}</div>
+    <div class="sl"><b>Approved by:</b><div class="line">(CEO / Management)</div></div>
+    <div class="sl"><b>Accepted by:</b><div class="line">(${e(d.employee.name)})</div></div>
+  </div>
+  <div class="f1"></div><div class="f2"></div>
+  </div><script>window.onload=()=>setTimeout(()=>window.print(),500);<\/script></body></html>`);
   w.document.close();
 }
 
