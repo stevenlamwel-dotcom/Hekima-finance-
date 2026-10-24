@@ -38,3 +38,23 @@ body.hk-shell{padding-top:var(--hk-top)!important}
 #profileModalOverlay{padding-top:calc(var(--hk-top) + env(safe-area-inset-top,0px))}
 #hkSide a span{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;color:inherit}#hkSide a span svg{display:block}
 .hk-emo,#hkSide a span{filter:grayscale(1) brightness(1.7)}html[data-theme="light"] .hk-emo,html[data-theme="light"] #hkSide a span{filter:grayscale(1) brightness(.45)}#hkTop .hk-bell .hk-emo{font-size:19px;line-height:1}
+
+/* ===== Dark mode kamili kwa kurasa zote (kadi nyeupe -> navy) ===== */
+html:not([data-theme="light"]){--bg:#00183c;--panel:#0b2a5b;--panel2:#082150;--border:#1d3f74;--line:#1d3f74;--text:#eef2f6;--sub:#93a7ba;--hk-navy:#eef2f6}
+html:not([data-theme="light"]) body{background-color:var(--bg);color:var(--text)}
+html:not([data-theme="light"]) :is(.card,.panel,.sec,.kpi,.agent-card,.bx-panel,.xl-scroll,.scrollx,#updatesScreen .menu-item,#hkAgents .hkA,#hkCash .hkC,#hkHist .hkH2){background:var(--panel);border-color:var(--border);color:var(--text);box-shadow:none}
+html:not([data-theme="light"]) :is(.bx-mini,.cell,.sumbox,#hkAgents .hkBk,#hkAgents .hkR:nth-child(even),.grid8 .cell:nth-child(even)){background:var(--panel2);border-color:var(--border);color:var(--text);box-shadow:none}
+html:not([data-theme="light"]) :is(.empty,.state-msg,table.denomtbl td){background:transparent;border-color:var(--border);color:var(--sub)}
+html:not([data-theme="light"]) :is(.bx-in,.cell input,.grid8 .cell input,.grid8 .cell .ro,.card input,.card select,.card textarea,.panel input,.panel select,.panel textarea,.sec input,.sec select,.bx-panel input,.bx-panel select){background:var(--panel2);color:var(--text);border-color:var(--border)}
+html:not([data-theme="light"]) :is(.bx-chip,.refresh-btn,.btn.secondary,.tab:not(.active),#hkTabs button:not(.on)){background:var(--panel2);color:var(--text);border-color:var(--border)}
+html:not([data-theme="light"]) #hkTabs button.on{background:var(--panel);color:#f5d88a;border-bottom-color:#cc9c24;box-shadow:none}
+html:not([data-theme="light"]) :is(.bx-alert,.msg.err,#hkAgents .p-bad,.statusPill.imekataliwa){background:rgba(226,100,90,.16);color:#f3c1bc}
+html:not([data-theme="light"]) .note{background:rgba(204,156,36,.15);color:#f0d9a0}
+html:not([data-theme="light"]) [style*="color:#001848"],html:not([data-theme="light"]) [style*="color: #001848"]{color:var(--text)!important}
+html:not([data-theme="light"]) #updatesScreen .menu-item :is(b,strong,.label,.title,h3,h4){color:var(--text)}
+#profileModalOverlay>div{max-width:640px!important;width:100%}
+
+body:not(.hk-on) #hkTop,body:not(.hk-on) #hkSide,body:not(.hk-on) #hkShade{display:none!important}
+.hk-gh{padding:10px 12px 4px;font-size:11px;font-weight:700;letter-spacing:.05em;opacity:.55}
+.hk-dd a small{display:block;opacity:.65;font-size:12px;margin-top:1px}
+#hkSearch .hk-dd{max-height:70vh;overflow-y:auto}
