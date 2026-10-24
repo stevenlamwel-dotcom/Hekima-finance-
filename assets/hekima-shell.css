@@ -3,7 +3,7 @@ html.hk-has-session #authGate{visibility:hidden}
 .back-link{display:none!important}
 body.hk-shell{padding-top:var(--hk-top)!important}
 #hkTop{position:fixed;top:0;left:0;right:0;height:var(--hk-top);z-index:900;display:flex;align-items:center;gap:8px;padding:0 12px;background:var(--bg,#fff);color:var(--text,#001848)}
-#hkTop .hk-ic{width:42px;height:42px;border:0;border-radius:50%;background:transparent;font-size:22px;cursor:pointer;color:inherit;position:relative;flex:0 0 auto}
+#hkTop .hk-ic{width:40px;height:40px;padding:0;border:0;border-radius:50%;background:transparent;font-size:22px;line-height:1;cursor:pointer;color:inherit;position:relative;flex:0 0 auto}
 #hkTop .hk-ic:active{background:rgba(127,127,127,.2)}
 #hkTop .hk-brand{display:none}
 #hkSearch{flex:1;min-width:0;position:relative}
@@ -16,7 +16,7 @@ body.hk-shell{padding-top:var(--hk-top)!important}
 .hk-dd a{display:block;padding:12px 14px;border-radius:12px;color:inherit;text-decoration:none;font-size:15px}
 .hk-dd a:hover{background:rgba(127,127,127,.18)}
 .hk-dd .hk-empty{padding:12px;font-size:13px;opacity:.7}
-#hkBadge{position:absolute;top:4px;right:4px;background:#e53935;color:#fff;border-radius:99px;font-size:10px;padding:1px 5px;display:none}
+#hkTop .hk-bell{color:var(--text,#001848);opacity:.85}#hkTop .hk-bell svg{display:block;margin:auto}#hkUser{display:flex;align-items:center;gap:8px;cursor:pointer;flex:0 0 auto}.hk-un{display:none;line-height:1.2;text-align:left;max-width:160px}.hk-un b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hk-un small{display:block;font-size:11px;opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}@media(min-width:700px){.hk-un{display:block}.hk-un.hk-chev{display:inline}}#hkBadge{position:absolute;top:4px;right:4px;background:#e53935;color:#fff;border-radius:99px;font-size:10px;padding:1px 5px;display:none}
 #hkAvatar{width:40px;height:40px;border-radius:50%;background:var(--hk-blue);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;flex:0 0 auto}
 #hkAvatar img{width:100%;height:100%;object-fit:cover}
 #hkSide{position:fixed;top:0;bottom:0;left:0;width:min(78vw,var(--hk-w));z-index:1000;background:var(--panel,#fff);color:var(--text,#001848);overflow-y:auto;transform:translateX(-100%);transition:transform .22s;padding-top:env(safe-area-inset-top,0px)}
@@ -35,3 +35,6 @@ body.hk-shell{padding-top:var(--hk-top)!important}
 #hkSet h3{margin:0 0 12px}
 #hkSet button,#hkSet a{display:block;width:100%;text-align:left;margin-top:8px;padding:14px 16px;border-radius:999px;border:1px solid var(--border,#dfe4ec);background:transparent;color:inherit;font:inherit;text-decoration:none;cursor:pointer}
 @media(min-width:900px){#hkSide{transform:none;width:var(--hk-w);box-shadow:none;border-right:1px solid var(--border,#dfe4ec)}body.hk-shell{padding-left:var(--hk-w)!important}#hkTop{left:var(--hk-w)}#hkTop .hk-menu,#hkShade{display:none!important}#hkSearch{max-width:560px;margin:0 auto}}
+#profileModalOverlay{padding-top:calc(var(--hk-top) + env(safe-area-inset-top,0px))}
+#hkSide a span{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;color:inherit}#hkSide a span svg{display:block}
+.hk-emo,#hkSide a span{filter:grayscale(1) brightness(1.7)}html[data-theme="light"] .hk-emo,html[data-theme="light"] #hkSide a span{filter:grayscale(1) brightness(.45)}#hkTop .hk-bell .hk-emo{font-size:19px;line-height:1}
