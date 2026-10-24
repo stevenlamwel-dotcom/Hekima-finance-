@@ -58,3 +58,4 @@ body:not(.hk-on) #hkTop,body:not(.hk-on) #hkSide,body:not(.hk-on) #hkShade{displ
 .hk-gh{padding:10px 12px 4px;font-size:11px;font-weight:700;letter-spacing:.05em;opacity:.55}
 .hk-dd a small{display:block;opacity:.65;font-size:12px;margin-top:1px}
 #hkSearch .hk-dd{max-height:70vh;overflow-y:auto}
+#hkSide .hk-logo{display:flex;align-items:center;gap:12px}#hkSide .hk-lg{width:54px;height:54px;object-fit:contain;background:#fff;border-radius:16px;padding:5px;flex:0 0 auto}#hkSide .hk-logo small{white-space:nowrap}
