@@ -374,6 +374,12 @@ addEventListener("beforeunload",show)})();</script>
       <button class="btn" onclick="addPayroll()">Hifadhi</button>
       <div class="msg" id="prMsg"></div>
     </div>
+    <div class="card" id="hsCard">
+      <h3>Salary Slips za Wafanyakazi</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Chagua mwezi uone salary slip za wafanyakazi waliolipwa. Bonyeza jina kufungua na kuchapisha.</p>
+      <div class="field"><label>Mwezi</label><select id="hsPeriod" onchange="hsLoad()"><option value="">Inapakia...</option></select></div>
+      <div id="hsRows"><div class="empty">Inapakia...</div></div>
+    </div>
     <div class="card">
       <h3>Rekodi za Malipo</h3>
       <div class="scrollx"><div class="xl-scroll"><table>
@@ -1193,5 +1199,83 @@ async function hrLoanDecide(id, ok){
 </script>
 <script src="assets/hekima-topbar.js">
 </script>
-</body>
+<script>
+async function hrPrintSlip(period, empId){
+  const {data,error}= empId ? await sb.rpc('hr_salary_slip_get',{p_employee:empId,p_period:period}) : await sb.rpc('salary_slip_get',{p_period:period});
+  if(error){ alert('Imeshindwa: '+error.message); return; }
+  const d=data, e=v=>String(v==null?'':v).replace(/</g,'&lt;'), m=v=>Number(v||0).toLocaleString('en-US');
+  const pay = d.payment_date ? new Date(d.payment_date).toLocaleDateString('en-GB') : '—';
+  const names=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const [yy,mm]=String(d.period).split('-'); const per=(names[parseInt(mm,10)-1]||mm)+' '+yy;
+  const dedRows=(d.deductions||[]).map((x,i)=>`<tr><td class="c">${i+1}</td><td class="c">${e(x.label)}</td><td class="r">${m(x.amount)}</td><td class="r">${m(x.remaining)}</td></tr>`).join('') || '<tr><td class="c">—</td><td class="c">Hakuna makato</td><td class="r">0</td><td class="r">—</td></tr>';
+  const w=window.open('','_blank');
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Salary Slip ${e(d.period)}</title><style>
+  body{font-family:Arial,Helvetica,sans-serif;color:#1f2d33;margin:0;background:#fff}
+  .page{max-width:720px;margin:0 auto}
+  .top{display:flex;height:150px}
+  .top .l{flex:1;background:#8fa3a3;padding:22px 26px;color:#fff;clip-path:polygon(0 0,100% 0,78% 100%,0 100%)}
+  .top .r{flex:1;background:#365a61;padding:22px 26px;color:#fff;text-align:right}
+  .title{font-size:34px;font-weight:900;letter-spacing:1px;margin:0 0 10px}
+  .meta{font-size:13px;line-height:1.7}
+  .brand{font-size:20px;font-weight:800;letter-spacing:1px}
+  .emp{display:flex;justify-content:space-between;padding:16px 26px 4px;font-size:13px;line-height:1.9}
+  .emp b{display:inline-block;width:130px}
+  h3{font-size:18px;letter-spacing:.5px;color:#365a61;margin:20px 26px 8px;font-weight:800}
+  table{width:calc(100% - 52px);margin:0 26px;border-collapse:collapse;font-size:13px}
+  th{background:#8fa3a3;color:#fff;padding:9px;font-weight:700}
+  td{padding:9px;border-bottom:1px solid #e3e3e3}
+  .c{text-align:center}.r{text-align:right}
+  .tot td{background:#8fa3a3;color:#fff;font-weight:800}
+  .net{margin:20px 26px 0;display:flex;background:#365a61;color:#fff;font-weight:800;font-size:16px}
+  .net div{padding:14px 16px}.net .a{flex:1}.net .b{background:#2f4e54;min-width:170px;text-align:right}
+  .debt{margin:14px 26px 0;border:1px solid #365a61;border-radius:8px;padding:12px 16px;font-size:14px}
+  .sig{display:flex;justify-content:space-between;margin:34px 26px 40px;font-size:13px}
+  .sig div{width:44%;text-align:center}
+  .line{border-top:1px dotted #365a61;margin-top:36px;padding-top:6px;font-style:italic}
+  @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  </style></head><body><div class="page">
+  <img src="assets/hekima-emblem.png" alt="HEKIMA FINANCE" style="height:64px;display:block;margin:14px 26px 0;">
+  <div class="top">
+    <div class="l"><div class="title">SALARY SLIP</div><div class="meta">Pay Period &nbsp;: ${e(per)}<br>Payment date : ${e(pay)}</div></div>
+    <div class="r"><div class="brand">HEKIMA FINANCE</div><div class="meta" style="margin-top:14px;">Records System<br>Iringa, Tanzania</div></div>
+  </div>
+  <div class="emp"><div>
+    <div><b>Employee Name</b>: ${e(d.employee.name)}</div>
+    <div><b>Department</b>: ${e(d.employee.department||'—')}</div>
+    <div><b>Position</b>: ${e(d.employee.position||'—')}</div>
+    <div><b>Employee code</b>: ${e(d.employee.code)}</div>
+  </div><div style="text-align:right;font-size:12px;">Slip no.<br><b>${e(d.slip_no)}</b></div></div>
+  <h3>INCOME DETAILS</h3>
+  <table><tr><th class="c">NO</th><th class="c">INFORMATION</th><th class="r">AMOUNT (TZS)</th></tr>
+    <tr><td class="c">1</td><td class="c">Mshahara wa mwezi</td><td class="r">${m(d.gross)}</td></tr>
+    <tr class="tot"><td></td><td class="r">TOTAL REVENUE</td><td class="r">${m(d.gross)}</td></tr></table>
+  <h3>DEDUCTION DETAILS</h3>
+  <table><tr><th class="c">NO</th><th class="c">INFORMATION</th><th class="r">AMOUNT (TZS)</th><th class="r">DEBT LEFT</th></tr>
+    ${dedRows}
+    <tr class="tot"><td></td><td class="r">TOTAL DEDUCTIONS</td><td class="r">${m(d.total_deductions)}</td><td></td></tr></table>
+  <div class="net"><div class="a">NET SALARY RECEIVED</div><div class="b">TZS ${m(d.net)}</div></div>
+  <div class="debt"><b>Deni la ofisi linalobaki:</b> TZS ${m(d.outstanding_debt)}</div>
+  <div class="sig"><div><div class="line">(Approved by: HR)</div></div><div><div class="line">(Accepted by: ${e(d.employee.name)})</div></div></div>
+  </div><script>window.onload=()=>window.print();<\/script></body></html>`);
+  w.document.close();
+}
+async function hsInit(){
+  const s=document.getElementById('hsPeriod'); if(!s) return;
+  const {data,error}=await sb.rpc('hr_salary_slip_periods');
+  if(error){ s.innerHTML='<option value="">—</option>'; document.getElementById('hsRows').innerHTML='<div class="empty">'+String(error.message).replace(/</g,'&lt;')+'</div>'; return; }
+  const list=data||[];
+  s.innerHTML=list.length?list.map(p=>'<option value="'+p+'">'+p+'</option>').join(''):'<option value="">Hakuna miezi bado</option>';
+  hsLoad();
+}
+async function hsLoad(){
+  const s=document.getElementById('hsPeriod'), box=document.getElementById('hsRows'); if(!s||!box) return;
+  const p=s.value; if(!p){ box.innerHTML='<div class="empty">Hakuna salary slip bado.</div>'; return; }
+  box.innerHTML='<div class="empty">Inapakia...</div>';
+  const {data,error}=await sb.rpc('hr_salary_slips_month',{p_period:p});
+  if(error){ box.innerHTML='<div class="empty">'+String(error.message).replace(/</g,'&lt;')+'</div>'; return; }
+  const esc=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  box.innerHTML=(data||[]).length?(data||[]).map(r=>'<div onclick="hrPrintSlip(\''+r.period+'\',\''+r.employee_id+'\')" style="border:1px solid var(--line,#dfe4ec);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;"><div style="min-width:0;"><b>'+esc(r.full_name)+'</b><div style="font-size:12px;opacity:.7;">'+esc(r.job_position||'')+(r.dept?' · '+esc(r.dept):'')+'</div></div><div style="text-align:right;white-space:nowrap;"><b>TZS '+Number(r.net).toLocaleString('en-US')+'</b><div style="font-size:11px;opacity:.7;">'+esc(r.payment_date||'')+'</div></div></div>').join(''):'<div class="empty">Hakuna salary slip za mwezi huu.</div>';
+}
+window.addEventListener('load',function(){var n=0,t=setInterval(function(){n++;if(typeof sb!=='undefined'&&sb&&sb.auth){clearInterval(t);hsInit()}else if(n>40)clearInterval(t)},300)});
+</script></body>
 </html>
