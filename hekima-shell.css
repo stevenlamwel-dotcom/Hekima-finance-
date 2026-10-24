@@ -1,0 +1,38 @@
+:root{--hk-top:66px;--hk-w:300px;--hk-gold:#f5b800;--hk-blue:#1565e8}
+html.hk-has-session #authGate{visibility:hidden}
+.back-link{display:none!important}
+body.hk-shell{padding-top:var(--hk-top)!important}
+#hkTop{position:fixed;top:0;left:0;right:0;height:var(--hk-top);z-index:900;display:flex;align-items:center;gap:8px;padding:0 12px;background:var(--bg,#fff);color:var(--text,#001848)}
+#hkTop .hk-ic{width:40px;height:40px;padding:0;border:0;border-radius:50%;background:transparent;font-size:22px;line-height:1;cursor:pointer;color:inherit;position:relative;flex:0 0 auto}
+#hkTop .hk-ic:active{background:rgba(127,127,127,.2)}
+#hkTop .hk-brand{display:none}
+#hkSearch{flex:1;min-width:0;position:relative}
+#hkSearch input{width:100%;height:46px;border:0;border-radius:999px;padding:0 20px;font:inherit;font-size:16px;text-align:center;background:rgba(127,127,127,.18);color:inherit;outline:none}
+#hkSearch input:focus{text-align:left}
+#hkSearch input::placeholder{color:inherit;opacity:.6}
+.hk-dd{position:absolute;top:52px;right:0;min-width:230px;max-width:92vw;background:var(--panel,#fff);color:var(--text,#001848);border:1px solid var(--border,#dfe4ec);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.28);padding:6px;display:none;z-index:950}
+#hkSearch .hk-dd{left:0;right:auto;width:100%}
+.hk-dd.open{display:block}
+.hk-dd a{display:block;padding:12px 14px;border-radius:12px;color:inherit;text-decoration:none;font-size:15px}
+.hk-dd a:hover{background:rgba(127,127,127,.18)}
+.hk-dd .hk-empty{padding:12px;font-size:13px;opacity:.7}
+#hkTop .hk-bell{color:var(--text,#001848);opacity:.85}#hkTop .hk-bell svg{display:block;margin:auto}#hkUser{display:flex;align-items:center;gap:8px;cursor:pointer;flex:0 0 auto}.hk-un{display:none;line-height:1.2;text-align:left;max-width:160px}.hk-un b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hk-un small{display:block;font-size:11px;opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}@media(min-width:700px){.hk-un{display:block}.hk-un.hk-chev{display:inline}}#hkBadge{position:absolute;top:4px;right:4px;background:#e53935;color:#fff;border-radius:99px;font-size:10px;padding:1px 5px;display:none}
+#hkAvatar{width:40px;height:40px;border-radius:50%;background:var(--hk-blue);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;flex:0 0 auto}
+#hkAvatar img{width:100%;height:100%;object-fit:cover}
+#hkSide{position:fixed;top:0;bottom:0;left:0;width:min(78vw,var(--hk-w));z-index:1000;background:var(--panel,#fff);color:var(--text,#001848);overflow-y:auto;transform:translateX(-100%);transition:transform .22s;padding-top:env(safe-area-inset-top,0px)}
+#hkSide.open{transform:none;box-shadow:0 0 30px rgba(0,0,0,.4)}
+#hkSide .hk-logo{padding:26px 22px 14px;font-size:24px;font-weight:600;border-bottom:1px solid var(--border,#dfe4ec);margin-bottom:10px}
+#hkSide .hk-logo small{display:block;font-size:12px;font-weight:400;opacity:.65;margin-top:2px}
+#hkSide .hk-sec{padding:16px 24px 6px;font-size:12px;font-weight:700;letter-spacing:.05em;opacity:.6}
+#hkSide a{display:flex;align-items:center;gap:16px;margin:2px 12px 2px 8px;padding:0 18px;height:50px;border-radius:999px;color:inherit;text-decoration:none;font-size:15.5px;cursor:pointer}
+#hkSide a.act{background:rgba(21,101,232,.22);font-weight:700}
+#hkSide a:hover:not(.act){background:rgba(127,127,127,.16)}
+#hkShade{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:990;display:none}
+#hkShade.open{display:block}
+#hkSet{position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px}
+#hkSet.open{display:flex}
+#hkSet .hk-box{background:var(--panel,#fff);color:var(--text,#001848);border-radius:24px;padding:20px;width:100%;max-width:360px}
+#hkSet h3{margin:0 0 12px}
+#hkSet button,#hkSet a{display:block;width:100%;text-align:left;margin-top:8px;padding:14px 16px;border-radius:999px;border:1px solid var(--border,#dfe4ec);background:transparent;color:inherit;font:inherit;text-decoration:none;cursor:pointer}
+@media(min-width:900px){#hkSide{transform:none;width:var(--hk-w);box-shadow:none;border-right:1px solid var(--border,#dfe4ec)}body.hk-shell{padding-left:var(--hk-w)!important}#hkTop{left:var(--hk-w)}#hkTop .hk-menu,#hkShade{display:none!important}#hkSearch{max-width:560px;margin:0 auto}}
+#profileModalOverlay{padding-top:calc(var(--hk-top) + env(safe-area-inset-top,0px))}
