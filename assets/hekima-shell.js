@@ -3,7 +3,7 @@ if(window.__hkShell||document.querySelector('.auth-gate#authGate')&&!document.ge
 var P=location.pathname.split('/').pop()||'index.html';
 var ROLE={hr:false,top:false},CACHE={};
 function setOn(o){document.body.classList.toggle('hk-on',o);document.body.classList.toggle('hk-shell',o)}
-var items=[['Home','portal.html','home'],['FINANCE'],['Balance','balance.html','wallet'],['Combine','combine.html','calc'],['Updates','portal.html#updates','sync'],['HR','hr.html','users','hr'],['OPERATIONS'],['Operations','operations.html','cog'],['MANAGEMENT','','','top'],['Management','management.html','building','top'],['AKAUNTI'],['Profile','portal.html#profile','user'],['Settings','#settings','sliders'],['Logout','#logout','logout']];
+var items=[['Home','portal.html','home'],['FINANCE'],['Balance','balance.html','wallet'],['Combine','combine.html','calc'],['Updates','portal.html#updates','sync'],['HUMAN RESOURCE','','','hr'],['HR Management','hr.html','users','hr'],['OPERATIONS'],['Operations','operations.html','cog'],['MANAGEMENT','','','top'],['Management','management.html','building','top'],['AKAUNTI'],['Profile','portal.html#profile','user'],['Settings','#settings','sliders'],['Logout','#logout','logout']];
 var IC={'home': '🏠', 'wallet': '💰', 'calc': '🧮', 'sync': '📋', 'users': '🧑\u200d💼', 'cog': '⚙️', 'building': '🏢', 'user': '👤', 'sliders': '🛠️', 'logout': '🚪'};
 var FN={home:'showHome',updates:'showUpdates',history:'showHistory',profile:'openProfileModal',capital:'showCapital',idara:'showIdara'};
 function el(t,a,h){var e=document.createElement(t);for(var k in a||{})e.setAttribute(k,a[k]);if(h!=null)e.innerHTML=h;return e}
@@ -12,7 +12,7 @@ function pend(){var g=sessionStorage.getItem('hk_go');if(!g||P!='portal.html')re
 var BELL='<span class="hk-emo">🔔</span>';
 function build(){
 var side=el('div',{id:'hkSide'}),shade=el('div',{id:'hkShade'}),top=el('div',{id:'hkTop'});
-side.innerHTML='<div class="hk-logo"><img class="hk-lg" src="assets/hekima-emblem.png" alt="" onerror="this.style.display=\'none\'"><div>Hekima Finance<small>Pooge na Masmibue</small></div></div>';
+side.innerHTML='<div class="hk-logo"><img class="hk-lg" src="assets/hekima-emblem.png" alt="" onerror="this.style.display=\'none\'"><div>Hekima Finance<small>Uwezo wa Fedha, Maendeleo ya Kesho</small></div></div>';
 items.forEach(function(i){
  if(i.length==1){side.appendChild(el('div',{'class':'hk-sec'},i[0]));return}
  if(i[1]===''){var s=el('div',{'class':'hk-sec'},i[0]);if(i[3])s.dataset.role=i[3];side.appendChild(s);return}
