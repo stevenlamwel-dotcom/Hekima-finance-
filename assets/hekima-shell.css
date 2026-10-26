@@ -50,7 +50,7 @@ html:not([data-theme="light"]) :is(.bx-chip,.refresh-btn,.btn.secondary,.tab:not
 html:not([data-theme="light"]) #hkTabs button.on{background:var(--panel);color:#f5d88a;border-bottom-color:#cc9c24;box-shadow:none}
 html:not([data-theme="light"]) :is(.bx-alert,.msg.err,#hkAgents .p-bad,.statusPill.imekataliwa){background:rgba(226,100,90,.16);color:#f3c1bc}
 html:not([data-theme="light"]) .note{background:rgba(204,156,36,.15);color:#f0d9a0}
-html:not([data-theme="light"]) [style*="color:#001848"],html:not([data-theme="light"]) [style*="color: #001848"]{color:var(--text)!important}
+html:not([data-theme="light"]) [style*="color:#001848"]:not(.print-sheet *),html:not([data-theme="light"]) [style*="color: #001848"]:not(.print-sheet *){color:var(--text)!important}
 html:not([data-theme="light"]) #updatesScreen .menu-item :is(b,strong,.label,.title,h3,h4){color:var(--text)}
 #profileModalOverlay>div{max-width:640px!important;width:100%}
 
@@ -61,3 +61,8 @@ body:not(.hk-on) #hkTop,body:not(.hk-on) #hkSide,body:not(.hk-on) #hkShade{displ
 #hkSide .hk-logo{display:flex;align-items:center;gap:12px}#hkSide .hk-lg{width:54px;height:54px;object-fit:contain;background:#fff;border-radius:16px;padding:5px;flex:0 0 auto}#hkSide .hk-logo small{white-space:nowrap}
 body.hk-shell .wrap{padding-top:12px!important}
 #hkSide .hk-logo small{white-space:normal;line-height:1.3;font-size:12px}
+
+/* Vitufe vya juu vinavyojirudia (mandhari, lugha, Toka, Menyu) vimeondolewa: viko kwenye Settings na menyu */
+body.hk-shell :is(.icon-toggle-btn[onclick*="toggleTheme"],.icon-toggle-btn[onclick*="toggleLang"],.logout-link,a[data-i18n="t_menu"]){display:none!important}
+
+@media print{#hkTop,#hkSide,#hkShade,#hkSet,#hkLoader{display:none!important}body.hk-shell{padding:0!important}html body{background:#fff!important;color:#000!important}}

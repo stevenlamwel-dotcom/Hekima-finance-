@@ -72,14 +72,15 @@ function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return
 function okRole(r){return !r||(r=='hr'&&(ROLE.hr||ROLE.top))||(r=='top'&&ROLE.top)}
 function load(t){if(!CACHE[t])CACHE[t]=sb.from(t).select('*').limit(2000).then(function(r){return (r&&r.data)||[]},function(){return []});return CACHE[t]}
 function hit(row,q){for(var k in row){if(k=='id'||/_id$|^created_|^updated_|_at$/.test(k))continue;var v=row[k];if((typeof v=='string'&&!/^[0-9a-f]{8}-[0-9a-f]{4}-/.test(v)&&v.toLowerCase().indexOf(q)>=0)||(typeof v=='number'&&String(v).indexOf(q)>=0))return true}return false}
-function authPoll(){function chk(){if(typeof sb=='undefined'||!sb||!sb.auth)return;sb.auth.getSession().then(function(r){var s=r&&r.data&&r.data.session,ac=document.getElementById('appContent');setOn(!!s&&(!ac||ac.style.display!='none'))}).catch(function(){})}chk();setInterval(chk,800)}
+function hideBack(){document.querySelectorAll('a').forEach(function(a){if(a.closest('#hkSide,#hkSet'))return;if(/^\s*[‹<]\s*(Menu|Menyu)/i.test(a.textContent))a.style.display='none'})}
+function authPoll(){function chk(){if(typeof sb=='undefined'||!sb||!sb.auth)return;sb.auth.getSession().then(function(r){var s=r&&r.data&&r.data.session,ac=document.getElementById('appContent');var on=!!s&&(!ac||ac.style.display!='none');setOn(on);if(on)hideBack()}).catch(function(){})}chk();setInterval(chk,800)}
 function prefill(){if(P!='cust-list.html'&&P!='refund.html')return;var h=location.hash;if(h.indexOf('#q=')!=0)return;var q=decodeURIComponent(h.slice(3)),n=0,t=setInterval(function(){n++;var i=document.getElementById('searchBox')||document.getElementById('findSearch');if(i){clearInterval(t);i.value=q;['input','keyup','change'].forEach(function(ev){i.dispatchEvent(new Event(ev,{bubbles:true}))})}else if(n>40)clearInterval(t)},250)}
 addEventListener('hashchange',prefill);
 /* ===== ukaguzi wa rangi: dark mode (mandharinyuma nyeupe -> navy, maandishi meusi -> mepesi) ===== */
 var TOUCH=[],obs,busy=false,DKQ=new Set(),dkT;
 function isDark(){return document.documentElement.getAttribute('data-theme')!=='light'}
 function lum(c){var m=c&&c.match(/[\d.]+/g);if(!m||m.length<3)return null;var a=m.length>3?+m[3]:1;if(a<.6)return null;return(.2126*m[0]+.7152*m[1]+.0722*m[2])/255}
-function skipEl(e){return e.closest('#hkTop,#hkSide,#hkSet,#hkLoader,#hkShade,.login-box,#authGate,svg,canvas,img,video')}
+function skipEl(e){return e.closest('#hkTop,#hkSide,#hkSet,#hkLoader,#hkShade,.login-box,#authGate,.print-sheet,svg,canvas,img,video')}
 function ov(e,pr,v){var o=e.__hk||(e.__hk={});if(!(pr in o)){o[pr]=[e.style.getPropertyValue(pr),e.style.getPropertyPriority(pr)];TOUCH.push(e)}e.style.setProperty(pr,v,'important')}
 function undo(e){var o=e.__hk;if(!o)return;for(var pr in o){if(o[pr][0])e.style.setProperty(pr,o[pr][0],o[pr][1]);else e.style.removeProperty(pr)}e.__hk=null;e.removeAttribute('data-hkd')}
 function hasText(e){if(/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(e.tagName))return true;for(var n=e.firstChild;n;n=n.nextSibling)if(n.nodeType==3&&n.nodeValue.trim())return true;return false}
