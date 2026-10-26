@@ -181,6 +181,7 @@ addEventListener("beforeunload",show)})();</script>
   <div class="bx-tabs" id="bxTabs"></div>
   <div id="bx-dashboard" class="bx-panel" data-bxtab="dashboard"><div class="card"><div class="empty">Inapakia...</div></div></div>
   <div id="bx-cash" class="bx-panel" data-bxtab="cash"></div>
+  <div id="bx-ada" class="bx-panel" data-bxtab="ada"></div>
   <div id="bx-matumizi" class="bx-panel" data-bxtab="matumizi"></div>
   <div id="bx-mishahara" class="bx-panel" data-bxtab="mishahara"></div>
   <div id="bx-pl" class="bx-panel" data-bxtab="pl"></div>
@@ -497,7 +498,7 @@ async function payRun(id, period, net){
 
 <script>
 /* ======== BALANCE: Dashboard, Cash & Mikopo, Matumizi, Mishahara, Faida/Hasara, Tahadhari ======== */
-const BX_TABS=[['dashboard','Dashboard'],['cash','Cash & Mikopo'],['matumizi','Matumizi'],['mishahara','Mishahara'],['pl','Faida/Hasara'],['tahadhari','Tahadhari'],['siku','Hesabu ya Siku']];
+const BX_TABS=[['dashboard','Dashboard'],['cash','Cash & Mikopo'],['ada','Ada za Mikopo'],['matumizi','Matumizi'],['mishahara','Mishahara'],['pl','Faida/Hasara'],['tahadhari','Tahadhari'],['siku','Hesabu ya Siku']];
 let BX_TAB='dashboard', BX_ALERT_N=0, BX_OWING=[], BX_PL={from:'',to:'',preset:'month'};
 const bxN = n => fmt(Number(n)||0);
 const bxEsc = s => esc(String(s==null?'':s));
@@ -528,7 +529,7 @@ async function bxAlertCount(){
 }
 async function bxRefresh(){
   if(!ROLE) return;
-  const f={dashboard:bxDashboard,cash:bxCash,matumizi:bxMatumizi,mishahara:bxMishahara,pl:bxPL,tahadhari:bxAlerts}[BX_TAB];
+  const f={dashboard:bxDashboard,cash:bxCash,ada:bxAda,matumizi:bxMatumizi,mishahara:bxMishahara,pl:bxPL,tahadhari:bxAlerts}[BX_TAB];
   if(f) await f(); else bxAlertCount();
 }
 
@@ -743,12 +744,7 @@ async function bxPool(){
   const r=await sb.rpc('balance_pool');
   if(r.error){ host.innerHTML=bxErr(r.error); return; }
   const p=r.data;
-  host.innerHTML = `<div class="card"><h2>POOL YA ADA (MATUMIZI NA MISHAHARA)</h2>
-    ${bxRow('Ada zilizoingia tangu kampuni ianze',bxN(p.ada_in))}
-    ${bxRow('Kilichobaki kwenye pool ya ada',bxN(p.pool_balance), p.pool_balance<0?'bad':'good')}
-    <p class="sec-desc" style="margin-top:6px">Matumizi yote ya ofisi na mishahara yanatoka kwenye pool hii tu.</p>
-  </div>
-  <div class="card"><h2>FAIDA YA CEO (RIBA)</h2>
+  host.innerHTML = `<div class="card"><h2>FAIDA YA CEO (RIBA)</h2>
     ${bxRow('Riba iliyokusanywa',bxN(p.riba_in))}
     ${bxRow('Imeshatolewa',bxN(p.withdrawn))}
     ${bxRow('Faida inayopatikana kutolewa',bxN(p.faida_balance), p.faida_balance<0?'bad':'good')}
@@ -830,5 +826,54 @@ async function loanDisburse(id){
 })();
 </script>
 <script src="assets/hekima-topbar.js"></script>
+
+<script>
+/* ---- Tab ya Ada za Mikopo: ada ndiyo inayolipa matumizi yote ya ofisi na mishahara ---- */
+async function bxAda(){
+  const el=$('bx-ada');
+  el.innerHTML='<div class="card"><div class="empty">Inapakia...</div></div>';
+  const r=await sb.rpc('balance_ada_summary');
+  if(r.error){ el.innerHTML=bxErr(r.error); return; }
+  const d=r.data||{};
+  const pool=Number(d.pool)||0, pend=Number(d.pending_payroll)||0;
+  const short=Math.max(0,pend-pool);
+  const months=(d.months||[]).map(m=>{
+    const net=(Number(m.ada)||0)-(Number(m.matumizi)||0)-(Number(m.mishahara)||0);
+    return `<div class="row"><span class="l">${bxEsc(m.month)}<div class="sec-desc" style="margin:2px 0 0">Ada ${bxN(m.ada)} · Matumizi ${bxN(m.matumizi)} · Mishahara ${bxN(m.mishahara)}</div></span><span class="v ${net<0?'bad':'good'}">${bxN(net)}</span></div>`;
+  }).join('') || '<div class="empty">Hakuna rekodi bado.</div>';
+  const recent=(d.recent||[]).map(x=>`<div class="row"><span class="l">${bxEsc(String(x.date||'').slice(0,10))}${x.manual?' · Nyongeza ya CEO':''}</span><span class="v">${bxN(x.amount)}</span></div>`).join('') || '<div class="empty">Hakuna ada iliyoingia bado.</div>';
+  el.innerHTML = `<div class="card"><h2>ADA ZA MIKOPO</h2>
+    ${bxRow('Ada zilizoingia tangu kampuni ianze',bxN(d.ada_in))}
+    ${bxRow('Matumizi ya ofisi yaliyolipwa',bxN(d.matumizi))}
+    ${bxRow('Mishahara iliyolipwa',bxN(d.mishahara))}
+    ${bxRow('Baki ya ada',bxN(pool), pool<0?'bad':'good')}
+    <p class="sec-desc" style="margin-top:6px">Matumizi yote ya ofisi na mishahara hulipwa kutoka kwenye ada. Ada isipotosha, malipo hayaruhusiwi mpaka CEO aweke pesa za matumizi.</p>
+  </div>
+  ${pend>0?`<div class="card"><h2>MISHAHARA INAYOSUBIRI KULIPWA</h2>
+    ${bxRow('Mishahara iliyoidhinishwa',bxN(pend))}
+    ${bxRow('Baki ya ada',bxN(pool), pool<0?'bad':'good')}
+    ${short>0?`<p class="sec-desc" style="margin-top:6px;color:#e2645a">Ada haitoshi. Ongeza angalau ${bxN(short)} ili mishahara ilipwe.</p>`:'<p class="sec-desc" style="margin-top:6px">Ada inatosha kulipa mishahara hii.</p>'}
+  </div>`:''}
+  <div class="card"><h2>WEKA PESA ZA MATUMIZI</h2>
+    ${d.is_ceo?`<p class="sec-desc">Ada ikiwa haitoshi, CEO anaweza kuweka pesa za matumizi hapa. Zinaongeza baki ya ada.</p>
+    <div style="display:flex;gap:6px;margin-top:8px;align-items:center;">
+      <input id="adaAmt" type="number" min="1" inputmode="numeric" placeholder="Kiasi" value="${short>0?Math.ceil(short):''}" class="bx-in" style="margin:0;flex:1">
+      <button class="bx-mini" style="margin:0" onclick="bxAdaTopup()">Weka</button></div>
+    <input id="adaNote" type="text" placeholder="Maelezo (hiari)" class="bx-in" style="margin-top:6px">
+    <div class="msg" id="msg-ada"></div>`:'<p class="sec-desc">Ni CEO pekee anayeweza kuweka pesa za matumizi.</p>'}
+  </div>
+  <div class="card"><h2>MWEZI KWA MWEZI</h2>${months}</div>
+  <div class="card"><h2>ADA ZILIZOINGIA KARIBUNI</h2>${recent}</div>`;
+}
+async function bxAdaTopup(){
+  const amt=parseFloat(document.getElementById('adaAmt').value)||0;
+  const note=(document.getElementById('adaNote').value||'').trim();
+  if(amt<=0){ ocMsg('msg-ada','Weka kiasi sahihi.',false); return; }
+  if(!confirm('Kuweka '+fmt(amt)+' kwenye pool ya ada (matumizi)?')) return;
+  const r=await sb.rpc('ada_topup',{p_amount:amt,p_note:note||null});
+  if(r.error){ ocMsg('msg-ada','Imeshindwa: '+r.error.message,false); return; }
+  bxAda();
+}
+</script>
 </body>
 </html>

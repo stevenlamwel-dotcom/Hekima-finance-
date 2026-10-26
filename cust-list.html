@@ -464,7 +464,7 @@ function toggleTheme(){
 /* ---------------- LANGUAGE (EN/SW) ---------------- */
 const HK_TR = {
   en: {
-    t_title:"Client List", t_menu:"‹ Menu", t_add_client:"+ Client", t_add_agent:"+ Agent", t_add_account:"+ Account", t_logout:"Log Out",
+    t_title:"Client List", t_menu:"‹ Menu", t_add_client:"+ Muamala", t_add_agent:"+ Agent", t_add_account:"+ Account", t_logout:"Log Out",
     t_guarantor:"Guarantor", t_name:"Name", t_phone:"Phone", t_documents:"Client Documents",
     t_documents_hint:"Scan/photo of ID, guarantor form, etc. (optional, can add more later)",
     t_save_client:"Save Client", t_edit_client:"Edit Client", t_full_name:"Full Name", t_nickname:"Nickname",
@@ -487,7 +487,7 @@ const HK_TR = {
     t_cannot_new_loan:"This client still has an outstanding balance on an existing loan. They must fully repay it before receiving a new loan."
   },
   sw: {
-    t_title:"Orodha ya Wateja", t_menu:"‹ Menyu", t_add_client:"+ Mteja", t_add_agent:"+ Wakala", t_add_account:"+ Akaunti", t_logout:"Toka",
+    t_title:"Orodha ya Wateja", t_menu:"‹ Menyu", t_add_client:"+ Muamala", t_add_agent:"+ Wakala", t_add_account:"+ Akaunti", t_logout:"Toka",
     t_guarantor:"Mdhamini", t_name:"Jina", t_phone:"Simu", t_documents:"Hati za Mteja",
     t_documents_hint:"Scan/picha ya kitambulisho, fomu ya mdhamini, n.k. (hiari, unaweza kuongeza baadaye)",
     t_save_client:"Hifadhi Mteja", t_edit_client:"Hariri Mteja", t_full_name:"Jina Kamili", t_nickname:"Jina la Utani",
@@ -1352,6 +1352,10 @@ function enterApp(){
   if(ME && ME.agent_code){
     const reqBtn = document.getElementById('reqMiamalaBtn');
     if(reqBtn) reqBtn.style.display='';
+  }
+  if(ME && ME.role === 'admin'){
+    const addBtn = document.getElementById('addClientBtn');
+    if(addBtn) addBtn.style.display='';
   }
   loadApplicants();
 
