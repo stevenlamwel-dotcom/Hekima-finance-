@@ -235,6 +235,30 @@ addEventListener("beforeunload",show)})();</script>
   #hkHist .hr{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr 1fr;gap:6px;padding:9px 12px;font-size:12.5px;border-top:1px solid #eef1f6;}
   #hkHist .hr.h{background:#e9edf3;font-weight:800;font-size:11px;border-top:0;}
   #hkHist .hr span.n{text-align:right;font-variant-numeric:tabular-nums;}
+
+  /* ===== HEKIMA: jedwali moja la noti kwa Matumizi/Marejesho/Chenji (muonekano; ids za hesabu hazijaguswa) ===== */
+  .xgw{overflow-x:auto;-webkit-overflow-scrolling:touch;border-top:1px solid var(--line,#dfe4ec);}
+  .xg{border-collapse:collapse;table-layout:fixed;width:max-content;min-width:100%;font-size:13px;color:var(--hk-navy,#001848);}
+  .xg th,.xg td{height:38px;padding:0 4px;border-bottom:1px solid var(--line,#dfe4ec);text-align:right;font-variant-numeric:tabular-nums;background:#fff;}
+  .xg th{background:#e9edf3;font-size:11px;font-weight:800;letter-spacing:.03em;}
+  .xg .xn{position:sticky;left:0;z-index:1;width:112px;max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;padding-left:12px;font-weight:800;cursor:pointer;}
+  .xg .xd{width:58px;}
+  .xg .xj{width:88px;font-weight:800;padding-right:12px;}
+  .xg tbody.xr:nth-of-type(even) td{background:#f7f9fc;}
+  .xg input[type=number]{width:100%;height:30px;padding:0 5px;text-align:right;border:1px solid #c9d2df;border-radius:8px;font:inherit;font-weight:800;color:var(--hk-navy,#001848);background:#fff;font-variant-numeric:tabular-nums;-moz-appearance:textfield;}
+  .xg input[type=number]::-webkit-outer-spin-button,.xg input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .xg input[readonly]{border-color:transparent;background:transparent;}
+  .xg tr.xnr[hidden]{display:none;}
+  .xg tr.xnr td{height:auto;padding:4px 8px 8px;text-align:left;}
+  .xg .xnr .note{position:sticky;left:12px;display:block;width:min(300px,calc(100vw - 64px));}
+  .xg tbody.xr:has(.xnr .note:not(:placeholder-shown)) .xn > span:first-child::after{content:" \270E";color:var(--hk-gold,#cc9c24);}
+  .xg tfoot td{background:var(--hk-navy,#001848);color:#fff;border-bottom:0;font-weight:800;height:42px;}
+  .xg tfoot .xn{cursor:default;}
+  .xg tfoot .xj{color:#d8b460;font-size:15px;font-weight:900;}
+  .xdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:#c9d2df;}
+  .xdot.ok{background:var(--hk-green,#008454);}
+  .xdot.w{background:var(--hk-gold,#cc9c24);}
+  .xdot.bad{background:#8a2a22;}
 </style>
 <link rel="stylesheet" href="assets/hekima-brand.css">
 <link rel="stylesheet" href="assets/hekima-topbar.css">
@@ -444,12 +468,31 @@ function agentBlocks(section){
     <input class="note" type="text" placeholder="Maelezo (hiari)" data-kind="agentnote" data-sec="${section}" data-agent="${esc(a.code)}">
   </div>`).join('');
 }
+function xgHead(first){
+  return `<thead><tr><th class="xn" style="cursor:default">${first}</th>${DENOMS.map(d=>`<th class="xd">${fmt(d)}</th>`).join('')}<th class="xj">JUMLA</th></tr></thead>`;
+}
+function xgFoot(key,tid){
+  return `<tfoot><tr><td class="xn">JUMLA</td>${DENOMS.map(d=>`<td class="xd"><span class="ro" id="o-${key}-${d}">0</span></td>`).join('')}<td class="xj"><span id="${tid}">0</span></td></tr></tfoot>`;
+}
+function xgNote(td){
+  const r=td.closest('tbody').querySelector('tr.xnr'); if(!r) return;
+  r.hidden=!r.hidden; if(!r.hidden){ const i=r.querySelector('input'); if(i) i.focus(); }
+}
 function matBlocks(){
-  return CATS.map(c=>`<div class="agent-card">
-    <div class="ah"><span>${esc(c)} <span id="ms-${esc(c)}"></span></span><span id="mt-${esc(c)}">0</span></div>
-    ${inputGrid(`data-kind="mat" data-cat="${esc(c)}"`)}
-    <input class="note" type="text" placeholder="Maelezo (hiari)" data-kind="matnote" data-cat="${esc(c)}">
-  </div>`).join('');
+  return `<div class="xgw"><table class="xg">${xgHead('AINA')}${CATS.map(c=>`<tbody class="xr"><tr>
+    <td class="xn" onclick="xgNote(this)"><span>${esc(c)}</span><span id="ms-${esc(c)}" style="display:block;line-height:1"></span></td>
+    ${DENOMS.map(d=>`<td class="xd"><input type="number" inputmode="numeric" min="0" step="1" placeholder="0" data-kind="mat" data-cat="${esc(c)}" data-d="${d}"></td>`).join('')}
+    <td class="xj" id="mt-${esc(c)}">0</td></tr>
+    <tr class="xnr" hidden><td colspan="10"><input class="note" type="text" placeholder="Maelezo (hiari)" data-kind="matnote" data-cat="${esc(c)}"></td></tr></tbody>`).join('')}${xgFoot('ak','t-ak')}</table></div>`;
+}
+function agentGrid(section){
+  if(!AGENTS.length) return '<div class="empty">Hakuna wakala waliosajiliwa bado.</div>';
+  const key=section==='marejesho'?'bq':'cc', tid=section==='marejesho'?'t-bq':'t-cc';
+  return `<div class="xgw"><table class="xg">${xgHead('WAKALA')}${AGENTS.map(a=>`<tbody class="xr"><tr onclick="hoOpen('${esc(a.code)}','${section}')">
+    <td class="xn" title="${esc(a.name)}"><span class="xdot" id="hos-${section}-${esc(a.code)}"></span>${esc(a.name)}</td>
+    ${DENOMS.map(d=>`<td class="xd"><input type="number" readonly tabindex="-1" placeholder="0" data-kind="agent" data-sec="${section}" data-agent="${esc(a.code)}" data-d="${d}"></td>`).join('')}
+    <td class="xj" id="ag-${section}-${esc(a.code)}">0</td></tr></tbody>`).join('')}${xgFoot(key,tid)}</table></div>
+    <div class="sec-desc" style="padding:8px 12px 10px;margin:0"><span class="xdot ok"></span>Imethibitishwa &nbsp; <span class="xdot w"></span>Inasubiri &nbsp; <span class="xdot bad"></span>Imerudishwa. Gusa safu kuhakiki.</div>`;
 }
 function matStatusLabel(s){
   if(s==='imekubaliwa') return '<span class="statusPill imekubaliwa">Imekubaliwa</span>';
@@ -497,10 +540,7 @@ function renderSections(){
 
   H.push(sec('matumizi','5 · MATUMIZI ASUBUHI',
     `<p class="sec-desc">Matumizi madogo madogo kwa kila aina, kwa idadi ya noti.</p>
-     ${matBlocks()}
-     <div class="sub-h">Jumla ya kila noti</div>
-     ${outGrid('ak')}
-     ${totalLine('JUMLA MATUMIZI','t-ak')}`));
+     ${matBlocks()}`));
 
   H.push(sec('asubuhi','6 · PESA ASUBUHI',
     `<div class="sub-h" style="margin-top:10px">Inatarajiwa (Baada ya Asubuhi)</div>
@@ -530,10 +570,7 @@ function renderSections(){
   H.push(sec('marejesho','9 · MAREJESHO',
     `<p class="sec-desc">Marejesho yaliyokabidhiwa na mawakala. Combine anahakiki tu: Thibitisha au Batilisha.</p>
      <div id="refundBox"></div>
-     ${handoverPanel('marejesho')}<div class="hk-hide">${agentBlocks('marejesho')}</div>
-     <div class="sub-h">Jumla ya kila noti</div>
-     ${outGrid('bq')}
-     ${totalLine('JUMLA MAREJESHO','t-bq')}`));
+     ${agentGrid('marejesho')}`));
 
   H.push(sec('ada','9b · ADA / KAMISHENI',
     `<p class="sec-desc">Ada au kamisheni zilizokabidhiwa na mawakala. Combine anahakiki tu. Zikithibitishwa zinaongeza fedha taslimu.</p>
@@ -542,10 +579,7 @@ function renderSections(){
 
   H.push(sec('chenji','10 · CHENJI',
     `<p class="sec-desc">Chenji iliyokabidhiwa na mawakala. Combine anahakiki tu.</p>
-     ${handoverPanel('chenji')}<div class="hk-hide">${agentBlocks('chenji')}</div>
-     <div class="sub-h">Jumla ya kila noti</div>
-     ${outGrid('cc')}
-     ${totalLine('JUMLA CHENJI','t-cc')}`));
+     ${agentGrid('chenji')}`));
 
   H.push(sec('adjust','11 · ADJUST',
     `<p class="sec-desc">Marekebisho ya mwisho wa siku: noti zinazoongezwa au kupunguzwa.</p>
@@ -1139,6 +1173,8 @@ function hoChip(st){ return st==='imethibitishwa'?'<span class="chip ok">Imethib
 function handoverPanel(sec){ return '<div class="ho-list" id="ho-'+sec+'"><div class="empty">Inapakia...</div></div>'; }
 function renderHandover(){
   ['marejesho','ada','chenji'].forEach(sec=>{
+    document.querySelectorAll('[id^="hos-'+sec+'-"]').forEach(e=>{ e.className='xdot'; });
+    (HANDOVER||[]).forEach(h=>{ const x=h[sec]; if(!x) return; const e=document.getElementById('hos-'+sec+'-'+h.agent_code); if(e) e.className='xdot '+(x.status==='imethibitishwa'?'ok':(x.status==='imerudishwa'?'bad':'w')); });
     const box=document.getElementById('ho-'+sec); if(!box) return;
     const rows=(HANDOVER||[]).filter(h=>h[sec]);
     box.innerHTML=rows.length?rows.map(h=>{
