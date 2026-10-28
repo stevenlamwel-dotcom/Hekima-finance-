@@ -238,7 +238,26 @@ addEventListener("beforeunload",show)})();</script>
 </style>
 <link rel="stylesheet" href="assets/hekima-brand.css">
 <link rel="stylesheet" href="assets/hekima-topbar.css">
-<link rel="stylesheet" href="assets/hekima-shell.css"><script defer src="assets/hekima-shell.js"></script><style>.datebar{display:flex!important;gap:6px;align-items:stretch}.datebar input[type=date]{flex:1 1 auto!important;min-width:0!important;width:auto!important}.datebar button{flex:0 0 auto!important}</style></head>
+<link rel="stylesheet" href="assets/hekima-shell.css"><script defer src="assets/hekima-shell.js"></script><style>.datebar{display:flex!important;gap:6px;align-items:stretch}.datebar input[type=date]{flex:1 1 auto!important;min-width:0!important;width:auto!important}.datebar button{flex:0 0 auto!important}</style><style>
+.hk-hide{display:none!important}
+#refundBox{display:none!important}
+.agent-card.ac .ah{cursor:pointer;align-items:center;margin-bottom:6px}
+.agent-card.ac .ah::after{content:"\25BE";margin-left:6px;opacity:.7}
+.agent-card.ac.open .ah::after{content:"\25B4"}
+.agent-card.ac:not(.open) .ac-body{display:none}
+.ho-list{display:flex;flex-direction:column;gap:8px;margin:8px 0}
+.ho-item{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--border);border-radius:12px;padding:11px 12px;background:var(--panel2);cursor:pointer}
+.ho-item b{font-size:14px}.ho-item small{display:block;color:var(--sub);font-size:11.5px;margin-top:2px}
+.chip{border-radius:99px;padding:3px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+.chip.w{background:rgba(204,156,36,.22);color:#e8c36a}.chip.ok{background:rgba(47,179,131,.2);color:#4cc79a}.chip.bad{background:rgba(226,100,90,.2);color:#ee8b82}
+#hoModal{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center}
+#hoModal.open{display:flex}
+#hoModal .hbox{background:var(--panel);color:var(--text);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:18px;max-height:88vh;overflow:auto}
+.ho-row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--border)}
+.ho-btns{display:flex;gap:8px;margin-top:14px}
+.ho-btns button{flex:1;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text)}
+.ho-btns .ok{background:#2fb383;color:#00241a;border-color:#2fb383}.ho-btns .no{border-color:#e2645a;color:#ee8b82}
+</style></head>
 <body>
 <div class="hk-wm" aria-hidden="true"></div>
 
@@ -317,6 +336,17 @@ let MIAMALA_CAPS = {};           // agent_code -> kiasi kilichoidhinishwa (Combi
 let MIAMALA_LINES = [];          // wateja waliopitishwa leo + hali (inasubiri / imeingizwa / imerudishwa)
 let CHENJI_LOG = [];             // chenji iliyorudishwa na Zone/CEO leo
 
+function collapseMiamala(){
+  AGENTS.forEach(a=>{
+    const cap=$('cap-'+a.code); if(!cap) return;
+    const card=cap.closest('.agent-card'); if(!card||card.dataset.coll) return;
+    card.dataset.coll='1'; card.classList.add('ac');
+    const ah=card.querySelector('.ah'); const body=document.createElement('div'); body.className='ac-body';
+    [...card.children].forEach(ch=>{ if(ch!==ah && ch!==cap) body.appendChild(ch); });
+    card.appendChild(body);
+    ah.addEventListener('click',()=>card.classList.toggle('open'));
+  });
+}
 function renderMiamalaCaps(){
   AGENTS.forEach(a=>{
     const el=$('cap-'+a.code); if(!el) return;
@@ -459,7 +489,7 @@ function renderSections(){
      ${totalLine('JUMLA','t-ongezeko1')}`));
 
   H.push(sec('miamala','4 · MIAMALA',
-    `<p class="sec-desc">Hela inayotoka ofisini kwenda kwa wateja (mikopo mipya) — inapunguza Combine. Andika noti kwa kila wakala.</p>
+    `<p class="sec-desc">Hela inayotoka ofisini kwenda kwa wateja (mikopo mipya) — inapunguza Combine. Gusa jina la wakala kujaza noti.</p>
      ${agentBlocks('miamala')}
      <div class="sub-h">Jumla ya kila noti</div>
      ${outGrid('y')}
@@ -498,21 +528,21 @@ function renderSections(){
      ${totalLine('JUMLA','t-ongezeko2')}`));
 
   H.push(sec('marejesho','9 · MAREJESHO',
-    `<p class="sec-desc">Marejesho ya wateja kwa siku husika. Andika noti kwa kila wakala.</p>
+    `<p class="sec-desc">Marejesho yaliyokabidhiwa na mawakala. Combine anahakiki tu: Thibitisha au Batilisha.</p>
      <div id="refundBox"></div>
-     ${agentBlocks('marejesho')}
+     ${handoverPanel('marejesho')}<div class="hk-hide">${agentBlocks('marejesho')}</div>
      <div class="sub-h">Jumla ya kila noti</div>
      ${outGrid('bq')}
      ${totalLine('JUMLA MAREJESHO','t-bq')}`));
 
   H.push(sec('ada','9b · ADA / KAMISHENI',
-    `<p class="sec-desc">Mapato ya ada au kamisheni yaliyopokelewa leo (siyo marejesho ya mkopo). Inaongeza fedha taslimu ya Combine.</p>
-     ${inputGrid('data-kind="count" data-sec="ada"')}
+    `<p class="sec-desc">Ada au kamisheni zilizokabidhiwa na mawakala. Combine anahakiki tu. Zikithibitishwa zinaongeza fedha taslimu.</p>
+     ${handoverPanel('ada')}<div class="hk-hide">${inputGrid('data-kind="count" data-sec="ada"')}</div>
      ${totalLine('JUMLA','t-ada')}`));
 
   H.push(sec('chenji','10 · CHENJI',
-    `<p class="sec-desc">Chenji kwa kila wakala.</p>
-     ${agentBlocks('chenji')}
+    `<p class="sec-desc">Chenji iliyokabidhiwa na mawakala. Combine anahakiki tu.</p>
+     ${handoverPanel('chenji')}<div class="hk-hide">${agentBlocks('chenji')}</div>
      <div class="sub-h">Jumla ya kila noti</div>
      ${outGrid('cc')}
      ${totalLine('JUMLA CHENJI','t-cc')}`));
@@ -703,7 +733,7 @@ async function loadDay(){
   const date=$('hDate').value; if(!date || LOADING) return;
   LOADING=true; showBanner('');
   setStatus('Inapakia...');
-  const [cR,aR,mR,pR,sR,capR,lnR,clR]=await Promise.all([
+  const [cR,aR,mR,pR,sR,capR,lnR,clR,hR]=await Promise.all([
     sb.from('combine_counts').select('*').eq('work_date',date),
     sb.from('combine_agent_entries').select('*').eq('work_date',date),
     sb.from('combine_matumizi').select('*').eq('work_date',date),
@@ -711,7 +741,8 @@ async function loadDay(){
     sb.from('combine_start').select('*').eq('id','singleton').maybeSingle(),
     sb.rpc('approved_miamala_by_agent',{p_work_date:date}),
     sb.rpc('combine_miamala_status',{p_work_date:date}),
-    sb.rpc('combine_chenji_log',{p_work_date:date})
+    sb.rpc('combine_chenji_log',{p_work_date:date}),
+    sb.rpc('combine_handover_list',{p_date:date})
   ]);
   const err=cR.error||aR.error||mR.error||pR.error||sR.error;
   if(err){
@@ -736,7 +767,8 @@ async function loadDay(){
   (capR.data||[]).forEach(r=>{ MIAMALA_CAPS[r.agent_code] = Number(r.approved)||0; });
   MIAMALA_LINES = lnR.error ? [] : (lnR.data||[]);
   CHENJI_LOG = clR.error ? [] : (clR.data||[]);
-  renderMiamalaCaps();
+  renderMiamalaCaps(); collapseMiamala();
+  HANDOVER = hR.error ? [] : (hR.data||[]); renderHandover();
   const p=(pR.data||[])[0];
   if(p) PREV={counts:rowToCounts(p),source:'prev',date:p.work_date};
   else PREV={counts:START,source:START_META.exists?'start':'none',date:null};
@@ -768,10 +800,12 @@ async function saveDay(){
 
   const cRows=[], aRows=[], mRows=[], newKeys=[];
   COUNT_SECS.forEach(s=>{
+    if(s==='ada') return;
     const c=DAY.counts[s];
     if(LOADED_KEYS.has('c:'+s) || !isBlank(c)){ cRows.push({work_date:date,section:s,...cols(c)}); newKeys.push('c:'+s); }
   });
   AGENT_SECS.forEach(s=>AGENTS.forEach(a=>{
+    if(s!=='miamala') return;
     const e=DAY.agent[s][a.code], key='a:'+s+':'+a.code;
     if(LOADED_KEYS.has(key) || !isBlank(e.counts) || (e.note||'').trim()){
       aRows.push({work_date:date,section:s,agent_code:a.code,...cols(e.counts),note:(e.note||'').trim()||null}); newKeys.push(key);
@@ -1095,6 +1129,51 @@ async function refundDecide(code, date, approve){
 </script>
 <script src="assets/hekima-topbar.js">
 
+</script>
+<div id="hoModal" onclick="if(event.target===this)hoClose()"><div class="hbox" id="hoBox"></div></div>
+<script>
+var HANDOVER=[];
+const HO_T={marejesho:'Marejesho',ada:'Ada',chenji:'Chenji'};
+const hoNf=n=>Number(n||0).toLocaleString('en-US');
+function hoChip(st){ return st==='imethibitishwa'?'<span class="chip ok">Imethibitishwa</span>':(st==='imerudishwa'?'<span class="chip bad">Imerudishwa</span>':'<span class="chip w">Inasubiri</span>'); }
+function handoverPanel(sec){ return '<div class="ho-list" id="ho-'+sec+'"><div class="empty">Inapakia...</div></div>'; }
+function renderHandover(){
+  ['marejesho','ada','chenji'].forEach(sec=>{
+    const box=document.getElementById('ho-'+sec); if(!box) return;
+    const rows=(HANDOVER||[]).filter(h=>h[sec]);
+    box.innerHTML=rows.length?rows.map(h=>{
+      const x=h[sec], amt=sec==='marejesho'?x.total:x.amount;
+      return '<div class="ho-item" onclick="hoOpen(\''+esc(h.agent_code)+'\',\''+sec+'\')"><span><b>'+esc(h.agent_name||h.agent_code)+'</b> <span class="code">('+esc(h.agent_code)+')</span><small>'+HO_T[sec]+' · '+hoNf(amt)+'</small></span>'+hoChip(x.status)+'</div>';
+    }).join(''):'<div class="empty">Hakuna aliyekabidhi bado.</div>';
+  });
+}
+function hoClose(){ document.getElementById('hoModal').classList.remove('open'); }
+function hoOpen(agent,sec){
+  const h=(HANDOVER||[]).find(z=>z.agent_code===agent); if(!h||!h[sec]) return; const x=h[sec];
+  const row=(l,v)=>'<div class="ho-row"><span>'+l+'</span><b>'+v+'</b></div>';
+  let body='';
+  if(sec==='marejesho'){
+    const cn=x.counts||{};
+    const lines=[10000,5000,2000,1000,500,200,100,50].filter(d=>Number(cn[d])>0).map(d=>row(hoNf(d)+' × '+cn[d],hoNf(d*cn[d]))).join('')||'<div class="empty">Hakuna noti.</div>';
+    const ok=Number(x.total)===Number(x.expected);
+    body=lines+row('Jumla ya noti',hoNf(x.total))+row('Malipo yaliyoandikwa',hoNf(x.expected))+'<div class="ho-row"><span>Hali</span>'+(ok?'<span class="chip ok">Zinalingana</span>':'<span class="chip bad">Hazilingani</span>')+'</div>';
+  } else body=row('Kiasi kilichokabidhiwa',hoNf(x.amount));
+  if(x.note) body+='<div class="ho-row"><span>Sababu</span><b style="max-width:65%;text-align:right">'+esc(x.note)+'</b></div>';
+  const open=x.status==='inasubiri';
+  document.getElementById('hoBox').innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px"><b style="font-size:16px">'+esc(h.agent_name||agent)+' · '+HO_T[sec]+'</b>'+hoChip(x.status)+'</div>'
+    +'<div class="sec-desc" style="margin:2px 0 8px">Kuhakiki tu. Huwezi kubadilisha chochote hapa.</div>'+body
+    +(open?'<div class="ho-btns"><button class="ok" onclick="hoDecide(\''+esc(agent)+'\',\''+sec+'\',true)">Thibitisha</button><button class="no" onclick="hoDecide(\''+esc(agent)+'\',\''+sec+'\',false)">Batilisha</button></div><div class="sec-desc" style="margin-top:8px">Batilisha inahitaji sababu. Agent atajaza upya na kukabidhi tena.</div>':'<div class="ho-btns"><button onclick="hoClose()">Funga</button></div>');
+  document.getElementById('hoModal').classList.add('open');
+}
+async function hoDecide(agent,sec,approve){
+  if(typeof DIRTY!=='undefined' && DIRTY){ alert('Una mabadiliko ambayo hujahifadhi. Bonyeza "Hifadhi siku" kwanza, kisha uthibitishe.'); return; }
+  let note=null;
+  if(!approve){ note=(prompt('Sababu ya kubatilisha (agent ataiona):')||'').trim(); if(!note) return; }
+  else if(!confirm('Thibitisha '+HO_T[sec]+' ya '+agent+'?')) return;
+  const r=await sb.rpc('combine_handover_decide',{p_agent:agent,p_date:CUR_DATE,p_section:sec,p_approve:approve,p_note:note});
+  if(r.error){ alert('Imeshindwa: '+r.error.message); return; }
+  hoClose(); await loadDay();
+}
 </script>
 </body>
 </html>
