@@ -485,10 +485,16 @@ function matBlocks(){
     <td class="xj" id="mt-${esc(c)}">0</td></tr>
     <tr class="xnr" hidden><td colspan="10"><input class="note" type="text" placeholder="Maelezo (hiari)" data-kind="matnote" data-cat="${esc(c)}"></td></tr></tbody>`).join('')}${xgFoot('ak','t-ak')}</table></div>`;
 }
+function xgOpen(code,section){
+  const h=(typeof HANDOVER!=='undefined'&&HANDOVER||[]).find(z=>z.agent_code===code);
+  if(h&&h[section]){ hoOpen(code,section); return; }
+  const a=AGENTS.find(z=>z.code===code);
+  alert((a?a.name:code)+' hajakabidhi '+(section==='chenji'?'Chenji':'Marejesho')+' bado.');
+}
 function agentGrid(section){
   if(!AGENTS.length) return '<div class="empty">Hakuna wakala waliosajiliwa bado.</div>';
   const key=section==='marejesho'?'bq':'cc', tid=section==='marejesho'?'t-bq':'t-cc';
-  return `<div class="xgw"><table class="xg">${xgHead('WAKALA')}${AGENTS.map(a=>`<tbody class="xr"><tr onclick="hoOpen('${esc(a.code)}','${section}')">
+  return `<div class="xgw"><table class="xg">${xgHead('WAKALA')}${AGENTS.map(a=>`<tbody class="xr"><tr onclick="xgOpen('${esc(a.code)}','${section}')">
     <td class="xn" title="${esc(a.name)}"><span class="xdot" id="hos-${section}-${esc(a.code)}"></span>${esc(a.name)}</td>
     ${DENOMS.map(d=>`<td class="xd"><input type="number" readonly tabindex="-1" placeholder="0" data-kind="agent" data-sec="${section}" data-agent="${esc(a.code)}" data-d="${d}"></td>`).join('')}
     <td class="xj" id="ag-${section}-${esc(a.code)}">0</td></tr></tbody>`).join('')}${xgFoot(key,tid)}</table></div>
