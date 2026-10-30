@@ -225,6 +225,7 @@ addEventListener("beforeunload",show)})();</script>
       <div class="row2">
         <div class="field"><label>Namba ya Kitambulisho (NIDA)</label><input id="empNatId"></div>
         <div class="field"><label>Agent Code (kama ni Loans)</label><input id="empAgentCode" placeholder="mfano AG01"></div>
+        <div class="field"><label>Mkoa wa Agent</label><select id="empRegion"><option value="">Chagua mkoa</option></select></div>
       </div>
       <div class="field"><label>Makazi</label><input id="empResidence" placeholder="Mtaa, Kata, Wilaya"></div>
       <div class="field"><label>Msimamizi (Tupo Chini ya Kiongozi Gani)</label><select id="empSupervisor"><option value="">— Hakuna —</option></select></div>
@@ -531,6 +532,7 @@ async function addEmployee(){
   const base_salary = document.getElementById('empSalary').value || null;
   const national_id = document.getElementById('empNatId').value.trim() || null;
   const agent_code = document.getElementById('empAgentCode').value.trim() || null;
+  const region_code = document.getElementById('empRegion').value || null;
   const residence = document.getElementById('empResidence').value.trim() || null;
   const supervisor_id = document.getElementById('empSupervisor').value || null;
   const contract_type = document.getElementById('empContractType').value || null;
@@ -539,9 +541,10 @@ async function addEmployee(){
   const contract_notes = document.getElementById('empContractNotes').value.trim() || null;
   const msg = document.getElementById('empMsg');
   if(!full_name){ msg.textContent='Jina linahitajika'; msg.className='msg err'; return; }
+  if(agent_code && !region_code && HR_REGIONS.length>1){ msg.textContent='Chagua mkoa wa agent'; msg.className='msg err'; return; }
   const wf = await wfReady();
   const eid = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
-  const base = { full_name, phone, email, position, department, hire_date, base_salary, national_id, agent_code, residence, supervisor_id, contract_type, contract_start, contract_end, contract_notes };
+  const base = { full_name, phone, email, position, department, hire_date, base_salary, national_id, agent_code, region_code, residence, supervisor_id, contract_type, contract_start, contract_end, contract_notes };
   if(wf && eid){
     const ph = document.getElementById('empPhoto').files[0], idf = document.getElementById('empIdFile').files[0], cf = document.getElementById('empContractFile').files[0];
     if(!ph || !idf || !cf){ msg.textContent='Pakia picha, nakala ya NIDA na mkataba.'; msg.className='msg err'; return; }
@@ -648,6 +651,8 @@ async function submitCreateAccount(){
   msg.className='msg'; msg.textContent='';
   const full_name = document.getElementById('caEmpName').value.trim();
   const agent_code = document.getElementById('caAgentCode').value.trim().toUpperCase() || null;
+  const region_code = document.getElementById('caRegion').value || null;
+  if(agent_code && !region_code && HR_REGIONS.length>1){ msg.className='msg err'; msg.textContent='Chagua mkoa wa agent.'; return; }
   const email = document.getElementById('caEmail').value.trim();
   const password = document.getElementById('caPass').value;
   if(!email || !password || password.length < 6){
@@ -659,7 +664,7 @@ async function submitCreateAccount(){
     if(agent_code){
       const { data: existing } = await sb.from('mikopo_agents').select('code').eq('code', agent_code).maybeSingle();
       if(!existing){
-        const { error: agErr } = await sb.from('mikopo_agents').insert({ code: agent_code, name: full_name });
+        const { error: agErr } = await sb.from('mikopo_agents').insert({ code: agent_code, name: full_name, region_code });
         if(agErr) throw agErr;
       }
     }
@@ -912,6 +917,7 @@ window.addEventListener('load', async function(){
     <p style="font-size:11.5px;color:var(--sub);margin:0 0 10px;">Mfanyakazi ataingia kwa email na password hii. Iwe na Agent Code kama ni Agent/Zone/Supervisor anayehitaji kuonekana kwenye Combine/Client List.</p>
     <div class="field"><label>Mfanyakazi</label><input id="caEmpName" disabled></div>
     <div class="field"><label>Agent Code (hiari kama siyo agent)</label><input id="caAgentCode" style="text-transform:uppercase" placeholder="mfano: JUM"></div>
+    <div class="field"><label>Mkoa wa Agent</label><select id="caRegion"><option value="">Chagua mkoa</option></select></div>
     <div class="field"><label>Email</label><input id="caEmail" type="email" placeholder="example@gmail.com"></div>
     <div class="field"><label>Password</label><input id="caPass" type="password" placeholder="Angalau herufi 6"></div>
     <button class="btn" id="caSubmitBtn" onclick="submitCreateAccount()" style="width:100%;margin-top:6px;">Tengeneza Akaunti</button>
@@ -1277,5 +1283,22 @@ async function hsLoad(){
   box.innerHTML=(data||[]).length?(data||[]).map(r=>'<div onclick="hrPrintSlip(\''+r.period+'\',\''+r.employee_id+'\')" style="border:1px solid var(--line,#dfe4ec);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;"><div style="min-width:0;"><b>'+esc(r.full_name)+'</b><div style="font-size:12px;opacity:.7;">'+esc(r.job_position||'')+(r.dept?' · '+esc(r.dept):'')+'</div></div><div style="text-align:right;white-space:nowrap;"><b>TZS '+Number(r.net).toLocaleString('en-US')+'</b><div style="font-size:11px;opacity:.7;">'+esc(r.payment_date||'')+'</div></div></div>').join(''):'<div class="empty">Hakuna salary slip za mwezi huu.</div>';
 }
 window.addEventListener('load',function(){var n=0,t=setInterval(function(){n++;if(typeof sb!=='undefined'&&sb&&sb.auth){clearInterval(t);hsInit()}else if(n>40)clearInterval(t)},300)});
-</script></body>
+</script><script>
+/* HEKIMA: mikoa kwenye fomu za usajili wa agent */
+var HR_REGIONS=[];
+async function hrLoadRegions(){
+  try{
+    const r=await sb.from('regions').select('code,name').eq('active',true).order('name');
+    if(r.error) return;
+    HR_REGIONS=r.data||[];
+    ['empRegion','caRegion'].forEach(function(id){
+      const el=document.getElementById(id); if(!el) return;
+      el.innerHTML='<option value="">Chagua mkoa</option>'+HR_REGIONS.map(function(x){return '<option value="'+x.code+'">'+x.name+'</option>';}).join('');
+      if(HR_REGIONS.length===1) el.value=HR_REGIONS[0].code;
+    });
+  }catch(e){}
+}
+window.addEventListener('load',function(){var n=0,t=setInterval(function(){n++;if(typeof sb!=='undefined'&&sb&&sb.auth){clearInterval(t);hrLoadRegions()}else if(n>40)clearInterval(t)},300)});
+</script>
+</body>
 </html>

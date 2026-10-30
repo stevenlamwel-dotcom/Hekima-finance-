@@ -195,6 +195,7 @@ addEventListener("beforeunload",show)})();</script>
     <div class="tab" data-tab="payroll" onclick="switchTab('payroll')">Payroll</div>
     <div class="tab" data-tab="futa" onclick="switchTab('futa')">Futa (CEO)</div>
     <div class="tab" data-tab="muundo" onclick="switchTab('muundo')">Watu &amp; Muundo</div>
+    <div class="tab" data-tab="mikoa" onclick="switchTab('mikoa')">Mikoa (CEO)</div>
   </div>
 
   <!-- REPORTS -->
@@ -420,6 +421,26 @@ addEventListener("beforeunload",show)})();</script>
     </div>
   </div>
 
+  <!-- MIKOA (CEO) -->
+  <div class="panel" id="panel-mikoa">
+    <div class="card">
+      <h3>Mikoa ya kampuni</h3>
+      <p style="font-size:12.5px;color:var(--sub);margin:-4px 0 10px;">Kila mkoa una Combine na Balance yake ndani ya Balance kuu. CEO pekee ndiye anayeongeza mkoa.</p>
+      <div id="mkList" style="font-size:13px;color:var(--sub);">Inapakia...</div>
+      <div id="mkAdd" style="display:none;margin-top:12px;">
+        <div class="field"><label>Jina la mkoa</label><input id="mkName" placeholder="mfano: Kagera"></div>
+        <div class="field"><label>Msimbo (herufi kubwa, bila nafasi)</label><input id="mkCode" style="text-transform:uppercase" placeholder="mfano: KAGERA"></div>
+        <button class="btn" onclick="mkAdd()">Ongeza mkoa</button>
+      </div>
+      <div class="msg" id="mkMsg"></div>
+    </div>
+    <div class="card">
+      <h3>Mawakala na mikoa yao</h3>
+      <div id="mkAgents" style="font-size:13px;color:var(--sub);">Inapakia...</div>
+      <div class="msg" id="mkMsg2"></div>
+    </div>
+  </div>
+
   <div class="panel" id="panel-futa">
     <div class="card">
       <p style="font-size:12px;color:var(--sub);margin:0;">Sehemu hii ni ya CEO pekee. Kila ufutaji unaandikwa kwenye kumbukumbu (audit log) na database inakataa mtu mwingine. Utaombwa kuandika FUTA kuthibitisha.</p>
@@ -450,6 +471,7 @@ function switchTab(name){
   if(name==='payroll'){ mpLoadRuns(); }
   if(name==='futa'){ fLoadAll(); }
   if(name==='muundo'){ uwLoad(); loadUsers(); loadVyeo(); }
+  if(name==='mikoa'){ mkLoad(); }
 }
 
 async function loadDebtsEmp(){
@@ -1658,5 +1680,47 @@ async function mgDecideEmp(id,ok){
   mgLoadPendingEmps();
 }
 window.addEventListener('load',function(){var n=0,t=setInterval(function(){n++;if(typeof sb!=='undefined'&&sb&&sb.auth){clearInterval(t);mgLoadPendingEmps()}else if(n>40)clearInterval(t)},300)});
-</script></body>
+</script><script>
+/* ======== Mikoa (CEO): kuongeza mkoa na kupanga mawakala ======== */
+let MK_IS_CEO=false, MK_REGIONS=[];
+const mkE=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function mkMsg(id,t,ok){ const el=document.getElementById(id); if(!el) return; el.className='msg'+(ok===true?' ok':(ok===false?' err':'')); el.textContent=t||''; }
+async function mkLoad(){
+  const ceo=await sb.rpc('am_i_ceo'); MK_IS_CEO=ceo.data===true;
+  document.getElementById('mkAdd').style.display=MK_IS_CEO?'block':'none';
+  const rg=await sb.from('regions').select('code,name,active').order('name');
+  if(rg.error){ document.getElementById('mkList').innerHTML='<span style="color:var(--red)">'+mkE(rg.error.message)+'</span>'; return; }
+  MK_REGIONS=rg.data||[];
+  document.getElementById('mkList').innerHTML=MK_REGIONS.length?MK_REGIONS.map(r=>'<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);color:var(--text);"><span><b>'+mkE(r.name)+'</b> <span style="color:var(--sub)">('+mkE(r.code)+')</span></span><span style="font-size:11px;font-weight:700;color:'+(r.active?'var(--green)':'var(--sub)')+'">'+(r.active?'Inatumika':'Imezimwa')+'</span></div>').join(''):'Hakuna mkoa bado.';
+  await mkLoadAgents();
+}
+async function mkLoadAgents(){
+  const box=document.getElementById('mkAgents');
+  const ag=await sb.from('mikopo_agents').select('code,name,region_code').order('name');
+  if(ag.error){ box.innerHTML='<span style="color:var(--red)">'+mkE(ag.error.message)+'</span>'; return; }
+  const opts=sel=>'<option value="">Haijapangiwa</option>'+MK_REGIONS.filter(r=>r.active||r.code===sel).map(r=>'<option value="'+mkE(r.code)+'"'+(r.code===sel?' selected':'')+'>'+mkE(r.name)+'</option>').join('');
+  box.innerHTML=(ag.data||[]).length?(ag.data||[]).map(a=>'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);color:var(--text);"><span><b>'+mkE(a.name||a.code)+'</b> <span style="color:var(--sub)">('+mkE(a.code)+')</span></span><select '+(MK_IS_CEO?'':'disabled ')+'onchange="mkAssign(\''+mkE(a.code)+'\',this)" style="background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:12.5px;max-width:50%;">'+opts(a.region_code||'')+'</select></div>').join(''):'Hakuna mawakala bado.';
+}
+async function mkAdd(){
+  if(!MK_IS_CEO){ mkMsg('mkMsg','Ni CEO pekee anayeweza kuongeza mkoa.',false); return; }
+  const name=document.getElementById('mkName').value.trim();
+  const code=document.getElementById('mkCode').value.trim().toUpperCase();
+  if(!name){ mkMsg('mkMsg','Andika jina la mkoa.',false); return; }
+  if(!/^[A-Z0-9_]{2,20}$/.test(code)){ mkMsg('mkMsg','Msimbo uwe herufi kubwa au namba pekee (2 hadi 20), bila nafasi.',false); return; }
+  const r=await sb.from('regions').insert({code,name});
+  if(r.error){ mkMsg('mkMsg','Imeshindwa: '+r.error.message,false); return; }
+  document.getElementById('mkName').value=''; document.getElementById('mkCode').value='';
+  mkMsg('mkMsg','Mkoa '+name+' umeongezwa ✓',true);
+  mkLoad();
+}
+async function mkAssign(code,sel){
+  if(!confirm('Kubadilisha mkoa wa wakala '+code+'? Historia yake yote ya Combine itahamia mkoa mpya.')){ mkLoadAgents(); return; }
+  sel.disabled=true;
+  const r=await sb.rpc('region_assign_agent',{p_agent:code,p_region:sel.value||''});
+  sel.disabled=false;
+  if(r.error){ mkMsg('mkMsg2','Imeshindwa: '+r.error.message,false); mkLoadAgents(); return; }
+  mkMsg('mkMsg2','Mkoa wa '+code+' umebadilishwa ✓',true);
+}
+</script>
+</body>
 </html>

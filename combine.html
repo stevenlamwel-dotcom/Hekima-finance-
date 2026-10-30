@@ -308,6 +308,7 @@ addEventListener("beforeunload",show)})();</script>
     <button onclick="shiftDate(1)" aria-label="Siku inayofuata">›</button>
     <button class="today" onclick="goToday()">Leo</button>
   </div>
+  <div id="regionBar" style="display:none;margin:0 0 8px;"><select id="hRegion" onchange="onRegionChange()" aria-label="Mkoa" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:9px;font-size:14px;font-weight:700;"></select></div>
   <div class="datelabel" id="dateLabel"></div>
 
   <div class="banner" id="banner"></div>
@@ -346,6 +347,9 @@ const AGENT_SECS = ['miamala','marejesho','chenji'];
 
 let ROLE = null;                 // 'super' (Admin Mkuu) | 'editor' (amepewa ruhusa)
 let AGENTS = [];
+let REG = null, REGIONS = [];   // mkoa unaotumika sasa, na mikoa ambayo mtumiaji anaruhusiwa
+function inReg(c){ return !REG || AGENTS.some(a=>a.code===c); }
+function regName(){ const r=REGIONS.find(x=>x.code===REG); return r?r.name:(REG||''); }
 let START = zero();
 let START_META = { exists:false, set_date:null };
 let START_DIRTY = false;
@@ -695,6 +699,7 @@ function recalc(){
   const ingia=T.ongezeko1+T.ongezeko2+T.ada;
   const put=(id,v,bad)=>{ const el=$(id); if(el){ el.textContent=fmt(v); el.className='val'+(bad&&v!==0?' bad':''); } };
   put('k-mpaka',T.mpaka); put('k-in',ingia); put('k-out',T.ak); put('k-cf',T.cf); put('k-usiku',T.usiku); put('k-m4',T.m4,true);
+  if(window.hkCashCards) window.hkCashCards(T);
   put('x-toka',T.ak); put('x-ingia',ingia); put('x-miamala',T.y); put('x-marejesho',T.bq); put('x-chenji',T.cc);
   const xa=$('x-adjust'); if(xa) xa.textContent='+'+fmt(T.adjp)+'  −'+fmt(T.adjm);
 
@@ -774,11 +779,11 @@ async function loadDay(){
   LOADING=true; showBanner('');
   setStatus('Inapakia...');
   const [cR,aR,mR,pR,sR,capR,lnR,clR,hR]=await Promise.all([
-    sb.from('combine_counts').select('*').eq('work_date',date),
-    sb.from('combine_agent_entries').select('*').eq('work_date',date),
-    sb.from('combine_matumizi').select('*').eq('work_date',date),
-    sb.from('combine_counts').select('*').eq('section','usiku').lt('work_date',date).order('work_date',{ascending:false}).limit(1),
-    sb.from('combine_start').select('*').eq('id','singleton').maybeSingle(),
+    sb.from('combine_counts').select('*').eq('region_code',REG).eq('work_date',date),
+    sb.from('combine_agent_entries').select('*').eq('work_date',date).in('agent_code',AGENTS.map(a=>a.code)),
+    sb.from('combine_matumizi').select('*').eq('region_code',REG).eq('work_date',date),
+    sb.from('combine_counts').select('*').eq('region_code',REG).eq('section','usiku').lt('work_date',date).order('work_date',{ascending:false}).limit(1),
+    sb.from('combine_start').select('*').eq('region_code',REG).maybeSingle(),
     sb.rpc('approved_miamala_by_agent',{p_work_date:date}),
     sb.rpc('combine_miamala_status',{p_work_date:date}),
     sb.rpc('combine_chenji_log',{p_work_date:date}),
@@ -824,7 +829,11 @@ async function loadDay(){
 /* ---------- save ---------- */
 async function fetchStamp(date){
   const q=t=>sb.from(t).select('updated_at').eq('work_date',date).order('updated_at',{ascending:false}).limit(1);
-  const [a,b,c]=await Promise.all([q('combine_counts'),q('combine_agent_entries'),q('combine_matumizi')]);
+  const [a,b,c]=await Promise.all([
+    q('combine_counts').eq('region_code',REG),
+    q('combine_agent_entries').in('agent_code',AGENTS.map(x=>x.code)),
+    q('combine_matumizi').eq('region_code',REG)
+  ]);
   const err=a.error||b.error||c.error;
   return { error:err, stamp: err?null:stampFrom([a.data,b.data,c.data]) };
 }
@@ -842,7 +851,7 @@ async function saveDay(){
   COUNT_SECS.forEach(s=>{
     if(s==='ada') return;
     const c=DAY.counts[s];
-    if(LOADED_KEYS.has('c:'+s) || !isBlank(c)){ cRows.push({work_date:date,section:s,...cols(c)}); newKeys.push('c:'+s); }
+    if(LOADED_KEYS.has('c:'+s) || !isBlank(c)){ cRows.push({region_code:REG,work_date:date,section:s,...cols(c)}); newKeys.push('c:'+s); }
   });
   AGENT_SECS.forEach(s=>AGENTS.forEach(a=>{
     if(s!=='miamala') return;
@@ -854,14 +863,14 @@ async function saveDay(){
   CATS.forEach(c=>{
     const e=DAY.mat[c], key='m:'+c;
     if(LOADED_KEYS.has(key) || !isBlank(e.counts) || (e.note||'').trim()){
-      mRows.push({work_date:date,category:c,...cols(e.counts),note:(e.note||'').trim()||null}); newKeys.push(key);
+      mRows.push({region_code:REG,work_date:date,category:c,...cols(e.counts),note:(e.note||'').trim()||null}); newKeys.push(key);
     }
   });
 
   const failed=[];
-  if(cRows.length){ const r=await sb.from('combine_counts').upsert(cRows,{onConflict:'work_date,section'}); if(r.error) failed.push('Hesabu za noti: '+r.error.message); }
+  if(cRows.length){ const r=await sb.from('combine_counts').upsert(cRows,{onConflict:'region_code,work_date,section'}); if(r.error) failed.push('Hesabu za noti: '+r.error.message); }
   if(aRows.length){ const r=await sb.from('combine_agent_entries').upsert(aRows,{onConflict:'work_date,section,agent_code'}); if(r.error) failed.push('Miamala/Marejesho/Chenji: '+r.error.message); }
-  if(mRows.length){ const r=await sb.from('combine_matumizi').upsert(mRows,{onConflict:'work_date,category'}); if(r.error) failed.push('Matumizi: '+r.error.message); }
+  if(mRows.length){ const r=await sb.from('combine_matumizi').upsert(mRows,{onConflict:'region_code,work_date,category'}); if(r.error) failed.push('Matumizi: '+r.error.message); }
 
   btn.disabled=false;
   if(failed.length){
@@ -881,15 +890,15 @@ async function saveStart(){
   const msg=$('msg-start'), btn=$('saveStartBtn');
   if(START_META.exists && !confirm('START tayari imewekwa. Kuibadilisha kutabadilisha Mpaka Asubuhi ya siku ya kwanza na mahesabu yanayofuata. Endelea?')) return;
   btn.disabled=true; msg.textContent='Inahifadhi...'; msg.className='msg';
-  const row={id:'singleton', set_date:START_META.set_date||null, ...cols(START)};
-  const r=await sb.from('combine_start').upsert([row],{onConflict:'id'});
+  const row={region_code:REG, set_date:START_META.set_date||null, ...cols(START)};
+  const r=await sb.from('combine_start').upsert([row],{onConflict:'region_code'});
   btn.disabled=false;
   if(r.error){ msg.textContent='Imeshindwa: '+r.error.message; msg.className='msg err'; return; }
   START_META.exists=true; START_DIRTY=false;
   msg.textContent='START imehifadhiwa ✓'; msg.className='msg ok';
   showBanner('');
   // Mpaka Asubuhi ya siku ya kwanza inategemea START — hesabu upya
-  const pR=await sb.from('combine_counts').select('work_date').eq('section','usiku').lt('work_date',CUR_DATE).limit(1);
+  const pR=await sb.from('combine_counts').select('work_date').eq('region_code',REG).eq('section','usiku').lt('work_date',CUR_DATE).limit(1);
   if(!pR.error && !(pR.data||[]).length){ PREV={counts:START,source:'start',date:null}; }
   recalc();
 }
@@ -907,11 +916,12 @@ function renderPermShell(){
 async function loadPerms(){
   const [pr,ac]=await Promise.all([
     sb.from('mikopo_profiles').select('id,full_name,email,role,admin_level,active').eq('active',true).neq('role','agent').order('full_name'),
-    sb.from('combine_access').select('user_id')
+    sb.from('combine_access').select('user_id,region_code')
   ]);
   const box=$('permList');
   if(pr.error||ac.error){ box.innerHTML='<div class="empty">Imeshindwa kupakia orodha: '+esc((pr.error||ac.error).message)+'</div>'; return; }
   const granted=new Set((ac.data||[]).map(r=>r.user_id));
+  const accReg=new Map((ac.data||[]).map(r=>[r.user_id,r.region_code||'']));
   const people=(pr.data||[]).filter(p=>p.admin_level!=='super');
   if(!people.length){
     box.innerHTML='<div class="empty">Hakuna wafanyakazi wengine (wasio wakala) waliosajiliwa bado. Sajili akaunti yao kwanza, kisha urudi hapa kuwapa ruhusa.</div>';
@@ -919,6 +929,7 @@ async function loadPerms(){
   }
   box.innerHTML=people.map(p=>`<div class="perm-row">
     <div class="who">${esc(p.full_name||p.email||'Bila jina')}<small>${esc(p.email||'')} · ${esc(p.role)}</small></div>
+    ${granted.has(p.id)?`<select aria-label="Mkoa wa ${esc(p.full_name||p.email||'mfanyakazi')}" onchange="setAccessRegion('${esc(p.id)}',this)" style="background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 6px;font-size:12px;max-width:42%;"><option value="">Mikoa yote</option>${REGIONS.map(r=>`<option value="${esc(r.code)}" ${accReg.get(p.id)===r.code?'selected':''}>${esc(r.name)}</option>`).join('')}</select>`:''}
     <input type="checkbox" aria-label="Ruhusa ya Combine kwa ${esc(p.full_name||p.email||'mfanyakazi')}" ${granted.has(p.id)?'checked':''} onchange="toggleAccess('${esc(p.id)}',this)">
   </div>`).join('');
 }
@@ -926,11 +937,41 @@ async function toggleAccess(id,box){
   const on=box.checked, msg=$('msg-perm');
   if(!on && !confirm('Kumwondolea mtu huyu ruhusa ya Combine? Hataona tena Combine.')){ box.checked=true; return; }
   box.disabled=true;
-  const r = on ? await sb.from('combine_access').upsert([{user_id:id}],{onConflict:'user_id'})
+  const r = on ? await sb.from('combine_access').upsert([{user_id:id,region_code:REG}],{onConflict:'user_id'})
                : await sb.from('combine_access').delete().eq('user_id',id);
   box.disabled=false;
   if(r.error){ box.checked=!on; msg.textContent='Imeshindwa: '+r.error.message; msg.className='msg err'; return; }
-  msg.textContent = on ? 'Ruhusa imetolewa ✓' : 'Ruhusa imeondolewa ✓'; msg.className='msg ok';
+  msg.textContent = on ? 'Ruhusa imetolewa kwa mkoa wa '+regName()+' ✓' : 'Ruhusa imeondolewa ✓'; msg.className='msg ok';
+  loadPerms();
+}
+async function setAccessRegion(id,sel){
+  const msg=$('msg-perm'); sel.disabled=true;
+  const r=await sb.from('combine_access').update({region_code:sel.value||null}).eq('user_id',id);
+  sel.disabled=false;
+  if(r.error){ msg.textContent='Imeshindwa: '+r.error.message; msg.className='msg err'; return; }
+  msg.textContent='Mkoa umebadilishwa ✓'; msg.className='msg ok';
+}
+
+/* ---------- mkoa ---------- */
+function setRegionUI(){
+  $('roleLabel').textContent = (ROLE==='super' ? 'Admin Mkuu' : 'Msimamizi wa Combine') + ' · ' + regName();
+  const bar=$('regionBar'), sel=$('hRegion');
+  bar.style.display = REGIONS.length>1 ? 'block' : 'none';
+  sel.innerHTML = REGIONS.map(r=>`<option value="${esc(r.code)}">${esc(r.name)}</option>`).join('');
+  sel.value=REG;
+}
+async function onRegionChange(){
+  const sel=$('hRegion'), nr=sel.value;
+  if(nr===REG) return;
+  if((DIRTY||START_DIRTY) && !confirm('Una mabadiliko ambayo hujahifadhi. Ukibadilisha mkoa yatapotea. Endelea?')){ sel.value=REG; return; }
+  const ag=await sb.from('mikopo_agents').select('code,name').eq('region_code',nr).order('name');
+  if(ag.error){ sel.value=REG; showBanner('Imeshindwa kupakia mawakala wa mkoa huu: '+ag.error.message); return; }
+  REG=nr; try{ localStorage.setItem('hk_combine_region',REG); }catch(e){}
+  AGENTS=ag.data||[]; DAY=emptyDay(); DIRTY=false; START_DIRTY=false;
+  setRegionUI(); renderSections();
+  await loadDay();
+  if(window.hkRefreshTop) hkRefreshTop();
+  if(window.hkLoadAgents) hkLoadAgents();
 }
 
 /* ---------- start ---------- */
@@ -950,11 +991,17 @@ async function init(){
     }
     if(!role){ location.replace('portal.html'); return; }   // asiye na ruhusa haoni chochote
     ROLE=role;
-    const ag=await sb.from('mikopo_agents').select('code,name').order('name');
+    const rg=await sb.rpc('combine_my_regions');
+    if(rg.error){ gateMessage('Imeshindwa kupakia mikoa. Jaribu tena.', true); return; }
+    REGIONS=rg.data||[];
+    if(!REGIONS.length){ gateMessage('Hujapangiwa mkoa wowote. Wasiliana na Admin Mkuu.', false); return; }
+    let saved=null; try{ saved=localStorage.getItem('hk_combine_region'); }catch(e){}
+    REG=(REGIONS.find(r=>r.code===saved)||REGIONS[0]).code;
+    const ag=await sb.from('mikopo_agents').select('code,name').eq('region_code',REG).order('name');
     if(ag.error){ gateMessage('Imeshindwa kupakia orodha ya wakala. Jaribu tena.', true); return; }
     AGENTS=ag.data||[];
     DAY=emptyDay();
-    $('roleLabel').textContent = ROLE==='super' ? 'Admin Mkuu' : 'Msimamizi wa Combine';
+    setRegionUI();
     $('authGate').style.display='none';
     $('appContent').style.display='block';
     $('savebar').style.display='flex';
@@ -1016,7 +1063,7 @@ setInterval(()=>{ if(!DIRTY && !LOADING && CUR_DATE && !document.hidden && ROLE)
     var d=CUR_DATE; if(!d){ box.innerHTML=''; return; }
     sb.from('combine_agent_entries').select('*').eq('work_date',d).eq('section','mawakala').then(function(res){
       if(res.error){ box.innerHTML='<div class="hkA" style="padding:12px;color:#b03a2e;">'+esc(res.error.message)+'</div>'; return; }
-      LAST=groupRows(res.data||[]);
+      LAST=groupRows((res.data||[]).filter(function(r){return inReg(r.agent_code);}));
       render(LAST);
     });
   }
@@ -1029,23 +1076,26 @@ setInterval(()=>{ if(!DIRTY && !LOADING && CUR_DATE && !document.hidden && ROLE)
   var DEN=[10000,5000,2000,1000,500,200,100,50];
   function topCards(){
     var box=document.getElementById('hkCash'); if(!box) return;
-    sb.rpc('office_cash_balance').then(function(res){
-      var cash = (res.data && res.data[0]) ? res.data[0].balance : null;
-      var cashTxt = res.error ? 'Imeshindwa' : fmt(cash);
-      box.innerHTML='<div class="hkK">'+
-        '<div class="hkC"><div class="l">Cash ofisini</div><div class="v">TZS '+cashTxt+'</div><div class="s">Fedha taslimu</div></div>'+
-        '<div class="hkC"><div class="l">Benki</div><div class="v">—</div><div class="s">Hakuna data bado</div></div>'+
-        '<div class="hkC"><div class="l">Mobile Money</div><div class="v">—</div><div class="s">Hakuna data bado</div></div>'+
-        '<div class="hkC"><div class="l">Hitilafu</div><div class="v" id="hkDiff">—</div><div class="s">Tofauti ya MISS</div></div>'+
-      '</div>';
-    });
+    box.innerHTML='<div class="hkK">'+
+      '<div class="hkC"><div class="l">Cash ya mkoa</div><div class="v" id="hkCashV">TZS 0</div><div class="s" id="hkCashS">Combine Usiku (inatarajiwa)</div></div>'+
+      '<div class="hkC"><div class="l">Hitilafu</div><div class="v" id="hkDiff">0</div><div class="s">Miss ya Usiku</div></div>'+
+    '</div>';
+    if(window.hkLastT) window.hkCashCards(window.hkLastT);
   }
+  window.hkCashCards=function(T){
+    window.hkLastT=T;
+    var v=document.getElementById('hkCashV'), s=document.getElementById('hkCashS'), d=document.getElementById('hkDiff');
+    var haveNight=T.usiku>0;
+    if(v) v.textContent='TZS '+fmt(haveNight?T.usiku:T.cf);
+    if(s) s.textContent=haveNight?'Pesa Usiku (halisi)':'Combine Usiku (inatarajiwa)';
+    if(d){ d.textContent=fmt(T.m4); d.style.color=T.m4!==0?'#8a2a22':''; }
+  };
   function history(){
     var box=document.getElementById('hkHist'); if(!box) return;
     sb.from('combine_agent_entries').select('work_date,agent_code,ada,chenji,hali,d10000,d5000,d2000,d1000,d500,d200,d100,d50').eq('section','mawakala').then(function(res){
       if(res.error){ box.innerHTML='<div class="hkH2" style="padding:12px;color:#b03a2e;">'+res.error.message+'</div>'; return; }
       var g={};
-      (res.data||[]).forEach(function(r){
+      (res.data||[]).filter(function(r){return inReg(r.agent_code);}).forEach(function(r){
         var k=r.work_date; if(!g[k]) g[k]={d:k,agents:0,marejesho:0,ada:0,chenji:0,ok:0,all:0};
         var m=DEN.reduce(function(s,d){return s+d*(Number(r['d'+d])||0);},0);
         g[k].agents++; g[k].marejesho+=m; g[k].ada+=Number(r.ada)||0; g[k].chenji+=Number(r.chenji)||0;
@@ -1070,7 +1120,7 @@ async function refundLoad(date){
   const box=document.getElementById('refundBox'); if(!box) return;
   const { data, error } = await sb.rpc('refund_list', { p_date: date });
   if(error){ box.innerHTML='<div class="sec-desc" style="color:#e2645a">'+error.message+'</div>'; return; }
-  const rows = (data||[]).filter(r=>r.status && r.status!=='bado' || r.expected>0);
+  const rows = (data||[]).filter(r=>inReg(r.agent_code) && (r.status && r.status!=='bado' || r.expected>0));
   const lab = { imewasilishwa:'Inasubiri uthibitisho', imethibitishwa:'Imethibitishwa ✓', imerudishwa:'Imerudishwa', bado:'Bado' };
   const col = { imewasilishwa:'#cc9c24', imethibitishwa:'#008454', imerudishwa:'#e2645a', bado:'#93a7ba' };
   box.innerHTML = `<div class="sub-h">Uthibitisho wa noti za refund</div>
@@ -1182,7 +1232,7 @@ function renderHandover(){
     document.querySelectorAll('[id^="hos-'+sec+'-"]').forEach(e=>{ e.className='xdot'; });
     (HANDOVER||[]).forEach(h=>{ const x=h[sec]; if(!x) return; const e=document.getElementById('hos-'+sec+'-'+h.agent_code); if(e) e.className='xdot '+(x.status==='imethibitishwa'?'ok':(x.status==='imerudishwa'?'bad':'w')); });
     const box=document.getElementById('ho-'+sec); if(!box) return;
-    const rows=(HANDOVER||[]).filter(h=>h[sec]);
+    const rows=(HANDOVER||[]).filter(h=>h[sec] && inReg(h.agent_code));
     box.innerHTML=rows.length?rows.map(h=>{
       const x=h[sec], amt=sec==='marejesho'?x.total:x.amount;
       return '<div class="ho-item" onclick="hoOpen(\''+esc(h.agent_code)+'\',\''+sec+'\')"><span><b>'+esc(h.agent_name||h.agent_code)+'</b> <span class="code">('+esc(h.agent_code)+')</span><small>'+HO_T[sec]+' · '+hoNf(amt)+'</small></span>'+hoChip(x.status)+'</div>';
