@@ -186,6 +186,10 @@ addEventListener("beforeunload",show)})();</script>
   <div id="bx-mishahara" class="bx-panel" data-bxtab="mishahara"></div>
   <div id="bx-pl" class="bx-panel" data-bxtab="pl"></div>
   <div id="bx-tahadhari" class="bx-panel" data-bxtab="tahadhari"></div>
+  <div id="bx-mikoa" class="bx-panel" data-bxtab="mikoa"></div>
+  <div id="bx-region" class="bx-panel" data-bxtab="region"></div>
+  <div id="bx-uhamisho" class="bx-panel" data-bxtab="uhamisho"></div>
+  <div id="bx-hq" class="bx-panel" data-bxtab="hq"></div>
 
   <div class="card" id="pendingCard" style="display:none">
     <h2>Matumizi Yanayosubiri Idhini</h2>
@@ -193,28 +197,6 @@ addEventListener("beforeunload",show)})();</script>
     <div id="pendingList"></div>
     <div class="msg" id="msg-pending"></div>
   </div>
-
-  <div class="card">
-    <h2>MTAJI (M)</h2>
-    <p class="sec-desc">M ni jumla ya deni la wateja (mkopo + riba) linalotarajiwa kurudi.</p>
-    <div id="startBox"></div>
-    <div class="row"><span class="l">M Inayotarajiwa (kutoka Combine)</span><span class="v" id="m-expected">0</span></div>
-    <div class="row"><span class="l">M Halisi (kutoka orodha ya wateja)</span><span class="v" id="m-actual">0</span></div>
-    <div class="row"><span class="l">MISS ya M</span><span class="v" id="m-miss">0</span></div>
-    <p class="sec-desc" style="margin-top:8px" id="missExplain"></p>
-  </div>
-
-  <div class="card">
-    <h2>COMBINE (Fedha Taslimu)</h2>
-    <div class="row"><span class="l">Mikopo Iliyotolewa Leo (Combine)</span><span class="v" id="c-miamala">0</span></div>
-    <div class="row"><span class="l">Marejesho Leo</span><span class="v" id="c-marejesho">0</span></div>
-    <div class="row"><span class="l">Ada/Kamisheni Leo (kutoka Combine, automatic)</span><span class="v" id="c-ada">0</span></div>
-    <div class="row"><span class="l">Ada inayotarajiwa (12% ya mikopo ya leo)</span><span class="v" id="c-ada-exp">0</span></div>
-    <div class="msg" id="c-ada-chk"></div>
-    <div class="row"><span class="l">Matumizi Yaliyokubaliwa Leo</span><span class="v" id="c-matumizi">0</span></div>
-  </div>
-
-
 
   <div class="card" id="officeCard">
     <h2>PESA ILIYOPO OFISINI</h2>
@@ -252,7 +234,7 @@ addEventListener("beforeunload",show)})();</script>
 
   <div class="card" id="badDebtCard" style="display:none">
     <h2>Mikopo Isiyolipika (Bad Debt)</h2>
-    <p class="sec-desc">Kutangaza mkopo kuwa hauliipiki kutaondoa deni lake kwenye M Halisi kuanzia leo. Hatua hii haiwezi kurudishwa kutoka hapa.</p>
+    <p class="sec-desc">Kutangaza mkopo kuwa hauliipiki kutaondoa deni lake kwenye mtaji (safi na chafu) kuanzia leo. Hatua hii haiwezi kurudishwa kutoka hapa.</p>
     <input class="search" id="loanSearch" placeholder="Tafuta jina la mteja..." oninput="renderOwing()">
     <div id="owingList"><div class="empty">Inapakia...</div></div>
   </div>
@@ -283,32 +265,6 @@ function updateDateLabel(){ const v=$('hDate').value; if(!v){$('dateLabel').text
 function shiftDate(n){ const v=$('hDate').value||todayStr(); const dt=new Date(v+'T00:00:00'); dt.setDate(dt.getDate()+n); $('hDate').value=dt.toLocaleDateString('sv-SE'); onDateChange(); }
 function goToday(){ $('hDate').value=todayStr(); onDateChange(); }
 function onDateChange(){ const nd=$('hDate').value; if(!nd){$('hDate').value=CUR_DATE;return;} if(nd===CUR_DATE) return; CUR_DATE=nd; loadAll(); }
-
-/* ---------- START (M ya kuanzia) ---------- */
-function renderStartBox(){
-  const box=$('startBox');
-  if(ROLE==='super'){
-    box.innerHTML=`<div class="row"><span class="l">M ya Kuanzia (M_start)</span></div>
-      <input type="number" min="0" id="mStartInput" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:8px;font-size:15px;">
-      <button class="btn wide" id="saveStartBtn" onclick="saveStart()">Hifadhi M_start</button>
-      <div class="msg" id="msg-start"></div>`;
-    $('mStartInput').value = START.m_start || '';
-  } else {
-    box.innerHTML=`<div class="row"><span class="l">M ya Kuanzia (M_start)</span><span class="v">${fmt(START.m_start)}</span></div>`;
-  }
-}
-async function saveStart(){
-  if(ROLE!=='super') return;
-  const val=clampNum($('mStartInput').value), msg=$('msg-start'), btn=$('saveStartBtn');
-  if(START.exists && !confirm('M_start tayari imewekwa. Kuibadilisha kutabadilisha mahesabu yote yanayofuata. Endelea?')) return;
-  btn.disabled=true; msg.textContent='Inahifadhi...'; msg.className='msg';
-  const r=await sb.from('balance_start').upsert([{id:'singleton', m_start:val, set_date:START.set_date||todayStr()}],{onConflict:'id'});
-  btn.disabled=false;
-  if(r.error){ msg.textContent='Imeshindwa: '+r.error.message; msg.className='msg err'; return; }
-  START={exists:true,m_start:val,set_date:START.set_date||todayStr()};
-  msg.textContent='Imehifadhiwa ✓'; msg.className='msg ok';
-  computeAndRender();
-}
 
 /* ---------- ADA ---------- */
 /* ---------- Matumizi queue ---------- */
@@ -364,65 +320,20 @@ async function markBadDebt(loanId, mteja){
   await loadOwing(); await computeAndRender();
 }
 
-/* ---------- Core compute ---------- */
+/* ---------- Core compute (M imeondolewa; ukaguzi uko kwenye Balance ya mkoa) ---------- */
 async function computeAndRender(){
   showBanner('');
-  const startDate = START.set_date || CUR_DATE;
-  const [snap, cum, dayCounts, dayAgent, pendingInfo] = await Promise.all([
-    sb.rpc('balance_snapshot',{p_date:CUR_DATE}),
-    sb.rpc('balance_cumulative',{p_from:startDate, p_to:CUR_DATE}),
-    sb.from('combine_counts').select('*').eq('work_date',CUR_DATE).in('section',['ada']),
-    sb.from('combine_agent_entries').select('*').eq('work_date',CUR_DATE),
-    loadPending()
-  ]);
-  const err = snap.error||cum.error||dayCounts.error||dayAgent.error;
-  if(err){ showBanner('Imeshindwa kupakia BALANCE: '+err.message); return; }
-
-  const s = (snap.data||[])[0] || {m_halisi:0, day_loans_jumla:0, day_writeoff:0};
-  const c = (cum.data||[])[0] || {cum_loans_jumla:0, cum_writeoff:0, cum_marejesho_cash:0};
-  const mExpected = Number(START.m_start||0) + Number(c.cum_loans_jumla||0) - Number(c.cum_marejesho_cash||0) - Number(c.cum_writeoff||0);
-  const mActual = Number(s.m_halisi||0);
-  const miss = mActual - mExpected;
-
-  $('m-expected').textContent = fmt(mExpected);
-  $('m-actual').textContent = fmt(mActual);
-  const missEl=$('m-miss'); missEl.textContent=fmt(miss); missEl.className='v'+(miss!==0?' bad':' good');
-  $('missExplain').textContent = miss===0
-    ? 'M inayotarajiwa na M halisi zinalingana — hakuna tofauti.'
-    : (miss>0 ? 'Wateja wanadaiwa zaidi ya kile Combine inachotarajia — kunaweza kuwa na mkopo usioandikwa kwenye Combine, au marejesho ambayo hayajahesabiwa.'
-              : 'Combine inatarajia deni kubwa zaidi kuliko orodha halisi ya wateja — angalia kama kuna marejesho yaliyoandikwa mara mbili au mkopo uliofutwa bila kutangazwa bad debt.');
-
-  const ada = (dayCounts.data||[]).find(r=>r.section==='ada');
-  const adaVals = ada ? rowToCounts(ada) : zero();
-
-  const agentRows = dayAgent.data||[];
-  const sumSec = sec => agentRows.filter(r=>r.section===sec).reduce((s,r)=>s+sumD(rowToCounts(r)),0);
-  $('c-miamala').textContent = fmt(sumSec('miamala'));
-  $('c-marejesho').textContent = fmt(sumSec('marejesho'));
-  $('c-ada').textContent = fmt(sumD(adaVals));
-  adaCheck();
-
-  const matR = await sb.from('combine_matumizi').select('*').eq('work_date',CUR_DATE);
-  if(!matR.error){
-    const approved = (matR.data||[]).filter(r=>r.status==='imekubaliwa').reduce((s,r)=>s+sumD(rowToCounts(r)),0);
-    $('c-matumizi').textContent = fmt(approved);
-  }
-
+  const pendingInfo = await loadPending();
   if(pendingInfo && pendingInfo.anyForDate){
     showBanner('BALANCE ya siku hii ni BATILI — kuna matumizi yanayosubiri idhini ya Admin Mkuu.');
-  } else if(!START.exists){
-    showBanner('M_start bado haijawekwa. '+(ROLE==='super'?'Iweke kwenye sehemu ya MTAJI (M) hapo juu.':'Admin Mkuu aiweke kwanza.'),true);
   }
 }
 
 async function loadAll(){
   updateDateLabel();
-  const s=await sb.from('balance_start').select('*').eq('id','singleton').maybeSingle();
-  if(!s.error && s.data) START={exists:true, m_start:Number(s.data.m_start||0), set_date:s.data.set_date};
-  else START={exists:false, m_start:0, set_date:null};
-  renderStartBox();
   await computeAndRender();
-  loadOffice(); loadPayPending(); if(typeof bxRefresh==='function') bxRefresh();
+  if(ROLE!=='balance'){ loadOffice(); loadPayPending(); }
+  if(typeof bxRefresh==='function') bxRefresh();
 }
 
 /* ---------- start ---------- */
@@ -432,15 +343,21 @@ async function init(){
   try{
     const {data:{session}}=await sb.auth.getSession();
     if(!session){ location.replace('portal.html'); return; }
-    const {data:role,error}=await sb.rpc('combine_my_role');
+    let {data:role,error}=await sb.rpc('combine_my_role');
     if(error){ gateMessage(/function|schema cache/i.test(error.message||'') ? 'Mfumo wa Balance bado haujawekwa kwenye database (SQL halijaendeshwa).' : 'Imeshindwa kuunganisha. Jaribu tena.', true); return; }
-    if(!role){ location.replace('portal.html'); return; }
+    if(!role){
+      const probe=await sb.rpc('balance_company_day',{p_date:todayStr()});
+      const regs=(probe.data&&probe.data.regions)||[];
+      if(!regs.length){ location.replace('portal.html'); return; }
+      role='balance';
+    }
     ROLE=role;
-    $('roleLabel').textContent = ROLE==='super' ? 'Admin Mkuu' : 'Msimamizi wa Combine';
+    $('roleLabel').textContent = ROLE==='super' ? 'Admin Mkuu' : (ROLE==='balance' ? 'Mhakiki wa Balance' : 'Msimamizi wa Combine');
+    if(ROLE==='balance'){ BX_TABS.length=0; BX_TABS.push(['mikoa','Mikoa'],['uhamisho','Uhamisho']); }
     $('authGate').style.display='none'; $('appContent').style.display='block';
     $('hDate').value=todayStr(); CUR_DATE=todayStr();
     await loadAll();
-    await loadOwing();
+    if(ROLE!=='balance') await loadOwing();
   }catch(e){ gateMessage('Hitilafu isiyotarajiwa: '+(e.message||e), true); }
 }
 window.addEventListener('load', init);
@@ -498,8 +415,8 @@ async function payRun(id, period, net){
 
 <script>
 /* ======== BALANCE: Dashboard, Cash & Mikopo, Matumizi, Mishahara, Faida/Hasara, Tahadhari ======== */
-const BX_TABS=[['dashboard','Dashboard'],['cash','Cash & Mikopo'],['ada','Ada za Mikopo'],['matumizi','Matumizi'],['mishahara','Mishahara'],['pl','Faida/Hasara'],['tahadhari','Tahadhari'],['siku','Hesabu ya Siku']];
-let BX_TAB='dashboard', BX_ALERT_N=0, BX_OWING=[], BX_PL={from:'',to:'',preset:'month'};
+const BX_TABS=[['mikoa','Mikoa'],['uhamisho','Uhamisho'],['hq','Makao Makuu'],['dashboard','Dashboard'],['cash','Cash & Mikopo'],['ada','Ada za Mikopo'],['matumizi','Matumizi'],['mishahara','Mishahara'],['pl','Faida/Hasara'],['tahadhari','Tahadhari'],['siku','Bad Debt']];
+let BX_TAB='mikoa', BX_ALERT_N=0, BX_OWING=[], BX_PL={from:'',to:'',preset:'month'};
 const bxN = n => fmt(Number(n)||0);
 const bxEsc = s => esc(String(s==null?'':s));
 const bxErr = e => `<div class="card"><div class="empty">${/does not exist|schema cache/i.test(e.message||'')?'Sehemu hii bado haijawekwa kwenye database (SQL ya Sehemu 4 haijaendeshwa).':bxEsc(e.message||e)}</div></div>`;
@@ -510,7 +427,6 @@ const BX_CAT_EX={kodi:'Kodi/Pango',usafiri:'Usafiri',matumizi_kazi:'Matumizi ya 
 
 function bxTag(){
   const tag=(el,t)=>{ if(el) el.dataset.bxtab=t; };
-  tag(document.querySelector('.datebar'),'siku'); tag($('dateLabel'),'siku'); tag($('banner'),'siku');
   tag($('pendingCard'),'matumizi'); tag($('officeCard'),'cash'); tag($('payCard'),'mishahara'); tag($('badDebtCard'),'siku');
   document.querySelectorAll('.wrap > .card:not([id])').forEach(c=>tag(c,'siku'));
   bxTabsRender();
@@ -529,7 +445,7 @@ async function bxAlertCount(){
 }
 async function bxRefresh(){
   if(!ROLE) return;
-  const f={dashboard:bxDashboard,cash:bxCash,ada:bxAda,matumizi:bxMatumizi,mishahara:bxMishahara,pl:bxPL,tahadhari:bxAlerts}[BX_TAB];
+  const f={mikoa:bmMikoa,region:bmRegion,uhamisho:bmUhamisho,hq:bmHq,dashboard:bxDashboard,cash:bxCash,ada:bxAda,matumizi:bxMatumizi,mishahara:bxMishahara,pl:bxPL,tahadhari:bxAlerts}[BX_TAB];
   if(f) await f(); else bxAlertCount();
 }
 
@@ -732,7 +648,7 @@ async function bxAlerts(){
 }
 
 /* ---- kuanza + kujisasisha ---- */
-bxTag(); bxShow('dashboard');
+bxTag(); bxShow('mikoa');
 setInterval(()=>{ if(!document.hidden && ROLE && !['INPUT','TEXTAREA','SELECT'].includes((document.activeElement||{}).tagName) && BX_TAB!=='siku') bxRefresh(); }, 60000);
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden && ROLE) bxRefresh(); });
 </script>
@@ -874,6 +790,255 @@ async function bxAdaTopup(){
   if(r.error){ ocMsg('msg-ada','Imeshindwa: '+r.error.message,false); return; }
   bxAda();
 }
+</script>
+<style>
+.bm-pill{font-size:11px;font-weight:800;padding:2px 9px;border-radius:999px;white-space:nowrap;display:inline-block;margin-left:4px}
+.bm-ok{background:#e3f4ec;color:#006b45}.bm-no{background:#f9e3e0;color:#8a2a22}.bm-nd{background:#eef1f6;color:#51606c}.bm-wn{background:#fbf0d3;color:#7a5a0a}
+.bm-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 2px;border-top:1px solid var(--line,#dfe4ec);cursor:pointer}
+.bm-row:first-of-type{border-top:0}
+.bm-n{font-size:14px;font-weight:800;color:var(--hk-navy,#001848)}
+.bm-s{font-size:11.5px;color:var(--sub,#51606c);margin-top:2px}
+.bm-v{font-size:14px;font-weight:800;color:var(--hk-navy,#001848);white-space:nowrap;font-variant-numeric:tabular-nums}
+.bm-banner{display:flex;justify-content:space-between;align-items:center;gap:10px;border-radius:14px;padding:12px 14px;margin:0 0 10px;border:1.5px solid}
+.bm-banner .w{font-size:19px;font-weight:900;letter-spacing:.02em}
+.bm-banner .s{font-size:12px;font-weight:600;margin-top:2px}
+.bm-banner.ok{background:#e3f4ec;border-color:#008454;color:#006b45}
+.bm-banner.no{background:#f9e3e0;border-color:#8a2a22;color:#8a2a22}
+.bm-banner.nd{background:#eef1f6;border-color:#c9d2df;color:#51606c}
+.bm-ck{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-top:1px solid #eef1f6}
+.bm-ck:first-of-type{border-top:0}
+.bm-a{font-size:13px;font-weight:700;color:var(--hk-navy,#001848)}
+.bm-sub{display:flex;gap:2px;margin:6px 0 10px;border-bottom:1px solid var(--line,#dfe4ec);overflow-x:auto}
+.bm-sub button{flex:0 0 auto;background:none;border:0;border-bottom:3px solid transparent;padding:9px 12px;font-weight:800;font-size:12px;color:var(--sub,#51606c);cursor:pointer;letter-spacing:.02em}
+.bm-sub button.on{color:var(--hk-navy,#001848);border-bottom-color:#cc9c24}
+.bm-back{background:none;border:0;color:var(--hk-navy,#001848);font-weight:800;font-size:13px;cursor:pointer;padding:2px 0 8px}
+.bm-btns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.bm-btns .btn{flex:1 1 200px}
+.bm-alt{flex:1 1 140px;background:#fff;border:1px solid #c9d2df;border-radius:10px;font-weight:700;padding:10px 12px;cursor:pointer;color:var(--hk-navy,#001848)}
+.bm-eq{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;font-variant-numeric:tabular-nums}
+.bm-eq.b{border-top:1px solid var(--line,#dfe4ec);margin-top:4px;padding-top:7px;font-weight:800}
+.bm-eq .m{color:var(--sub,#51606c)}
+.bm-sel{background:#fff;border:1px solid #c9d2df;border-radius:8px;padding:6px 8px;font:inherit;font-size:12.5px;color:var(--hk-navy,#001848)}
+</style>
+<script>
+/* ======== HEKIMA: Balance ya mikoa — Mikoa, Balance ya mkoa, Uhamisho, Makao Makuu ======== */
+const BM={region:null,tab:'ukaguzi',solo:false,names:{},cache:null};
+const bmN=n=>fmt(Math.round(Number(n)||0));
+const bmE=s=>esc(String(s==null?'':s));
+const bmPill=(cls,t)=>'<span class="bm-pill '+cls+'">'+bmE(t)+'</span>';
+const bmBal=x=>!x.has_data?bmPill('bm-nd','Hakuna data'):(x.all_ok?bmPill('bm-ok','Imebalance'):bmPill('bm-no','Haijabalance'));
+const bmSt=s=>s==='imefungwa'?bmPill('bm-nd','Imefungwa'):(s==='imewasilishwa'?bmPill('bm-wn','Imewasilishwa'):bmPill('bm-nd','Wazi'));
+const bmCan=()=>ROLE==='super'||ROLE==='balance';
+const bmDT=t=>t?new Date(t).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+
+/* ---- Mikoa (Balance kuu) ---- */
+async function bmMikoa(){
+  const el=$('bx-mikoa');
+  const r=await sb.rpc('balance_company_day',{p_date:CUR_DATE});
+  if(r.error){ el.innerHTML=bxErr(r.error); return; }
+  const d=r.data||{}, t=d.totals||{}, regs=d.regions||[];
+  regs.forEach(x=>BM.names[x.code]=x.name);
+  if(ROLE==='balance' && regs.length===1){ BM.region=regs[0].code; BM.solo=true; bxShow('region'); return; }
+  const bad=regs.filter(x=>x.has_data&&!x.all_ok).length;
+  el.innerHTML=`<div class="bx-grid">
+      <div class="bx-mini"><div class="l">Mtaji Safi</div><div class="v good">${bmN(t.safi)}</div></div>
+      <div class="bx-mini"><div class="l">Mtaji Chafu</div><div class="v bad">${bmN(t.chafu)}</div></div>
+      <div class="bx-mini" style="grid-column:1/-1"><div class="l">Jumla ya Mtaji (pesa mtaani)</div><div class="v">${bmN(t.jumla)}</div></div>
+      <div class="bx-mini"><div class="l">Wateja wenye mkopo</div><div class="v">${bmN(t.wateja)}</div></div>
+      <div class="bx-mini"><div class="l">Mikopo mibaya</div><div class="v ${t.mibaya?'bad':''}">${bmN(t.mibaya)}</div></div>
+    </div>
+    <div class="bx-panel"><div class="t">Mikoa (gusa kufungua Balance ya mkoa)${bad?bmPill('bm-no',bad+' haijabalance'):''}</div>
+    ${regs.length?regs.map(x=>{ const m=x.mtaji||{}; return `<div class="bm-row" onclick="bmOpen('${bmE(x.code)}')"><div><div class="bm-n">${bmE(x.name)}${bmBal(x)}${bmSt(x.status)}${x.matumizi_pending?bmPill('bm-wn','Matumizi '+x.matumizi_pending):''}</div><div class="bm-s">Safi ${bmN(m.safi)} · Chafu ${bmN(m.chafu)} · Mawakala ${bmN(x.agents)} · Wateja ${bmN(m.wateja)}</div></div><div class="bm-v">${bmN(m.jumla)} ›</div></div>`; }).join(''):'<div class="empty">Hakuna mkoa unaoruhusiwa kuona.</div>'}
+    </div><div id="bmAccess"></div>`;
+  if(ROLE==='super') bmAccess();
+}
+function bmOpen(code){ BM.region=code; BM.tab='ukaguzi'; bxShow('region'); }
+
+/* ---- Balance ya mkoa ---- */
+async function bmRegion(){
+  const el=$('bx-region');
+  if(!BM.region){ bxShow('mikoa'); return; }
+  el.innerHTML='<div class="card"><div class="empty">Inapakia...</div></div>';
+  const [r,row]=await Promise.all([
+    sb.rpc('balance_region_day',{p_region:BM.region,p_date:CUR_DATE}),
+    sb.from('combine_day_status').select('*').eq('region_code',BM.region).eq('work_date',CUR_DATE).maybeSingle()
+  ]);
+  if(r.error){ el.innerHTML=bxErr(r.error); return; }
+  BM.cache={d:r.data,S:row.data||null};
+  const d=r.data, S=BM.cache.S, m=d.mtaji||{}, nm=d.region_name||BM.names[BM.region]||BM.region;
+  let bn;
+  if(!d.has_data) bn=['nd','HAKUNA DATA YA SIKU HII','Combine bado hajaingiza hesabu za siku hii.',''];
+  else if(d.all_ok) bn=['ok','✓ IMEBALANCE','Ukaguzi wote 5 umekubali',''];
+  else bn=['no','HAIJABALANCE','Ukaguzi '+d.problems+' kati ya 5 una tofauti',''];
+  const stTxt = d.status==='imefungwa' ? ('Siku imefungwa'+(S&&S.closed_at?' · '+bmDT(S.closed_at):' kiotomatiki saa 12 asubuhi'))
+              : (d.status==='imewasilishwa' ? 'Combine ameiwasilisha. Inasubiri ukaguzi wa Balance.' : 'Combine bado hajawasilisha.');
+  el.innerHTML=`${BM.solo?'':'<button class="bm-back" onclick="bxShow(\'mikoa\')">‹ Mikoa</button>'}
+    <div class="bm-banner ${bn[0]}"><div><div class="w">${bn[1]}</div><div class="s">${bmE(nm)} · ${bmE(bn[2])}</div></div><div class="s" style="text-align:right">${bmSt(d.status)}</div></div>
+    <p class="sec-desc" style="margin:0 0 10px">${bmE(stTxt)}</p>
+    ${d.status==='wazi'&&S&&S.return_note?`<div class="bx-alert">Umerudishwa kwa Combine: ${bmE(S.return_note)}</div>`:''}
+    ${d.status==='imefungwa'&&S&&S.close_note?`<div class="bx-alert" style="border-left-color:#cc9c24;background:#fbf6e6;color:#5a4a12">Maelezo ya kufunga: ${bmE(S.close_note)}</div>`:''}
+    ${d.matumizi_pending?`<div class="bx-alert" style="border-left-color:#cc9c24;background:#fbf6e6;color:#5a4a12">Matumizi ${d.matumizi_pending} yanasubiri idhini ya CEO. Pesa yake imehesabiwa kwenye cash.</div>`:''}
+    <div class="bx-grid">
+      <div class="bx-mini"><div class="l">Mtaji Safi</div><div class="v good">${bmN(m.safi)}</div></div>
+      <div class="bx-mini"><div class="l">Mtaji Chafu</div><div class="v bad">${bmN(m.chafu)}</div></div>
+      <div class="bx-mini" style="grid-column:1/-1"><div class="l">Jumla ya Mtaji</div><div class="v">${bmN(m.jumla)}</div></div>
+    </div>
+    <div class="bm-sub">${[['ukaguzi','UKAGUZI'],['mawakala','MAWAKALA'],['punguzo','PUNGUZO']].map(t=>`<button class="${BM.tab===t[0]?'on':''}" onclick="bmTab('${t[0]}')">${t[1]}</button>`).join('')}</div>
+    <div id="bmBody"></div>`;
+  bmBody();
+}
+function bmTab(t){ BM.tab=t; document.querySelectorAll('.bm-sub button').forEach(b=>b.classList.toggle('on',b.textContent.toLowerCase()===t)); bmBody(); }
+async function bmBody(){
+  const box=$('bmBody'); if(!box||!BM.cache) return;
+  const {d,S}=BM.cache, c=d.cash||{};
+  if(BM.tab==='ukaguzi'){
+    const hint=k=>{ if(k.ok) return ''; if(k.key==='marejesho'&&k.diff>0) return ' (pesa iko mkononi mwa wakala)'; if(k.key==='cash') return ' · hatua: M1 '+bmN(c.m1)+', M2 '+bmN(c.m2)+', M3 '+bmN(c.m3)+', M4 '+bmN(c.m4); return ''; };
+    const checks=(d.checks||[]).map((k,i)=>`<div class="bm-ck"><div><div class="bm-a">${i+1}. ${bmE(k.label)}</div><div class="bm-s">${bmE(k.a_label)}: ${bmN(k.a)} · ${bmE(k.b_label)}: ${bmN(k.b)}${k.ok?'':' · tofauti '+bmN(k.diff)}${hint(k)}</div></div>${k.ok?bmPill('bm-ok','Imebalance'):bmPill('bm-no','Haijabalance')}</div>`).join('');
+    const eq=(l,v,sign)=>`<div class="bm-eq"><span class="m">${l}</span><span>${sign||''}${bmN(v)}</span></div>`;
+    const act=(d.status==='imewasilishwa'&&bmCan())?`<div class="bx-panel"><div class="t">Ukaguzi wako</div>
+      <textarea id="bmNote" class="bx-in" rows="2" style="width:100%" placeholder="${d.all_ok?'Maelezo (hiari)':'Maelezo ya kila tofauti (lazima ili kufunga siku)'}"></textarea>
+      <div class="bm-btns"><button class="btn wide" onclick="bmClose()">Wasilisha na Hifadhi (funga siku)</button><button class="bm-alt" onclick="bmReturn()">Rudisha kwa Combine</button></div>
+      <div class="msg" id="bmMsg"></div></div>`:'';
+    box.innerHTML=`<div class="bx-panel"><div class="t">Ukaguzi wa siku</div>${checks}</div>${act}
+      <details class="bx-panel"><summary style="cursor:pointer;font-weight:800;font-size:13px">Mahesabu ya cash ya siku</summary><div style="margin-top:8px">
+        ${eq('Mpaka asubuhi (jana usiku)',c.mpaka)}${eq('Pesa mwanzoni (halisi)',c.mwanzoni)}${eq('Ongezeko (asubuhi)',c.ongezeko1,'+')}
+        ${eq('Miamala',c.miamala,'−')}${eq('Matumizi',c.matumizi,'−')}${eq('Pesa asubuhi (halisi)',c.asubuhi)}${eq('Pesa mchana (halisi)',c.mchana)}
+        ${eq('Ongezeko (mchana)',c.ongezeko2,'+')}${eq('Marejesho',c.marejesho,'+')}${eq('Chenji',c.chenji,'+')}${eq('Ada',c.ada,'+')}
+        ${eq('Adjust (+)',c.adjust_plus,'+')}${eq('Adjust (−)',c.adjust_minus,'−')}${eq('Punguzo (Makao Makuu)',c.punguzo,'−')}
+        <div class="bm-eq b"><span>Combine Usiku (inatarajiwa)</span><span>${bmN(c.cf)}</span></div>
+        <div class="bm-eq"><span class="m">Pesa Usiku (halisi)</span><span>${bmN(c.usiku)}</span></div>
+        <div class="bm-eq"><span class="m">Miss ya usiku</span><span style="color:${Number(c.m4)!==0?'#8a2a22':'inherit'}">${bmN(c.m4)}</span></div>
+      </div></details>
+      <details class="bx-panel"><summary style="cursor:pointer;font-weight:800;font-size:13px">Mahesabu ya mtaji wa siku</summary><div style="margin-top:8px">
+        ${eq('Mtaji wa jana',d.mtaji.prev)}${eq('Mikopo mipya (pamoja na riba)',d.mtaji.mikopo_mapya,'+')}${eq('Marejesho yaliyotumika',d.mtaji.marejesho_yaliyotumika,'−')}${eq('Mikopo isiyolipika',d.mtaji.isiyolipika,'−')}
+        <div class="bm-eq b"><span>Mtaji unaotarajiwa leo</span><span>${bmN(d.mtaji.unaotarajiwa)}</span></div>
+        <div class="bm-eq"><span class="m">Mtaji halisi (ripoti ya Updates)</span><span>${bmN(d.mtaji.jumla)}</span></div>
+      </div></details>`;
+  } else if(BM.tab==='mawakala'){
+    box.innerHTML='<div class="bx-panel"><div class="empty">Inapakia...</div></div>';
+    const r=await sb.rpc('balance_mtaji_agents',{p_region:BM.region,p_date:CUR_DATE});
+    if(r.error){ box.innerHTML=bxErr(r.error); return; }
+    const rows=r.data||[];
+    box.innerHTML=`<div class="bx-panel"><div class="t">Mawakala wa mkoa (mtaji kama dashboard ya Updates)</div>
+      ${rows.length?rows.map(a=>`<div class="bm-row" style="cursor:default"><div><div class="bm-n">${bmE(a.agent_name||a.agent_code)} <span style="color:var(--sub);font-weight:600">(${bmE(a.agent_code)})</span></div><div class="bm-s">Safi ${bmN(a.safi)} · Chafu ${bmN(a.chafu)} · Wateja ${bmN(a.wateja)} · Mibaya ${bmN(a.mibaya)}</div></div><div class="bm-v">${bmN(a.jumla)}</div></div>`).join(''):'<div class="empty">Hakuna wakala kwenye mkoa huu.</div>'}
+      <p class="sec-desc" style="margin-top:8px">Ripoti kamili ya kila wakala iko kwenye <a href="report.html">Ripoti</a>.</p></div>`;
+  } else {
+    const t=d.transfer;
+    box.innerHTML=`<div class="bx-panel"><div class="t">Punguzo la siku (kutuma Makao Makuu)</div>
+      ${bmRow('Kiasi kilichotolewa Combine',bmN(c.punguzo))}
+      ${bmRow('Njia',t&&t.method?({taslimu:'Taslimu',benki:'Benki',mobile:'Mobile Money'}[t.method]):'—')}
+      ${bmRow('Namba ya rejea',t&&t.reference?bmE(t.reference):'—')}
+      ${bmRow('Hali',!t||!Number(t.amount)?'—':(t.status==='imepokelewa'?'Imepokelewa '+bmN(t.received_amount):(t.status==='imekataliwa'?'Imekataliwa: '+bmE(t.hq_note||''):'Inasubiri Makao Makuu')))}
+      <p class="sec-desc" style="margin-top:8px">Kiasi hiki kimepunguzwa kwenye Combine Usiku. Makao Makuu wanathibitisha kupokea kwenye tab ya Uhamisho.</p></div>`;
+  }
+}
+const bmRow=(l,v)=>`<div class="row"><span class="l">${l}</span><span class="v">${v}</span></div>`;
+async function bmClose(){
+  const note=($('bmNote').value||'').trim(), d=BM.cache.d, msg=$('bmMsg');
+  if(!d.all_ok && !note){ msg.textContent='Siku ina tofauti. Andika maelezo ya kila tofauti kabla ya kufunga.'; msg.className='msg err'; return; }
+  if(!confirm('Kufunga siku ya '+CUR_DATE+'? Baada ya hapo CEO pekee ndiye anayeweza kuihariri.')) return;
+  msg.textContent='Inahifadhi...'; msg.className='msg';
+  const r=await sb.rpc('balance_close_day',{p_region:BM.region,p_date:CUR_DATE,p_note:note});
+  if(r.error){ msg.textContent='Imeshindwa: '+r.error.message; msg.className='msg err'; return; }
+  bmRegion();
+}
+async function bmReturn(){
+  const reason=($('bmNote').value||'').trim(), msg=$('bmMsg');
+  if(!reason){ msg.textContent='Andika sababu ya kurudisha kwa Combine kwenye kisanduku cha maelezo.'; msg.className='msg err'; return; }
+  if(!confirm('Kurudisha siku hii kwa Combine ili asahihishe?')) return;
+  const r=await sb.rpc('balance_return_day',{p_region:BM.region,p_date:CUR_DATE,p_reason:reason});
+  if(r.error){ msg.textContent='Imeshindwa: '+r.error.message; msg.className='msg err'; return; }
+  bmRegion();
+}
+
+/* ---- Uhamisho (mikoa kwenda Makao Makuu) ---- */
+async function bmNames(){
+  if(Object.keys(BM.names).length) return;
+  const g=await sb.from('regions').select('code,name'); (g.data||[]).forEach(x=>BM.names[x.code]=x.name);
+}
+async function bmUhamisho(){
+  const el=$('bx-uhamisho');
+  const [r]=await Promise.all([sb.from('region_transfers').select('*').gt('amount',0).order('work_date',{ascending:false}).limit(100), bmNames()]);
+  if(r.error){ el.innerHTML=bxErr(r.error); return; }
+  const rows=r.data||[];
+  const sum=(f)=>rows.filter(f).reduce((s,x)=>s+Number(x.status==='imepokelewa'?x.received_amount:x.amount)||0,0);
+  const njiani=sum(x=>x.status==='inasubiri'), pokelewa=sum(x=>x.status==='imepokelewa');
+  const meth={taslimu:'Taslimu',benki:'Benki',mobile:'Mobile Money'};
+  el.innerHTML=`<div class="bx-grid">
+      <div class="bx-mini"><div class="l">Njiani (inasubiri)</div><div class="v ${njiani?'bad':''}">${bmN(njiani)}</div></div>
+      <div class="bx-mini"><div class="l">Imepokelewa</div><div class="v good">${bmN(pokelewa)}</div></div></div>
+    <div class="bx-panel"><div class="t">Pesa kutoka mikoani kwenda Makao Makuu</div>
+    ${rows.length?rows.map(x=>{
+      const diff=x.status==='imepokelewa'&&Number(x.received_amount)!==Number(x.amount);
+      const pill=x.status==='imepokelewa'?bmPill(diff?'bm-no':'bm-ok',diff?'Imepokelewa, tofauti':'Imepokelewa'):(x.status==='imekataliwa'?bmPill('bm-no','Imekataliwa'):bmPill('bm-wn','Inasubiri'));
+      const acts=(ROLE==='super'&&x.status==='inasubiri')?`<div class="bm-btns"><button class="btn wide" style="flex:1 1 120px" onclick="bmConfirm('${x.id}',${Number(x.amount)})">Thibitisha</button><button class="bm-alt" onclick="bmReject('${x.id}')">Kataa</button></div>`:'';
+      return `<div class="bm-ck" style="display:block"><div style="display:flex;justify-content:space-between;gap:8px"><div><div class="bm-a">${bmE(BM.names[x.region_code]||x.region_code)} · ${bmE(x.work_date)}</div><div class="bm-s">${bmE(meth[x.method]||'Njia haijaandikwa')}${x.reference?' · '+bmE(x.reference):''}${diff?' · ilitumwa '+bmN(x.amount):''}${x.hq_note?' · '+bmE(x.hq_note):''}</div></div><div style="text-align:right"><div class="bm-v">${bmN(x.status==='imepokelewa'?x.received_amount:x.amount)}</div>${pill}</div></div>${acts}</div>`;
+    }).join(''):'<div class="empty">Hakuna uhamisho bado.</div>'}
+    <div class="msg" id="bmTMsg"></div></div>`;
+}
+async function bmConfirm(id,amount){
+  const v=prompt('Kiasi kilichopokelewa Makao Makuu (TZS):',String(amount)); if(v===null) return;
+  const n=Number(String(v).replace(/[^0-9.]/g,'')); if(!isFinite(n)||n<0){ alert('Kiasi si sahihi'); return; }
+  const note=n!==Number(amount)?(prompt('Kiasi ni tofauti na kilichotumwa. Andika maelezo:','')||''):'';
+  const r=await sb.rpc('transfer_confirm',{p_id:id,p_received:n,p_note:note});
+  if(r.error){ alert('Imeshindwa: '+r.error.message); return; }
+  bmUhamisho();
+}
+async function bmReject(id){
+  const note=prompt('Sababu ya kukataa:',''); if(note===null) return;
+  const r=await sb.rpc('transfer_reject',{p_id:id,p_note:note});
+  if(r.error){ alert('Imeshindwa: '+r.error.message); return; }
+  bmUhamisho();
+}
+
+/* ---- Makao Makuu ---- */
+async function bmHq(){
+  const el=$('bx-hq');
+  const [t,oc]=await Promise.all([sb.from('region_transfers').select('method,status,amount,received_amount').gt('amount',0), sb.rpc('office_cash_balance')]);
+  if(t.error){ el.innerHTML=bxErr(t.error); return; }
+  const rows=t.data||[], ocb=(oc.data||[])[0]||{balance:0};
+  const by=m=>rows.filter(x=>x.status==='imepokelewa'&&(x.method||'taslimu')===m).reduce((s,x)=>s+Number(x.received_amount||0),0);
+  const njiani=rows.filter(x=>x.status==='inasubiri').reduce((s,x)=>s+Number(x.amount||0),0);
+  el.innerHTML=`<div class="bx-grid">
+      <div class="bx-mini"><div class="l">Cash ofisini (daftari)</div><div class="v ${Number(ocb.balance)<0?'bad':'good'}">${bmN(ocb.balance)}</div></div>
+      <div class="bx-mini"><div class="l">Njiani kutoka mikoani</div><div class="v">${bmN(njiani)}</div></div>
+      <div class="bx-mini"><div class="l">Imepokelewa: Taslimu</div><div class="v">${bmN(by('taslimu'))}</div></div>
+      <div class="bx-mini"><div class="l">Imepokelewa: Benki</div><div class="v">${bmN(by('benki'))}</div></div>
+      <div class="bx-mini" style="grid-column:1/-1"><div class="l">Imepokelewa: Mobile Money</div><div class="v">${bmN(by('mobile'))}</div></div></div>
+    <div class="bx-panel"><p class="sec-desc" style="margin:0">Benki na Mobile Money ni za Makao Makuu. Hapa zinaonekana pesa zilizopokelewa kutoka mikoani kwa kila njia. Mishahara, matumizi ya ofisi na faida ziko kwenye tabs zake kama kawaida.</p></div>`;
+}
+
+/* ---- CEO: watu wa Balance (wahakiki wa mikoa) ---- */
+async function bmAccess(){
+  const box=$('bmAccess'); if(!box) return;
+  const [a,p,g]=await Promise.all([
+    sb.from('balance_access').select('user_id,region_code'),
+    sb.from('mikopo_profiles').select('id,full_name,email,active').eq('active',true),
+    sb.from('regions').select('code,name').eq('active',true).order('name')
+  ]);
+  if(a.error||p.error||g.error){ box.innerHTML=''; return; }
+  const prof=new Map((p.data||[]).map(x=>[x.id,x])), regs=g.data||[];
+  const has=new Set((a.data||[]).map(x=>x.user_id));
+  const nm=id=>{ const x=prof.get(id)||{}; return x.full_name||x.email||id; };
+  const opts=sel=>'<option value="">Mikoa yote</option>'+regs.map(r=>`<option value="${bmE(r.code)}" ${r.code===sel?'selected':''}>${bmE(r.name)}</option>`).join('');
+  box.innerHTML=`<div class="bx-panel"><div class="t">Watu wa Balance (wahakiki wa mikoa)</div>
+    <p class="sec-desc" style="margin:0 0 8px">Wanakagua na kufunga siku ya mkoa wao tu. Hawawezi kubadilisha hesabu, mishahara wala faida.</p>
+    ${(a.data||[]).length?(a.data||[]).map(x=>`<div class="bm-ck"><div class="bm-a">${bmE(nm(x.user_id))}</div><div style="display:flex;gap:6px;align-items:center"><select class="bm-sel" onchange="bmAccSet('${bmE(x.user_id)}',this.value)">${opts(x.region_code||'')}</select><button class="bm-alt" style="flex:0 0 auto;padding:6px 10px" onclick="bmAccDel('${bmE(x.user_id)}')">Ondoa</button></div></div>`).join(''):'<div class="empty">Bado hakuna aliyepewa ruhusa.</div>'}
+    <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+      <select class="bm-sel" id="bmAccUser" style="flex:1 1 150px"><option value="">Chagua mtu</option>${(p.data||[]).filter(x=>!has.has(x.id)).map(x=>`<option value="${bmE(x.id)}">${bmE(x.full_name||x.email||x.id)}</option>`).join('')}</select>
+      <select class="bm-sel" id="bmAccReg" style="flex:1 1 120px">${opts('')}</select>
+      <button class="btn wide" style="flex:1 1 100%" onclick="bmAccAdd()">Mpe ruhusa ya Balance</button></div>
+    <div class="msg" id="bmAccMsg"></div></div>`;
+}
+async function bmAccAdd(){
+  const u=$('bmAccUser').value, rg=$('bmAccReg').value||null, msg=$('bmAccMsg');
+  if(!u){ msg.textContent='Chagua mtu.'; msg.className='msg err'; return; }
+  const r=await sb.from('balance_access').upsert([{user_id:u,region_code:rg}],{onConflict:'user_id'});
+  if(r.error){ msg.textContent='Imeshindwa: '+r.error.message; msg.className='msg err'; return; }
+  bmAccess();
+}
+async function bmAccSet(u,rg){ const r=await sb.from('balance_access').update({region_code:rg||null}).eq('user_id',u); if(r.error) alert('Imeshindwa: '+r.error.message); }
+async function bmAccDel(u){ if(!confirm('Kuondoa ruhusa ya Balance kwa mtu huyu?')) return; const r=await sb.from('balance_access').delete().eq('user_id',u); if(r.error){ alert('Imeshindwa: '+r.error.message); return; } bmAccess(); }
 </script>
 </body>
 </html>

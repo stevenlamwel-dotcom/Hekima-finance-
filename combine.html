@@ -332,6 +332,7 @@ addEventListener("beforeunload",show)})();</script>
 <div class="savebar" id="savebar">
   <div class="status" id="saveStatus">Hakuna mabadiliko.</div>
   <button class="btn" id="saveBtn" onclick="saveDay()">Hifadhi siku</button>
+  <button class="btn" id="submitBtn" onclick="submitDay()" style="background:#001848;color:#fff;">Wasilisha</button>
 </div>
 </div>
 
@@ -342,11 +343,12 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const DENOMS = [10000,5000,2000,1000,500,200,100,50];
 const CATS = ['Combine 1','Combine 2','Combine 3','Combine THL','Combine *','Office','Others','Posho','MD'];
-const COUNT_SECS = ['mwanzoni','ongezeko1','asubuhi','mchana','ongezeko2','ada','adjust_plus','adjust_minus','usiku'];
+const COUNT_SECS = ['mwanzoni','ongezeko1','asubuhi','mchana','ongezeko2','ada','adjust_plus','adjust_minus','usiku','punguzo'];
 const AGENT_SECS = ['miamala','marejesho','chenji'];
 
 let ROLE = null;                 // 'super' (Admin Mkuu) | 'editor' (amepewa ruhusa)
 let AGENTS = [];
+let DAYST = 'wazi', DAYROW = null, TRANSFER = null, DAYBANNER = false;
 let REG = null, REGIONS = [];   // mkoa unaotumika sasa, na mikoa ambayo mtumiaji anaruhusiwa
 function inReg(c){ return !REG || AGENTS.some(a=>a.code===c); }
 function regName(){ const r=REGIONS.find(x=>x.code===REG); return r?r.name:(REG||''); }
@@ -591,7 +593,16 @@ function renderSections(){
     `<p class="sec-desc">Chenji iliyokabidhiwa na mawakala. Combine anahakiki tu.</p>
      ${agentGrid('chenji')}`));
 
-  H.push(sec('adjust','11 · ADJUST',
+  H.push(sec('punguzo','11 · PUNGUZO (Makao Makuu)',
+    `<p class="sec-desc">Noti zilizotoka Combine ya mkoa kwenda Makao Makuu. Zinapunguzwa kwenye Combine Usiku. Makao Makuu wanathibitisha kupokea.</p>
+     ${inputGrid('data-kind="count" data-sec="punguzo"')}
+     ${totalLine('JUMLA PUNGUZO','t-punguzo')}
+     <div class="sub-h">Njia na rejea</div>
+     <select id="pzMethod" onchange="markDirty()" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:9px;font-size:14px;margin-bottom:8px;"><option value="">Chagua njia</option><option value="taslimu">Taslimu</option><option value="benki">Benki</option><option value="mobile">Mobile Money</option></select>
+     <input class="note" id="pzRef" type="text" placeholder="Namba ya rejea (hiari)" oninput="markDirty()">
+     <p class="sec-desc" id="pzStatus"></p>`));
+
+  H.push(sec('adjust','12 · ADJUST',
     `<p class="sec-desc">Marekebisho ya mwisho wa siku: noti zinazoongezwa au kupunguzwa.</p>
      <div class="sub-h" style="margin-top:0">Ongeza (+)</div>
      ${inputGrid('data-kind="count" data-sec="adjust_plus"')}
@@ -600,9 +611,9 @@ function renderSections(){
      ${inputGrid('data-kind="count" data-sec="adjust_minus"')}
      ${totalLine('JUMLA −','t-adjm')}`));
 
-  H.push(sec('usiku','12 · PESA USIKU',
+  H.push(sec('usiku','13 · PESA USIKU',
     `<div class="sub-h" style="margin-top:10px">Inatarajiwa (Combine Usiku)</div>
-     <p class="sec-desc" style="margin:0 0 8px">Pesa Mchana + Ongezeko (Mchana) + Marejesho + Chenji + Adjust</p>
+     <p class="sec-desc" style="margin:0 0 8px">Pesa Mchana + Ongezeko (Mchana) + Marejesho + Chenji + Adjust − Punguzo</p>
      ${outGrid('cf')}
      ${totalLine('COMBINE USIKU','t-cf')}
      <div class="sub-h">Uliyohesabu (Pesa Usiku)</div>
@@ -613,7 +624,7 @@ function renderSections(){
      ${totalLine('JUMLA MISS','t-m4')}
      <p class="sec-desc">Pesa Usiku unayohifadhi hapa ndiyo itakuwa Mpaka Asubuhi ya siku inayofuata.</p>`));
 
-  H.push(`<details class="sec" id="sec-muhtasari"><summary><span class="st">13 · MUHTASARI WA SIKU</span><span class="sr"></span></summary><div class="sec-body">
+  H.push(`<details class="sec" id="sec-muhtasari"><summary><span class="st">14 · MUHTASARI WA SIKU</span><span class="sr"></span></summary><div class="sec-body">
      <div class="sumgrid">
        <div class="sumbox"><div class="lbl">PESA ILIO TOKA (Matumizi)</div><div class="val" id="x-toka">0</div></div>
        <div class="sumbox"><div class="lbl">PESA ILIO INGIA (Ongezeko)</div><div class="val" id="x-ingia">0</div></div>
@@ -621,6 +632,7 @@ function renderSections(){
        <div class="sumbox"><div class="lbl">MAREJESHO</div><div class="val" id="x-marejesho">0</div></div>
        <div class="sumbox"><div class="lbl">CHENJI</div><div class="val" id="x-chenji">0</div></div>
        <div class="sumbox"><div class="lbl">ADJUST (+ −)</div><div class="val" id="x-adjust">0</div></div>
+       <div class="sumbox"><div class="lbl">PUNGUZO (Makao Makuu)</div><div class="val" id="x-punguzo">0</div></div>
      </div>
    </div></details>`);
 
@@ -640,7 +652,7 @@ function compute(){
     M.AQ[d] = C.mwanzoni[d] + C.ongezeko1[d] - M.Y[d] - M.AK[d];
     M.m2[d] = M.AQ[d] - C.asubuhi[d];
     M.m3[d] = C.asubuhi[d] - C.mchana[d];
-    M.CF[d] = C.mchana[d] + C.ongezeko2[d] + M.BQ[d] + M.CC[d] + C.ada[d] + C.adjust_plus[d] - C.adjust_minus[d];
+    M.CF[d] = C.mchana[d] + C.ongezeko2[d] + M.BQ[d] + M.CC[d] + C.ada[d] + C.adjust_plus[d] - C.adjust_minus[d] - C.punguzo[d];
     M.m4[d] = M.CF[d] - C.usiku[d];
   });
   return M;
@@ -673,7 +685,7 @@ function recalc(){
     start:sumD(START), mpaka:sumD(PREV.counts), mwanzoni:sumD(C.mwanzoni), m1:sumD(M.m1),
     ongezeko1:sumD(C.ongezeko1), y:sumD(M.Y), ak:sumD(M.AK), aq:sumD(M.AQ), asubuhi:sumD(C.asubuhi), m2:sumD(M.m2),
     mchana:sumD(C.mchana), m3:sumD(M.m3), ongezeko2:sumD(C.ongezeko2), ada:sumD(C.ada), bq:sumD(M.BQ), cc:sumD(M.CC),
-    adjp:sumD(C.adjust_plus), adjm:sumD(C.adjust_minus), cf:sumD(M.CF), usiku:sumD(C.usiku), m4:sumD(M.m4)
+    adjp:sumD(C.adjust_plus), adjm:sumD(C.adjust_minus), pz:sumD(C.punguzo), cf:sumD(M.CF), usiku:sumD(C.usiku), m4:sumD(M.m4)
   };
   setT('t-start',T.start); setT('t-mpaka',T.mpaka); setT('t-mwanzoni',T.mwanzoni); setT('t-m1',T.m1,true);
   setT('t-ongezeko1',T.ongezeko1); setT('t-y',T.y); setT('t-ak',T.ak); setT('t-aq',T.aq); setT('t-asubuhi',T.asubuhi);
@@ -700,6 +712,7 @@ function recalc(){
   const put=(id,v,bad)=>{ const el=$(id); if(el){ el.textContent=fmt(v); el.className='val'+(bad&&v!==0?' bad':''); } };
   put('k-mpaka',T.mpaka); put('k-in',ingia); put('k-out',T.ak); put('k-cf',T.cf); put('k-usiku',T.usiku); put('k-m4',T.m4,true);
   if(window.hkCashCards) window.hkCashCards(T);
+  setT('t-punguzo',T.pz); put('x-punguzo',T.pz);
   put('x-toka',T.ak); put('x-ingia',ingia); put('x-miamala',T.y); put('x-marejesho',T.bq); put('x-chenji',T.cc);
   const xa=$('x-adjust'); if(xa) xa.textContent='+'+fmt(T.adjp)+'  −'+fmt(T.adjm);
 
@@ -824,6 +837,57 @@ async function loadDay(){
   updateDateLabel(); fillInputs(); recalc();
   if(!START_META.exists) showBanner('START bado haijawekwa. '+(ROLE==='super'?'Fungua sehemu ya START uweke mtaji wa kuanzia.':'Admin Mkuu aiweke kwanza.'),true);
   setStatus('Hakuna mabadiliko.');
+  await loadDayStatus();
+}
+
+/* ---------- hali ya siku, kuwasilisha na uhamisho ---------- */
+async function loadDayStatus(){
+  const date=$('hDate').value; if(!date||!REG) return;
+  const [s,row,tr]=await Promise.all([
+    sb.rpc('day_status',{p_region:REG,p_date:date}),
+    sb.from('combine_day_status').select('*').eq('region_code',REG).eq('work_date',date).maybeSingle(),
+    sb.from('region_transfers').select('*').eq('region_code',REG).eq('work_date',date).maybeSingle()
+  ]);
+  DAYST = s.error ? 'wazi' : (s.data||'wazi');
+  DAYROW = row.data||null; TRANSFER = tr.data||null;
+  renderTransferInfo(); applyDayLock();
+}
+function renderTransferInfo(){
+  const m=$('pzMethod'), r=$('pzRef'), st=$('pzStatus'); if(!m||!r||!st) return;
+  m.value=(TRANSFER&&TRANSFER.method)||''; r.value=(TRANSFER&&TRANSFER.reference)||'';
+  let t='';
+  if(TRANSFER && Number(TRANSFER.amount)>0){
+    if(TRANSFER.status==='imepokelewa') t='Imepokelewa Makao Makuu: TZS '+fmt(Number(TRANSFER.received_amount||0))+(Number(TRANSFER.received_amount)!==Number(TRANSFER.amount)?' (ulituma TZS '+fmt(Number(TRANSFER.amount))+')':'');
+    else if(TRANSFER.status==='imekataliwa') t='Makao Makuu wamekataa: '+(TRANSFER.hq_note||'');
+    else t='Inasubiri Makao Makuu kuthibitisha kupokea.';
+  }
+  st.textContent=t;
+}
+function applyDayLock(){
+  const canEdit = DAYST==='wazi' || ROLE==='super';
+  document.querySelectorAll('#sections input, #sections select, #sections textarea').forEach(el=>{
+    if(canEdit){ if(el.dataset.daylock){ el.disabled=false; delete el.dataset.daylock; } }
+    else if(!el.disabled && !el.hasAttribute('readonly')){ el.disabled=true; el.dataset.daylock='1'; }
+  });
+  const sv=$('saveBtn'); if(sv) sv.disabled=!canEdit;
+  const sm=$('submitBtn'); if(sm) sm.style.display = (DAYST==='wazi') ? '' : 'none';
+  let msg=null, info=true;
+  if(DAYST==='imewasilishwa') msg='Siku hii imewasilishwa kwa ukaguzi wa Balance. Huwezi kuhariri mpaka irudishwe.'+(ROLE==='super'?' (Wewe ni CEO: unaweza kuhariri.)':'');
+  else if(DAYST==='imefungwa') msg='Siku hii imefungwa.'+(ROLE==='super'?' Wewe ni CEO: unaweza kuhariri, na kila badiliko linaandikwa.':' CEO pekee ndiye anayeweza kuihariri.');
+  else if(DAYROW && DAYROW.return_note){ msg='Balance imerudisha siku hii kwako: '+DAYROW.return_note; info=false; }
+  if(msg){ showBanner(msg, info); DAYBANNER=true; } else if(DAYBANNER){ showBanner(''); DAYBANNER=false; }
+}
+async function submitDay(){
+  const date=$('hDate').value;
+  if(DAYST!=='wazi'||!date||!REG) return;
+  if(DIRTY||START_DIRTY){ alert('Una mabadiliko ambayo hujahifadhi. Bonyeza "Hifadhi siku" kwanza, kisha uwasilishe.'); return; }
+  if(!confirm('Kuwasilisha siku ya '+date+' (mkoa wa '+regName()+') kwa ukaguzi wa Balance? Baada ya hapo huwezi kuhariri hesabu mpaka Balance irudishe.')) return;
+  const b=$('submitBtn'); b.disabled=true;
+  const r=await sb.rpc('combine_submit_day',{p_region:REG,p_date:date});
+  b.disabled=false;
+  if(r.error){ showBanner('Imeshindwa kuwasilisha: '+r.error.message); return; }
+  await loadDayStatus();
+  setStatus('Siku imewasilishwa kwa Balance ✓','ok');
 }
 
 /* ---------- save ---------- */
@@ -871,6 +935,10 @@ async function saveDay(){
   if(cRows.length){ const r=await sb.from('combine_counts').upsert(cRows,{onConflict:'region_code,work_date,section'}); if(r.error) failed.push('Hesabu za noti: '+r.error.message); }
   if(aRows.length){ const r=await sb.from('combine_agent_entries').upsert(aRows,{onConflict:'work_date,section,agent_code'}); if(r.error) failed.push('Miamala/Marejesho/Chenji: '+r.error.message); }
   if(mRows.length){ const r=await sb.from('combine_matumizi').upsert(mRows,{onConflict:'region_code,work_date,category'}); if(r.error) failed.push('Matumizi: '+r.error.message); }
+  const pzM=($('pzMethod')||{}).value||null, pzR=(($('pzRef')||{}).value||'').trim()||null;
+  if(DAYST==='wazi' && (!isBlank(DAY.counts.punguzo) || pzM || pzR || (TRANSFER&&TRANSFER.id))){
+    const r=await sb.rpc('transfer_set_info',{p_region:REG,p_date:date,p_method:pzM,p_ref:pzR}); if(r.error) failed.push('Punguzo: '+r.error.message);
+  }
 
   btn.disabled=false;
   if(failed.length){
@@ -882,6 +950,7 @@ async function saveDay(){
   const after=await fetchStamp(date);
   if(!after.error) STAMP=after.stamp;
   DIRTY=false; showBanner('');
+  await loadDayStatus();
   setStatus('Imehifadhiwa ✓ '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),'ok');
 }
 
