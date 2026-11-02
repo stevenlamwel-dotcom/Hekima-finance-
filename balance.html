@@ -365,7 +365,7 @@ window.addEventListener('load', init);
 
 <script>
 /* ======== Pesa ya Ofisini + Malipo ya Payroll ======== */
-const OC_CAT={mtaji:'Mtaji wa CEO',ada:'Ada za mikopo',mapato_mikopo:'Mapato ya mikopo',hekima_tech:'Kazi za HEKIMA TECH',nyingine_mapato:'Mapato mengine',mshahara:'Mshahara',matumizi_ofisi:'Matumizi ya ofisi',nyingine_matumizi:'Matumizi mengine',mkopo_yametolewa:'Mkopo uliotolewa',marejesho_mkopo:'Marejesho (mkopo)',riba_mikopo:'Riba ya mikopo',kodi:'Kodi/Pango',usafiri:'Usafiri',matumizi_kazi:'Matumizi ya kazi',nyingine:'Mengineyo'};
+const OC_CAT={mtaji:'Mtaji wa CEO',nyongeza_ceo:'Nyongeza ya CEO (matumizi)',ada:'Ada za mikopo',mapato_mikopo:'Mapato ya mikopo',hekima_tech:'Kazi za HEKIMA TECH',nyingine_mapato:'Mapato mengine',mshahara:'Mshahara',matumizi_ofisi:'Matumizi ya ofisi',nyingine_matumizi:'Matumizi mengine',mkopo_yametolewa:'Mkopo uliotolewa',marejesho_mkopo:'Marejesho (mkopo)',riba_mikopo:'Riba ya mikopo',kodi:'Kodi/Pango',usafiri:'Usafiri',matumizi_kazi:'Matumizi ya kazi',nyingine:'Mengineyo'};
 function ocMsg(id,t,ok){ const el=$(id); if(!el) return; el.textContent=t||''; el.className='msg'+(ok===true?' ok':(ok===false?' err':'')); }
 async function loadOffice(){
   const b=await sb.rpc('office_cash_balance');
@@ -462,19 +462,19 @@ async function bxDashboard(){
   <div class="card"><h2>FEDHA ZA KAMPUNI</h2>
     <div class="bx-bar"><div style="width:${pct}%;background:var(--green)"></div><div style="flex:1;background:var(--gold)"></div></div>
     ${bxRow('<span style="color:var(--green)">●</span> Cash ofisini',bxN(f.cash), f.cash<0?'bad':'good')}
-    ${bxRow('<span style="color:var(--gold)">●</span> Kwa wateja mtaani (mkopo ambao haujarejeshwa)',bxN(f.customers))}
+    ${bxRow('<span style="color:var(--gold)">●</span> Mkopo uliopo mtaani (bila riba)',bxN(f.customers))}
     ${bxRow('Jumla ya fedha za kampuni','<b>'+bxN(f.total)+'</b>')}
-    <p class="sec-desc" style="margin-top:6px">Hii si faida. Fedha za wateja ni mkopo unaodaiwa, si Cash inayoweza kutumika mara moja.</p>
+    <p class="sec-desc" style="margin-top:6px">Hii si faida. Fedha za wateja ni mkopo unaodaiwa, si Cash inayoweza kutumika mara moja. Deni la wateja (pamoja na riba) ni kubwa kuliko hapa kwa sababu linajumuisha riba ambayo bado haijakusanywa.</p>
     ${(d.cash||{}).active?'':'<p class="sec-desc" style="color:var(--gold)">Kitabu cha Cash bado hakijaanza: CEO aweke "Mtaji wa CEO" kwenye tab ya Cash & Mikopo.</p>'}
   </div>
   <div class="bx-grid">
     ${bxKpi('Mtaji wa CEO',bxN(d.capital))}
-    ${bxKpi(d.profit>=0?'Faida':'Hasara',bxN(Math.abs(d.profit)), d.profit>=0?'good':'bad')}
+    ${bxKpi(d.profit>=0?'Faida (mapato − matumizi)':'Hasara',bxN(Math.abs(d.profit)), d.profit>=0?'good':'bad')}
     ${bxKpi('Jumla ya mapato',bxN(d.income_total))}
     ${bxKpi('Jumla ya matumizi',bxN(d.expense_total))}
     ${bxKpi('Mikopo iliyotolewa',bxN(L.issued_total))}
     ${bxKpi('Marejesho yaliyopokelewa',bxN(L.total_repaid))}
-    ${bxKpi('Madeni ya wateja',bxN(L.client_debt_total))}
+    ${bxKpi('Deni la wateja (mkopo + riba)',bxN(L.client_debt_total))}
     ${bxKpi('Mikopo iliyochelewa',L.overdue_count+' · '+bxN(L.overdue_amount), L.overdue_count>0?'bad':'')}
     ${bxKpi('Mishahara iliyolipwa',bxN(paid))}
     ${bxKpi('Mishahara inayosubiri',bxN(unpaid), unpaid>0?'':'')}
@@ -506,7 +506,7 @@ async function bxCash(){
   <div class="card"><h2>B. FEDHA ZILIZO KWA WATEJA MTAANI</h2>
     ${bxRow('Mikopo iliyotolewa ('+L.issued_count+')',bxN(L.issued_total))}
     ${bxRow('Marejesho yaliyopokelewa',bxN(L.total_repaid))}
-    ${bxRow('Kiasi cha mkopo ambacho bado kiko kwa wateja',bxN(L.outstanding_principal))}
+    ${bxRow('Mkopo uliopo mtaani (bila riba)',bxN(L.outstanding_principal))}
     ${bxRow('Deni la wateja (pamoja na riba)',bxN(L.client_debt_total))}
     ${d.staff_dwo>0?bxRow('Madeni ya wafanyakazi kutoka DWO (yanakatwa kwenye mishahara)',bxN(d.staff_dwo)):''}
     ${bxRow('Mikopo iliyochelewa ('+L.overdue_count+')',bxN(L.overdue_amount), L.overdue_count>0?'bad':'')}
@@ -514,7 +514,7 @@ async function bxCash(){
     <p class="sec-desc" style="margin-top:6px">Mkopo uliotolewa hauonekani tena kama Cash ya ofisini. Deni lililoandikwa DWO limetolewa kwenye deni la mteja na kuhamia kwa mfanyakazi husika.</p>
   </div>
   <div class="card"><h2>C. JUMLA YA FEDHA ZA KAMPUNI</h2>
-    ${bxRow('Cash ofisini',bxN(f.cash))}${bxRow('Fedha kwa wateja mtaani',bxN(f.customers))}
+    ${bxRow('Cash ofisini',bxN(f.cash))}${bxRow('Mkopo uliopo mtaani (bila riba)',bxN(f.customers))}
     ${bxRow('Jumla','<b>'+bxN(f.total)+'</b>')}
     <p class="sec-desc" style="margin-top:6px">Haichanganywi na faida: jumla hii ni mtaji pamoja na faida iliyopatikana.</p>
   </div>
@@ -660,10 +660,11 @@ async function bxPool(){
   const r=await sb.rpc('balance_pool');
   if(r.error){ host.innerHTML=bxErr(r.error); return; }
   const p=r.data;
-  host.innerHTML = `<div class="card"><h2>FAIDA YA CEO (RIBA)</h2>
+  host.innerHTML = `<div class="card"><h2>RIBA ILIYOKUSANYWA (FAIDA YA KUTOLEWA NA CEO)</h2>
     ${bxRow('Riba iliyokusanywa',bxN(p.riba_in))}
     ${bxRow('Imeshatolewa',bxN(p.withdrawn))}
     ${bxRow('Faida inayopatikana kutolewa',bxN(p.faida_balance), p.faida_balance<0?'bad':'good')}
+    <p class="sec-desc" style="margin-top:6px">Hii ni riba tu iliyokusanywa kutoka kwenye marejesho. Faida ya Dashboard ni mapato yote ukitoa matumizi.</p>
     ${p.is_ceo ? `<div style="display:flex;gap:6px;margin-top:10px;align-items:center;">
         <input id="wdAmt" type="number" min="1" inputmode="numeric" placeholder="Kiasi cha kutoa" class="bx-in" style="margin:0;flex:1">
         <button class="bx-mini" style="margin:0" onclick="bxWithdraw()">Toa faida</button></div>
@@ -843,7 +844,7 @@ async function bmMikoa(){
   el.innerHTML=`<div class="bx-grid">
       <div class="bx-mini"><div class="l">Mtaji Safi</div><div class="v good">${bmN(t.safi)}</div></div>
       <div class="bx-mini"><div class="l">Mtaji Chafu</div><div class="v bad">${bmN(t.chafu)}</div></div>
-      <div class="bx-mini" style="grid-column:1/-1"><div class="l">Jumla ya Mtaji (pesa mtaani)</div><div class="v">${bmN(t.jumla)}</div></div>
+      <div class="bx-mini" style="grid-column:1/-1"><div class="l">Jumla ya Mtaji (deni la wateja pamoja na riba)</div><div class="v">${bmN(t.jumla)}</div></div>
       <div class="bx-mini"><div class="l">Wateja wenye mkopo</div><div class="v">${bmN(t.wateja)}</div></div>
       <div class="bx-mini"><div class="l">Mikopo mibaya</div><div class="v ${t.mibaya?'bad':''}">${bmN(t.mibaya)}</div></div>
     </div>
@@ -881,7 +882,7 @@ async function bmRegion(){
     <div class="bx-grid">
       <div class="bx-mini"><div class="l">Mtaji Safi</div><div class="v good">${bmN(m.safi)}</div></div>
       <div class="bx-mini"><div class="l">Mtaji Chafu</div><div class="v bad">${bmN(m.chafu)}</div></div>
-      <div class="bx-mini" style="grid-column:1/-1"><div class="l">Jumla ya Mtaji</div><div class="v">${bmN(m.jumla)}</div></div>
+      <div class="bx-mini" style="grid-column:1/-1"><div class="l">Jumla ya Mtaji (pamoja na riba)</div><div class="v">${bmN(m.jumla)}</div></div>
     </div>
     <div class="bm-sub">${[['ukaguzi','UKAGUZI'],['mawakala','MAWAKALA'],['punguzo','PUNGUZO']].map(t=>`<button class="${BM.tab===t[0]?'on':''}" onclick="bmTab('${t[0]}')">${t[1]}</button>`).join('')}</div>
     <div id="bmBody"></div>`;
