@@ -884,7 +884,7 @@ function switchLoansTab(name){
 
 let CAN_SEE_COMBINE_BALANCE = false;
 let COMBINE_LOADED = false;
-function showUpdates(){ setScreen('updates'); }
+function showUpdates(){ location.href='dashboard.html'; }
 async function applyLoansPermissions(){
   const role = ME && ME.role;
   sb.rpc('current_can_issue_miamala').then(({data})=>{
