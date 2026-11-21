@@ -467,7 +467,7 @@ checkAuth();
 <style id="hkNavyV2">
 @media screen{
 /* ===== HEKIMA FINANCE — muonekano mpya (giza, vigae, menyu ya chini). CSS + menyu pekee; logic haijaguswa ===== */
-html,html[data-theme="light"],html[data-theme="dark"]{
+html:not([data-theme="light"]){
   --bg:#06182e;--panel:#0c2442;--panel2:#0a2040;--border:#14406c;
   --text:#e6f1fa;--sub:#7f9bb8;--cyan:#d4a72c;--cyan-dim:rgba(212,167,44,.16);--gold:#d4a72c;
   --green:#22d3ee;--red:#ef5350;
@@ -538,13 +538,34 @@ button[onclick*="toggleTheme"],#themeToggleBtn{display:none!important;}
 .hk-z.warn svg{color:var(--red);}
 }
 @media print{#hkDock,#hkMore{display:none!important;}}
+
+/* ===== MWANGA (white mode) — rangi za brand; Giza hapo juu halijaguswa ===== */
+html[data-theme="light"]{
+  --bg:#f4f6f8;--panel:#ffffff;--panel2:#e9edf3;--border:#dfe4ec;
+  --text:#001848;--sub:#51606c;--cyan:#cc9c24;--cyan-dim:rgba(204,156,36,.16);--gold:#cc9c24;--gold-dim:rgba(204,156,36,.16);
+  --green:#008454;--red:#c62828;
+  --hk-navy:#001848;--line:#dfe4ec;--hk-green:#008454;--hk-gold:#cc9c24;
+  color-scheme:light;
+}
+html[data-theme="light"] .tabs>.tab.active,html[data-theme="light"] .tabs>button.active{color:#fff!important;}
+html[data-theme="light"] .btn:not(.secondary):not(.danger):not(.red):not(.gold){color:#fff;}
+html[data-theme="light"] .msg.ok{background:rgba(0,132,84,.10);}
+html[data-theme="light"] .msg.err{color:#b3261e;}
+html[data-theme="light"] .badge.active,html[data-theme="light"] .badge.present{background:rgba(0,132,84,.12);color:#006b43;}
+html[data-theme="light"] .badge.inactive,html[data-theme="light"] .badge.absent{background:rgba(198,40,40,.12);color:#b3261e;}
+html[data-theme="light"] .badge.late{background:rgba(204,156,36,.20);color:#7a5a10;}
+html[data-theme="light"] #hkDock{box-shadow:0 6px 24px rgba(0,24,72,.14);}
+html[data-theme="light"] a[style*="color:var(--cyan)"],html[data-theme="light"] [style^="color:var(--gold)"],html[data-theme="light"] [style*=";color:var(--gold)"]{color:#7a5a10!important;}
+html[data-theme="light"] .refresh-btn,html[data-theme="light"] .print-btn{color:#7a5a10;}
+/* Karatasi ya print ni karatasi nyeupe: rangi zake hazibadiliki kwa Giza/Mwanga */
+.print-sheet{--text:#111111;--sub:#51606c;--hk-navy:#001848;}
+html:not([data-theme="light"]) .print-sheet :is(.xl-scroll,.scrollx){background:transparent!important;border-color:transparent!important;}
 </style>
 <script id="hkDockJS">
 /* Menyu ya chini ya Updates: viungo vya kurasa. Haibadilishi logic ya ukurasa. */
 (function(){
   var h=document.documentElement;
-  function dark(){ if(h.getAttribute('data-theme')!=='dark') h.setAttribute('data-theme','dark'); }
-  dark(); new MutationObserver(dark).observe(h,{attributes:true,attributeFilter:['data-theme']});
+  /* Mandhari (Giza/Mwanga) inafuata chaguo la mtumiaji; hailazimishwi tena kuwa giza. */
   var ICON={dashboard:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',
     users:'<circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.5-5.5 5.5-5.5s5.5 2.5 5.5 5.5"/><circle cx="17" cy="9" r="2.4"/><path d="M16.5 14.5c2.5 0 4.5 2 4.5 4.5"/>',
     card:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/>',

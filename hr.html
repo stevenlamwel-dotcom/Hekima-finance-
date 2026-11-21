@@ -1304,7 +1304,7 @@ window.addEventListener('load',function(){var n=0,t=setInterval(function(){n++;i
 </script>
 <style id="hkNavyV2">
 /* ===== HEKIMA FINANCE — muonekano mpya (giza, vigae, menyu ya chini). CSS + menyu pekee; logic haijaguswa ===== */
-html,html[data-theme="light"],html[data-theme="dark"]{
+html:not([data-theme="light"]){
   --bg:#06182e;--panel:#0c2442;--panel2:#0a2040;--border:#14406c;
   --text:#e6f1fa;--sub:#7f9bb8;--cyan:#d4a72c;--cyan-dim:rgba(212,167,44,.16);--gold:#d4a72c;
   --green:#22d3ee;--red:#ef5350;
@@ -1371,13 +1371,31 @@ button[onclick*="toggleTheme"],#themeToggleBtn{display:none!important;}
 .hk-z .s{font-size:12px;color:var(--sub);margin-top:2px;}
 .hk-z.on{border-color:var(--green);}
 .hk-z.warn svg{color:var(--red);}
+
+/* ===== MWANGA (white mode) — rangi za brand; Giza hapo juu halijaguswa ===== */
+html[data-theme="light"]{
+  --bg:#f4f6f8;--panel:#ffffff;--panel2:#e9edf3;--border:#dfe4ec;
+  --text:#001848;--sub:#51606c;--cyan:#cc9c24;--cyan-dim:rgba(204,156,36,.16);--gold:#cc9c24;--gold-dim:rgba(204,156,36,.16);
+  --green:#008454;--red:#c62828;
+  --hk-navy:#001848;--line:#dfe4ec;--hk-green:#008454;--hk-gold:#cc9c24;
+  color-scheme:light;
+}
+html[data-theme="light"] .tabs>.tab.active,html[data-theme="light"] .tabs>button.active{color:#fff!important;}
+html[data-theme="light"] .btn:not(.secondary):not(.danger):not(.red):not(.gold){color:#fff;}
+html[data-theme="light"] .msg.ok{background:rgba(0,132,84,.10);}
+html[data-theme="light"] .msg.err{color:#b3261e;}
+html[data-theme="light"] .badge.active,html[data-theme="light"] .badge.present{background:rgba(0,132,84,.12);color:#006b43;}
+html[data-theme="light"] .badge.inactive,html[data-theme="light"] .badge.absent{background:rgba(198,40,40,.12);color:#b3261e;}
+html[data-theme="light"] .badge.late{background:rgba(204,156,36,.20);color:#7a5a10;}
+html[data-theme="light"] #hkDock{box-shadow:0 6px 24px rgba(0,24,72,.14);}
+html[data-theme="light"] a[style*="color:var(--cyan)"],html[data-theme="light"] [style^="color:var(--gold)"],html[data-theme="light"] [style*=";color:var(--gold)"]{color:#7a5a10!important;}
+html[data-theme="light"] .refresh-btn,html[data-theme="light"] .print-btn{color:#7a5a10;}
 </style>
 <script id="hkDockJS">
 /* Menyu ya chini: inasoma tabs zilizopo na kuziita kwa switchTab() ileile ya ukurasa. Haibadilishi logic. */
 (function(){
   var h=document.documentElement;
-  function dark(){ if(h.getAttribute('data-theme')!=='dark') h.setAttribute('data-theme','dark'); }
-  dark(); new MutationObserver(dark).observe(h,{attributes:true,attributeFilter:['data-theme']});
+  /* Mandhari (Giza/Mwanga) inafuata chaguo la mtumiaji; hailazimishwi tena kuwa giza. */
   var CFG={"prim": ["employees", "attendance", "leave", "payroll"], "lbl": {"mine": "Taarifa zangu", "employees": "Wafanyakazi", "profiles": "Wasifu", "performance": "Utendaji", "attendance": "Mahudhurio", "leave": "Likizo", "payroll": "Mishahara", "debts": "Madeni ya ofisi"}, "sub": {"mine": "Taarifa na malipo yangu", "profiles": "Wasifu wa wafanyakazi", "performance": "Tathmini za utendaji", "debts": "Madeni ya wafanyakazi"}, "warn": []};
   var ICON={
    mine:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 18.5c1-2.5 3-3.5 5.5-3.5s4.5 1 5.5 3.5"/>',
