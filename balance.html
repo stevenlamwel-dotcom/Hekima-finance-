@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="sw">
-<head><style id="hkLdCss">#hkLoader{position:fixed;inset:0;z-index:2147483000;background:rgba(0,16,48,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;transition:opacity .35s}#hkLoader.out{opacity:0;pointer-events:none}#hkLoader .r{position:relative;width:112px;height:112px;display:flex;align-items:center;justify-content:center}#hkLoader .r::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(21,101,232,0) 0%,rgba(21,101,232,.18) 35%,#1565e8 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));animation:hkspin 1.3s linear infinite;filter:drop-shadow(0 0 6px rgba(21,101,232,.7))}#hkLoader b{position:relative;color:#fff;font:700 13px/1 "Trebuchet MS",system-ui,sans-serif;font-variant:small-caps;letter-spacing:1px}@keyframes hkspin{to{transform:rotate(360deg)}}#authLoading{opacity:0!important}</style><script id="hkLdJs">(function(){var d=document,t0=Date.now(),done=false,L=d.createElement("div");L.id="hkLoader";L.innerHTML='<div class="r"><b>Loading...</b></div>';d.documentElement.appendChild(L);
+<head><script src="assets/hekima-nav.js"></script><style id="hkLdCss">#hkLoader{position:fixed;inset:0;z-index:2147483000;background:rgba(0,16,48,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;transition:opacity .35s}#hkLoader.out{opacity:0;pointer-events:none}#hkLoader .r{position:relative;width:112px;height:112px;display:flex;align-items:center;justify-content:center}#hkLoader .r::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(21,101,232,0) 0%,rgba(21,101,232,.18) 35%,#1565e8 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));animation:hkspin 1.3s linear infinite;filter:drop-shadow(0 0 6px rgba(21,101,232,.7))}#hkLoader b{position:relative;color:#fff;font:700 13px/1 "Trebuchet MS",system-ui,sans-serif;font-variant:small-caps;letter-spacing:1px}@keyframes hkspin{to{transform:rotate(360deg)}}#authLoading{opacity:0!important}</style><script id="hkLdJs">(function(){var d=document,t0=Date.now(),done=false,L=d.createElement("div");L.id="hkLoader";L.innerHTML='<div class="r"><b>Loading...</b></div>';d.documentElement.appendChild(L);
 function hide(){if(done)return;done=true;var w=Math.max(0,450-(Date.now()-t0));setTimeout(function(){L.classList.add("out");setTimeout(function(){L.style.display="none"},400)},w)}
 function show(){done=false;t0=Date.now();L.style.display="flex";L.classList.remove("out");setTimeout(hide,7000)}
 function ready(){var g=d.getElementById("authGate");if(!g||g.style.display==="none")return true;var a=d.getElementById("authLoading");return !a||getComputedStyle(a).display==="none"}
@@ -344,13 +344,13 @@ async function init(){
   applyTheme(localStorage.getItem('hekima_theme')||'light');
   try{
     const {data:{session}}=await sb.auth.getSession();
-    if(!session){ location.replace('portal.html'); return; }
+    if(!session){ (window.HkNav?HkNav.home():location.replace('portal.html')); return; }
     let {data:role,error}=await sb.rpc('combine_my_role');
     if(error){ gateMessage(/function|schema cache/i.test(error.message||'') ? 'Mfumo wa Balance bado haujawekwa kwenye database (SQL halijaendeshwa).' : 'Imeshindwa kuunganisha. Jaribu tena.', true); return; }
     if(!role){
       const probe=await sb.rpc('balance_company_day',{p_date:todayStr()});
       const regs=(probe.data&&probe.data.regions)||[];
-      if(!regs.length){ location.replace('portal.html'); return; }
+      if(!regs.length){ (window.HkNav?HkNav.home():location.replace('portal.html')); return; }
       role='balance';
     }
     ROLE=role;
@@ -473,7 +473,8 @@ function bxTabsRender(){
   sheet.innerHTML=more.length?'<div class="hk-more-in">'+more.map(t=>`<button class="hk-z ${t[0]===cur?'on':''}" onclick="bxShow('${t[0]}')">${bxIcon(t[0])}<div class="n">${t[1]}</div><div class="s">${BX_SUBT[t[0]]||''}</div>${t[0]==='tahadhari'&&BX_ALERT_N?`<i class="hk-dot n">${BX_ALERT_N}</i>`:''}</button>`).join('')+'</div>':'';
   sheet.classList.toggle('open',BX_MORE_OPEN&&more.length>0);
 }
-function bxShow(t){
+function bxShow(t,silent){
+  if(!silent && window.HkNav) HkNav.tab(t);
   BX_TAB=t; BX_MORE_OPEN=false;
   document.querySelectorAll('[data-bxtab]').forEach(el=>el.classList.toggle('bx-off', el.dataset.bxtab!==t));
   bxTabsRender(); bxRefresh();
@@ -694,7 +695,7 @@ async function bxAlerts(){
 }
 
 /* ---- kuanza + kujisasisha ---- */
-bxTag(); bxShow('mikoa');
+bxTag(); bxShow('mikoa',1);
 setInterval(()=>{ if(!document.hidden && ROLE && !['INPUT','TEXTAREA','SELECT'].includes((document.activeElement||{}).tagName) && BX_TAB!=='siku') bxRefresh(); }, 60000);
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden && ROLE) bxRefresh(); });
 </script>
@@ -892,7 +893,7 @@ async function bmMikoa(){
   if(r.error){ el.innerHTML=bxErr(r.error); return; }
   const d=r.data||{}, t=d.totals||{}, regs=d.regions||[];
   regs.forEach(x=>BM.names[x.code]=x.name);
-  if(ROLE==='balance' && regs.length===1){ BM.region=regs[0].code; BM.solo=true; bxShow('region'); return; }
+  if(ROLE==='balance' && regs.length===1){ BM.region=regs[0].code; BM.solo=true; bxShow('region',1); return; }
   const bad=regs.filter(x=>x.has_data&&!x.all_ok).length;
   el.innerHTML=`<div class="bx-grid">
       <div class="bx-mini"><div class="l">Mtaji Safi</div><div class="v good">${bmN(t.safi)}</div></div>
@@ -911,7 +912,7 @@ function bmOpen(code){ BM.region=code; BM.tab='ukaguzi'; bxShow('region'); }
 /* ---- Balance ya mkoa ---- */
 async function bmRegion(){
   const el=$('bx-region');
-  if(!BM.region){ bxShow('mikoa'); return; }
+  if(!BM.region){ bxShow('mikoa',1); return; }
   el.innerHTML='<div class="card"><div class="empty">Inapakia...</div></div>';
   const [r,row]=await Promise.all([
     sb.rpc('balance_region_day',{p_region:BM.region,p_date:CUR_DATE}),
@@ -1322,5 +1323,9 @@ html[data-theme="light"] #bxTabs{box-shadow:0 6px 24px rgba(0,24,72,.14);}
 html[data-theme="light"] a[style*="color:var(--cyan)"],html[data-theme="light"] [style^="color:var(--gold)"],html[data-theme="light"] [style*=";color:var(--gold)"]{color:#7a5a10!important;}
 html[data-theme="light"] .refresh-btn,html[data-theme="light"] .print-btn{color:#7a5a10;}
 </style>
+<script>
+/* Navigation: sehemu za ndani = kiwango kimoja cha mtoto (Back -> sehemu kuu -> Home) */
+if(window.HkNav) HkNav.tabs({cur:function(){ return BX_TAB; }, show:function(n){ bxShow(n,true); }});
+</script>
 </body>
 </html>

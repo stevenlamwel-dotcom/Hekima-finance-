@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head><script src="assets/hekima-nav.js"></script>
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -216,7 +216,8 @@ const SUPABASE_URL = "https://euhteovuhdvefzaavlqx.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1aHRlb3Z1aGR2ZWZ6YWF2bHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NjQwNjEsImV4cCI6MjA5NzE0MDA2MX0.gaV1mShFhVHVpxAqCptJsiSr4r-d3_OYvdtH0bpR58Q";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function switchTab(name){
+function switchTab(name,silent){
+  if(!silent && window.HkNav) HkNav.tab(name);
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+name));
 }
@@ -523,5 +524,9 @@ html[data-theme="light"] .refresh-btn,html[data-theme="light"] .print-btn{color:
 })();
 </script>
 
+<script>
+/* Navigation: sehemu za ndani = kiwango kimoja cha mtoto (Back -> sehemu kuu -> Home) */
+if(window.HkNav) HkNav.tabs({cur:function(){ var t=document.querySelector('.tab.active'); return t?t.dataset.tab:null; }, show:function(n){ switchTab(n,true); }});
+</script>
 </body>
 </html>
