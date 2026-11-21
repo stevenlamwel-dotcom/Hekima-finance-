@@ -318,6 +318,8 @@ addEventListener("beforeunload",show)})();</script>
     </div>
     <div class="card">
       <h3>Rekodi za Hivi Karibuni</h3>
+      <button class="btn" onclick="hrAttPdf()" style="margin-bottom:10px;">Download Mahudhurio</button>
+      <div class="msg" id="attDlMsg"></div>
       <div class="scrollx"><div class="xl-scroll"><table>
         <thead><tr><th>Jina</th><th>Tarehe</th><th>Hali</th></tr></thead>
         <tbody id="attTableBody"></tbody>
@@ -352,9 +354,9 @@ addEventListener("beforeunload",show)})();</script>
 
   <!-- PAYROLL -->
     <div class="card" id="hrOrgCard">
-    <h3>Muundo wa Timu</h3>
-    <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Pakua PDF ya muundo wa timu uliohifadhiwa na CEO.</p>
-    <button class="btn" onclick="hrOrgPdf()">Pakua PDF ya Muundo wa Timu</button>
+    <h3>Download Mkeka</h3>
+    <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Pakua PDF ya mkeka uliohifadhiwa na CEO.</p>
+    <button class="btn" onclick="hrOrgPdf()">Download Mkeka</button>
     <div class="msg" id="hrOrgMsg"></div>
   </div>
 <div class="panel" id="panel-payroll">
@@ -437,6 +439,7 @@ function switchTab(name){
   if(name==='debts'){ loadDebtsProfiles(); loadMyDebtRequests(); }
   if(name==='payroll'){ hpLoad(); }
   if(name==='mine'){ hrSelfLoad(); }
+  const oc=document.getElementById('hrOrgCard'); if(oc) oc.style.display=(name==='mine'||name==='employees')?'':'none';
 }
 
 async function loadDebtsProfiles(){
@@ -1121,11 +1124,48 @@ async function orgDownloadTasksPdf(meta, tasks){
 </script>
 
 <script>
+async function hrAttPdf(){
+  const msg=document.getElementById('attDlMsg'); msg.className='msg'; msg.textContent='Inatengeneza PDF...';
+  try{
+    let all=[], from=0; const step=1000;
+    while(true){
+      const { data, error } = await sb.from('hr_attendance').select('*, hr_employees(full_name)').order('att_date',{ascending:false}).range(from, from+step-1);
+      if(error){ msg.className='msg err'; msg.textContent='Imeshindwa: '+error.message; return; }
+      all = all.concat(data||[]);
+      if(!data || data.length<step) break;
+      from += step;
+    }
+    if(!all.length){ msg.className='msg err'; msg.textContent='Hakuna rekodi za mahudhurio bado.'; return; }
+    await orgLoadLibs();
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:'a4' });
+    const W = doc.internal.pageSize.getWidth();
+    const NAVY=[0,24,60], GOLD=[204,156,36], INK=[18,32,47], MUTED=[90,104,120];
+    const stamp = new Date().toLocaleDateString('en-GB');
+    const lbl = { present:'Alikuwepo', late:'Alichelewa', absent:'Hakuwepo', leave:'Likizo' };
+    doc.autoTable({
+      head: [['JINA','TAREHE','HALI','MAELEZO']],
+      body: all.map(r=>[ r.hr_employees ? r.hr_employees.full_name : '', r.att_date||'', lbl[r.status]||r.status||'', r.note||'' ]),
+      startY: 68, margin: { top: 68, bottom: 30, left: 30, right: 30 },
+      styles: { fontSize: 9, cellPadding: 4, textColor: INK, lineColor:[214,219,226], lineWidth: 0.4, fillColor:[255,255,255] },
+      headStyles: { fillColor: NAVY, textColor: [255,255,255], fontStyle:'bold' },
+      didDrawPage: data => {
+        doc.setTextColor(...NAVY); doc.setFont(undefined,'bold'); doc.setFontSize(15); doc.text('MAHUDHURIO YA WAFANYAKAZI', 30, 34);
+        doc.setTextColor(...MUTED); doc.setFont(undefined,'normal'); doc.setFontSize(8.5);
+        doc.text('Imetengenezwa ' + stamp + '  ·  Ukurasa ' + data.pageNumber, 30, 49);
+        doc.setDrawColor(...GOLD); doc.setLineWidth(1.2); doc.line(30, 56, W-30, 56);
+      }
+    });
+    doc.save('Mahudhurio_' + new Date().toISOString().slice(0,10) + '.pdf');
+    msg.className='msg ok'; msg.textContent='PDF imepakuliwa ✓';
+  }catch(e){ msg.className='msg err'; msg.textContent='Imeshindwa kutengeneza PDF: '+e.message; }
+}
+
 async function hrOrgPdf(){
   const msg=document.getElementById('hrOrgMsg'); msg.className='msg'; msg.textContent='Inatengeneza PDF...';
   const { data, error } = await sb.rpc('org_get');
   if(error){ msg.className='msg err'; msg.textContent='Imeshindwa: '+error.message; return; }
-  if(!(data.rows||[]).length){ msg.className='msg err'; msg.textContent='Muundo wa timu bado haujawekwa na CEO.'; return; }
+  if(!(data.rows||[]).length){ msg.className='msg err'; msg.textContent='Mkeka bado haujawekwa na CEO.'; return; }
   try{ await orgDownloadPdf({title:data.title, subtitle:data.subtitle}, data.rows, data.tasks, data.people); msg.className='msg ok'; msg.textContent='PDF imepakuliwa ✓'; }
   catch(e){ msg.className='msg err'; msg.textContent='Imeshindwa kutengeneza PDF: '+e.message; }
 }
