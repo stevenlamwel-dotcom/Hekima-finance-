@@ -246,12 +246,20 @@ addEventListener("beforeunload",show)})();</script>
   <div class="panel" id="panel-payroll">
     <div class="card">
       <h3>Tengeneza Payroll ya Mwezi</h3>
-      <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Wewe unaamua kiasi cha kila mfanyakazi. Makato ya madeni yanajazwa kutoka ratiba ya deni (unaweza kubadilisha). Kisha unamtumia HR kuhakiki, na BALANCE ndio wanalipa.</p>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Mshahara wa kila mfanyakazi unahesabiwa wenyewe kutokana na cheo chake, wateja wa agent na agents wa zone (kanuni hapa chini). Unaweza kubadilisha kiasi cha yeyote kabla ya kutuma. Makato ya madeni yanajazwa kutoka ratiba ya deni. Kisha unamtumia HR kuhakiki, na BALANCE ndio wanalipa.</p>
       <div class="row2">
         <div class="field"><label>Mwezi</label><input id="mpPeriod" type="month"></div>
         <div class="field"><label>&nbsp;</label><button class="btn" onclick="mpCreate()" style="width:100%">Tengeneza</button></div>
       </div>
       <div class="msg" id="mpMsg"></div>
+    </div>
+    <style>.mpr-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--border);font-size:13px;}.mpr-row input{width:130px;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:7px;text-align:right;font-family:inherit;}.mpr-h{font-weight:700;font-size:12.5px;margin:12px 0 2px;}.mpr-s{font-size:11.5px;color:var(--sub);margin:0 0 4px;}</style>
+    <div class="card" id="mpRulesCard" style="margin-bottom:12px;">
+      <h3>Kanuni za Mshahara</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 8px;">Weka mshahara wa chini wa kila cheo. Agent na Zone wanaongezeka kulingana na kazi yao.</p>
+      <div id="mpRulesBox"><div class="empty">Inapakia...</div></div>
+      <button class="btn" style="width:100%;margin-top:12px;" onclick="mpRulesSave()">Hifadhi kanuni</button>
+      <div class="msg" id="mpRulesMsg"></div>
     </div>
     <div class="card" style="margin-bottom:12px;"><h3>Mikopo ya wafanyakazi — idhini ya CEO</h3><div id="mgLoanList"><div class="empty">Inapakia...</div></div></div>
     <div class="card"><h3>Payroll Zote</h3><div id="mpRuns"><div class="empty">Inapakia...</div></div></div>
@@ -469,7 +477,7 @@ function switchTab(name,silent){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+name));
   if(name==='debts'){ loadDebtsEmp(); loadPendingDebtRequests(); loadAllDebts(); mdLoad(); }
-  if(name==='payroll'){ mpLoadRuns(); }
+  if(name==='payroll'){ mpLoadRuns(); mpRulesLoad(); }
   if(name==='futa'){ fLoadAll(); }
   if(name==='muundo'){ uwLoad(); loadUsers(); loadVyeo(); }
   if(name==='mikoa'){ mkLoad(); }
@@ -847,12 +855,101 @@ async function mpLoadRuns(){
     </div>`;
   }).join('') : '<div class="empty">Hakuna payroll bado.</div>';
 }
+/* ---- Kanuni za mshahara: cheo, wateja wa agent, agents wa zone ---- */
+const MP_RK='hk_pay_rules_v1';
+let MP_RULES={ min:{}, agent:{from:50,per:0}, zone:{per:0} }, MP_CALC={};
+function mpNorm(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,' '); }
+function mpKind(pos){ const p=mpNorm(pos); if(p.includes('zone')) return 'zone'; if(p.includes('agent')) return 'agent'; return 'plain'; }
+function mpRulesRead(){
+  try{ const r=JSON.parse(localStorage.getItem(MP_RK)||'null');
+    if(r && r.min) MP_RULES={ min:r.min||{}, agent:Object.assign({from:50,per:0}, r.agent||{}), zone:Object.assign({per:0}, r.zone||{}) };
+  }catch(e){}
+}
+async function mpRulesLoad(){
+  mpRulesRead();
+  const box=document.getElementById('mpRulesBox'); if(!box) return;
+  const { data } = await sb.from('hr_employees').select('position');
+  const pos={}; (data||[]).forEach(e=>{ const p=String(e.position||'').trim(); if(p && !pos[mpNorm(p)]) pos[mpNorm(p)]=p; });
+  if(!Object.keys(pos).some(k=>mpKind(k)==='agent')) pos['agent']='Agent';
+  if(!Object.keys(pos).some(k=>mpKind(k)==='zone')) pos['zone manager']='Zone Manager';
+  const keys=Object.keys(pos).sort((a,b)=>pos[a].localeCompare(pos[b]));
+  const v=x=>(x>0?x:'');
+  box.innerHTML =
+    `<div class="mpr-h" style="margin-top:0;">Mshahara wa chini kwa cheo (TZS)</div>`+
+    keys.map(k=>`<div class="mpr-row"><span>${mE(pos[k])}</span><input type="number" min="0" inputmode="numeric" data-pos="${mE(k)}" value="${v(MP_RULES.min[k])}" placeholder="0"></div>`).join('')+
+    `<div class="mpr-h">Agent: ongezeko la wateja</div><p class="mpr-s">Mteja wa [N] na kuendelea analipiwa ongezeko kwa kila mteja.</p>
+     <div class="mpr-row"><span>Kuanzia mteja wa</span><input type="number" min="1" id="mprAgFrom" value="${MP_RULES.agent.from||50}"></div>
+     <div class="mpr-row"><span>Ongeza (TZS) kwa kila mteja</span><input type="number" min="0" inputmode="numeric" id="mprAgPer" value="${v(MP_RULES.agent.per)}" placeholder="0"></div>
+     <div class="mpr-h">Zone: ongezeko la agents</div><p class="mpr-s">Agents wanaotoka kwenye Muundo (Zone aliyewekwa kwa kila agent).</p>
+     <div class="mpr-row"><span>Ongeza (TZS) kwa kila agent</span><input type="number" min="0" inputmode="numeric" id="mprZnPer" value="${v(MP_RULES.zone.per)}" placeholder="0"></div>`;
+}
+function mpRulesSave(){
+  const min={}; document.querySelectorAll('#mpRulesBox input[data-pos]').forEach(i=>{ const n=parseFloat(i.value); if(n>0) min[i.dataset.pos]=n; });
+  const g=id=>parseFloat((document.getElementById(id)||{}).value)||0;
+  MP_RULES={ min, agent:{ from:Math.max(1,g('mprAgFrom')||50), per:g('mprAgPer') }, zone:{ per:g('mprZnPer') } };
+  try{ localStorage.setItem(MP_RK, JSON.stringify(MP_RULES)); mSay('mpRulesMsg','Kanuni zimehifadhiwa ✓ (zinatumika payroll mpya na "Hesabu upya")',true); }
+  catch(e){ mSay('mpRulesMsg','Imeshindwa kuhifadhi kwenye kifaa hiki.',false); }
+}
+async function mpCalc(emps){
+  const out={};
+  const counts={};
+  await Promise.all(emps.filter(e=>mpKind(e.position)==='agent' && e.agent_code).map(async e=>{
+    const r=await sb.from('mikopo_clients').select('*',{count:'exact',head:true}).eq('agent_code',e.agent_code);
+    counts[e.id]=r.count||0;
+  }));
+  let zoneRows=[];
+  if(emps.some(e=>mpKind(e.position)==='zone')){ const g=await sb.rpc('org_get'); zoneRows=(g.data && g.data.rows)||[]; }
+  emps.forEach(e=>{
+    const k=mpKind(e.position), r=MP_RULES.min[mpNorm(e.position)];
+    const min = r!=null ? r : (parseFloat(e.base_salary)||0);
+    let gross=min, text=(e.position||'Cheo hakijawekwa')+' · msingi '+mN(min);
+    if(k==='agent'){
+      const n=counts[e.id]||0, T=MP_RULES.agent.from||50;
+      const extra = n>=T ? (n-T+1)*(MP_RULES.agent.per||0) : 0;
+      gross+=extra; text+=' · wateja '+n+(extra?' (kuanzia '+T+': +'+mN(extra)+')':'');
+    }else if(k==='zone'){
+      const nm=mpNorm(e.full_name), n=zoneRows.filter(x=>mpNorm(x.zone_manager)===nm).length;
+      const extra=n*(MP_RULES.zone.per||0);
+      gross+=extra; text+=' · agents '+n+(extra?' (+'+mN(extra)+')':'');
+    }
+    out[e.id]={ gross, text };
+  });
+  return out;
+}
+async function mpAutoFill(runId){
+  mpRulesRead();
+  const { data: items, error } = await sb.rpc('payroll_run_items',{ p_run_id: runId });
+  if(error) return { done:0, skipped:0 };
+  const { data: emps } = await sb.from('hr_employees').select('id, full_name, position, agent_code, base_salary');
+  const list=emps||[], calc=await mpCalc(list), byId={}, byName={};
+  list.forEach(e=>{ byId[e.id]=e; const n=mpNorm(e.full_name); (byName[n]=byName[n]||[]).push(e); });
+  let done=0, skipped=0; MP_CALC={};
+  for(const it of (items||[])){
+    const e = byId[it.employee_id] || ((byName[mpNorm(it.full_name)]||[]).length===1 ? byName[mpNorm(it.full_name)][0] : null);
+    if(!e || !calc[e.id]){ skipped++; continue; }
+    const c=calc[e.id]; MP_CALC[it.item_id]=c.text;
+    const ded=(it.deductions||[]).map(x=>({ debt_id:x.debt_id, amount:x.amount }));
+    const r=await sb.rpc('payroll_set_item',{ p_item_id:it.item_id, p_gross:c.gross, p_deductions:ded });
+    if(r.error) skipped++; else done++;
+  }
+  return { done, skipped };
+}
+async function mpRecalcAll(runId){
+  if(!confirm('Kuhesabu upya mishahara yote kwa kanuni? Mabadiliko uliyofanya kwa mkono yatafutwa.')) return;
+  mSay('mpDetailMsg','Inahesabu...',true);
+  const r=await mpAutoFill(runId);
+  await mpLoadRuns(); await mpOpen(runId);
+  mSay('mpDetailMsg','Mishahara imehesabiwa upya ✓ ('+r.done+')'+(r.skipped?' · hawakuhesabiwa: '+r.skipped:''),true);
+}
 async function mpCreate(){
   const per=document.getElementById('mpPeriod').value;
   if(!per){ mSay('mpMsg','Chagua mwezi.',false); return; }
   const { data, error } = await sb.rpc('payroll_create_run',{ p_period: per });
   if(error){ mSay('mpMsg','Imeshindwa: '+error.message,false); return; }
-  mSay('mpMsg','Payroll ya '+per+' imetengenezwa ✓',true);
+  mSay('mpMsg','Inahesabu mishahara...',true);
+  const r=await mpAutoFill(data);
+  const has=Object.keys(MP_RULES.min).length || MP_RULES.agent.per>0 || MP_RULES.zone.per>0;
+  mSay('mpMsg','Payroll ya '+per+' imetengenezwa ✓ · mishahara imehesabiwa: '+r.done+(r.skipped?' · haikuhesabiwa: '+r.skipped:'')+(has?'':' · Bado hujaweka kanuni, imetumika mshahara wa msingi.'),true);
   await mpLoadRuns(); mpOpen(data);
 }
 async function mpOpen(runId){
@@ -864,13 +961,15 @@ async function mpOpen(runId){
   document.getElementById('mpDetailTitle').textContent='Payroll ya '+(run.period||'');
   if(error){ box.innerHTML=''; mSay('mpDetailMsg',error.message,false); return; }
   if(edit){
+    document.querySelectorAll('#mpDetailCard .mpHelp').forEach(n=>n.remove());
     const { data: emps } = await sb.from('hr_employees').select('id,full_name').order('full_name');
     const opts=(emps||[]).map(e=>`<option value="${e.id}">${mE(e.full_name)}</option>`).join('');
-    box.insertAdjacentHTML('beforebegin', `<div style="border:1px dashed var(--border);border-radius:12px;padding:10px;margin-bottom:10px;">
+    box.insertAdjacentHTML('beforebegin', `<div class="mpHelp" style="border:1px dashed var(--border);border-radius:12px;padding:10px;margin-bottom:10px;">
       <div style="font-weight:700;margin-bottom:6px;">Ongeza mfanyakazi kwenye payroll hii</div>
       <div style="display:flex;gap:8px;"><select id="mpAddEmp" style="flex:1;">${opts}</select>
       <button class="btn" onclick="mpAddEmployee('${runId}')">Ongeza</button></div>
       <div class="msg" id="mpAddMsg" style="margin-top:6px;"></div></div>`);
+    box.insertAdjacentHTML('beforebegin', `<button class="btn secondary mpHelp" style="width:100%;margin-bottom:10px;" onclick="mpRecalcAll('${runId}')">Hesabu upya mishahara kwa kanuni</button>`);
   }
   box.innerHTML = (data||[]).map(it=>{
     const ded = {}; (it.deductions||[]).forEach(x=>ded[x.debt_id]=x.amount);
@@ -880,6 +979,7 @@ async function mpOpen(runId){
     return `<div style="border-top:1px solid var(--border);padding:11px 0;" data-it="${it.item_id}">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><b>${mE(it.full_name)} <span style="color:var(--sub);font-weight:400;font-size:11.5px;">${mE(it.job_position||'')}</span></b>
         ${edit?`<input type="number" min="0" id="mpG-${it.item_id}" value="${it.gross}" oninput="mpRecalc('${it.item_id}')" style="width:120px;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:7px;text-align:right;">`:`<b>${mN(it.gross)}</b>`}</div>
+      ${edit&&MP_CALC[it.item_id]?`<div style="font-size:11.5px;color:var(--sub);margin-top:3px;">${mE(MP_CALC[it.item_id])}</div>`:''}
       ${debts}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:13px;"><span>Anapata: <b id="mpNet-${it.item_id}">${mN(it.net)}</b></span>
         ${edit?`<button class="btn secondary" style="padding:5px 12px;font-size:12px;" onclick="mpSaveItem('${it.item_id}')">Hifadhi</button>`:''}</div>
