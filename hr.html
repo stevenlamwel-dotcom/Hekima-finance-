@@ -318,6 +318,7 @@ addEventListener("beforeunload",show)})();</script>
     </div>
     <div class="card">
       <h3>Rekodi za Hivi Karibuni</h3>
+      <div class="field"><label>Tarehe ya ripoti</label><input id="attDlDate" type="date"></div>
       <button class="btn" onclick="hrAttPdf()" style="margin-bottom:10px;">Download Mahudhurio</button>
       <div class="msg" id="attDlMsg"></div>
       <div class="scrollx"><div class="xl-scroll"><table>
@@ -834,6 +835,7 @@ function enterApp(){
   document.getElementById('appContent').style.display='block';
   const today = new Date().toISOString().slice(0,10);
   document.getElementById('attDate').value = today;
+  var _ad=document.getElementById('attDlDate'); if(_ad) _ad.value = today;
   document.getElementById('lvStart').value = today;
   document.getElementById('lvEnd').value = today;
   document.getElementById('prDate').value = today;
@@ -1125,40 +1127,115 @@ async function orgDownloadTasksPdf(meta, tasks){
 </script>
 
 <script>
+var _hkLogoP=null;
+function hrLogoData(){
+  if(_hkLogoP) return _hkLogoP;
+  _hkLogoP = new Promise(function(res){
+    try{
+      var im=new Image();
+      im.onload=function(){ try{ var c=document.createElement('canvas'); c.width=240; c.height=240; var x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,240,240); x.drawImage(im,0,0,240,240); res(c.toDataURL('image/jpeg',0.92)); }catch(e){ res(null); } };
+      im.onerror=function(){ res(null); };
+      im.src='assets/hekima-logo.png';
+    }catch(e){ res(null); }
+  });
+  return _hkLogoP;
+}
 async function hrAttPdf(){
   const msg=document.getElementById('attDlMsg'); msg.className='msg'; msg.textContent='Inatengeneza PDF...';
   try{
-    let all=[], from=0; const step=1000;
-    while(true){
-      const { data, error } = await sb.from('hr_attendance').select('*, hr_employees(full_name)').order('att_date',{ascending:false}).range(from, from+step-1);
-      if(error){ msg.className='msg err'; msg.textContent='Imeshindwa: '+error.message; return; }
-      all = all.concat(data||[]);
-      if(!data || data.length<step) break;
-      from += step;
-    }
-    if(!all.length){ msg.className='msg err'; msg.textContent='Hakuna rekodi za mahudhurio bado.'; return; }
+    const dEl=document.getElementById('attDlDate');
+    const day=(dEl && dEl.value) || new Date().toISOString().slice(0,10);
+    const { data, error } = await sb.from('hr_attendance').select('*, hr_employees(full_name, position, department, region_code)').eq('att_date', day).limit(1000);
+    if(error){ msg.className='msg err'; msg.textContent='Imeshindwa: '+error.message; return; }
+    const recs=data||[];
+    if(!recs.length){ msg.className='msg err'; msg.textContent='Hakuna rekodi za mahudhurio za tarehe hiyo.'; return; }
+    const regName={}; (HR_REGIONS||[]).forEach(x=>{ regName[x.code]=x.name; });
+    const pad=n=>String(n).padStart(2,'0');
+    const kindOf=r=>{ const has=!!String(r.note||'').trim(), s=String(r.status||'').toLowerCase();
+      if(s==='present') return 'Present'; if(s==='late') return has?'Late/R':'Late'; if(s==='absent') return has?'Absent/R':'Absent'; if(s==='leave') return 'On Leave';
+      return s ? s.charAt(0).toUpperCase()+s.slice(1) : ''; };
+    const timeOf=r=>{ const v=r.check_in||r.check_in_time||r.time_in||r.arrival_time; if(!v) return ''; const s=String(v);
+      if(/T.*(Z|[+-]\d\d:?\d\d)$/.test(s)){ const d=new Date(s); return isNaN(d)?'':pad(d.getHours())+':'+pad(d.getMinutes()); }
+      const m=s.match(/(\d{2}:\d{2})/); return m?m[1]:''; };
+    const fineOf=r=>{ const v=(r.fine!=null?r.fine:(r.fine_amount!=null?r.fine_amount:r.penalty)); const n=Number(v); return (v==null||isNaN(n))?0:Math.abs(n); };
+    const items=recs.map(r=>{ const e=r.hr_employees||{};
+      return { region:String(regName[e.region_code]||e.region_code||e.department||'OTHER').toUpperCase(), name:String(e.full_name||'').toUpperCase(),
+        pos:String(e.position||''), kind:kindOf(r), time:timeOf(r), fine:fineOf(r), note:String(r.note||'').trim() }; });
+    const KINDS=['Present','Late','Late/R','Absent','Absent/R','On Leave'];
+    const COL={ 'Present':[22,163,74], 'Late':[217,119,6], 'Late/R':[13,148,136], 'Absent':[220,38,38], 'Absent/R':[8,145,178], 'On Leave':[5,150,105] };
+    const cnt={}; KINDS.forEach(k=>{ cnt[k]=0; }); items.forEach(i=>{ if(cnt[i.kind]!=null) cnt[i.kind]++; });
+    const totalFines=items.reduce((a,i)=>a+i.fine,0);
+    const hasTime=items.some(i=>i.time), hasFine=totalFines>0, hasNote=items.some(i=>i.note);
+    const groups={}; items.forEach(i=>{ (groups[i.region]=groups[i.region]||[]).push(i); });
+    const gNames=Object.keys(groups).sort();
+    gNames.forEach(n=>groups[n].sort((a,b)=>a.name.localeCompare(b.name)));
     await orgLoadLibs();
+    const logo=await hrLogoData();
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:'a4' });
-    const W = doc.internal.pageSize.getWidth();
-    const NAVY=[0,24,60], GOLD=[204,156,36], INK=[18,32,47], MUTED=[90,104,120];
-    const stamp = new Date().toLocaleDateString('en-GB');
-    const lbl = { present:'Alikuwepo', late:'Alichelewa', absent:'Hakuwepo', leave:'Likizo' };
-    doc.autoTable({
-      head: [['JINA','TAREHE','HALI','MAELEZO']],
-      body: all.map(r=>[ r.hr_employees ? r.hr_employees.full_name : '', r.att_date||'', lbl[r.status]||r.status||'', r.note||'' ]),
-      startY: 68, margin: { top: 68, bottom: 30, left: 30, right: 30 },
-      styles: { fontSize: 9, cellPadding: 4, textColor: INK, lineColor:[214,219,226], lineWidth: 0.4, fillColor:[255,255,255] },
-      headStyles: { fillColor: NAVY, textColor: [255,255,255], fontStyle:'bold' },
-      didDrawPage: data => {
-        doc.setTextColor(...NAVY); doc.setFont(undefined,'bold'); doc.setFontSize(15); doc.text('MAHUDHURIO YA WAFANYAKAZI', 30, 34);
-        doc.setTextColor(...MUTED); doc.setFont(undefined,'normal'); doc.setFontSize(8.5);
-        doc.text('Imetengenezwa ' + stamp + '  ·  Ukurasa ' + data.pageNumber, 30, 49);
-        doc.setDrawColor(...GOLD); doc.setLineWidth(1.2); doc.line(30, 56, W-30, 56);
-      }
+    const doc=new jsPDF({ orientation:'portrait', unit:'pt', format:'a4' });
+    const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=32, CW=W-2*M;
+    const NAVY=[0,24,60], GOLD=[204,156,36], INK=[18,32,47], MUTED=[100,112,128];
+    const dObj=new Date(day+'T00:00:00');
+    const dLong=dObj.toLocaleDateString('en-US',{weekday:'long'})+', '+dObj.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    // Kichwa (banner) chenye logo
+    doc.setFillColor(...NAVY); doc.roundedRect(M,28,CW,74,8,8,'F');
+    doc.setFillColor(255,255,255); doc.roundedRect(M+12,36,58,58,8,8,'F');
+    if(logo){ try{ doc.addImage(logo,'JPEG',M+15,39,52,52); }catch(e){} }
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.text('ATTENDANCE REPORT', M+84, 62);
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(205,218,238); doc.text(dLong, M+84, 80);
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(255,255,255); doc.text(items.length+' Employees', W-M-14, 62, {align:'right'});
+    doc.setFontSize(8.5); doc.setTextColor(...GOLD); doc.text('HEKIMA FINANCE', W-M-14, 80, {align:'right'});
+    // Kadi za muhtasari
+    const gap=8, cw=(CW-5*gap)/6; let y=114;
+    KINDS.forEach((k,idx)=>{ const x=M+idx*(cw+gap);
+      doc.setFillColor(...COL[k]); doc.roundedRect(x,y,cw,46,6,6,'F');
+      doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.text(String(cnt[k]), x+cw/2, y+23, {align:'center'});
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.text(k, x+cw/2, y+37, {align:'center'}); });
+    y+=46+12;
+    if(hasFine){ doc.setFillColor(254,242,242); doc.roundedRect(M,y,CW,24,5,5,'F');
+      doc.setTextColor(185,28,28); doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.text('Total Fines: '+totalFines.toLocaleString('en-US')+' TZS', M+10, y+15.5); y+=24+12; }
+    // Vikundi kwa mkoa
+    const head=['#','Name','Position','Status'].concat(hasTime?['Time']:[]).concat(hasFine?['Fine']:[]).concat(hasNote?['Note']:[]);
+    const stI=3, fnI=hasFine?(hasTime?5:4):-1;
+    const cs={ 0:{cellWidth:22}, 1:{cellWidth:hasNote?132:170,fontStyle:'bold'}, 2:{cellWidth:hasNote?84:110}, 3:{cellWidth:62} };
+    if(hasTime) cs[4]={cellWidth:40}; if(hasFine) cs[fnI]={cellWidth:50,halign:'right'};
+    const drawn={};
+    const pageHead=n=>{ if(n<2||drawn[n]) return; drawn[n]=true;
+      if(logo){ try{ doc.addImage(logo,'JPEG',M,16,22,22); }catch(e){} }
+      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...NAVY); doc.text('ATTENDANCE REPORT', M+28, 30);
+      doc.setFont('helvetica','normal'); doc.setTextColor(...MUTED); doc.text(dLong, W-M, 30, {align:'right'});
+      doc.setDrawColor(...GOLD); doc.setLineWidth(.8); doc.line(M,42,W-M,42); };
+    gNames.forEach(g=>{
+      if(y>H-110){ doc.addPage(); y=52; }
+      doc.setFillColor(238,243,255); doc.setDrawColor(199,214,250); doc.setLineWidth(.6); doc.roundedRect(M,y,CW,22,5,5,'FD');
+      doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(30,64,175); doc.text(g+'  ('+groups[g].length+')', M+10, y+14.5);
+      doc.autoTable({
+        startY:y+28, margin:{left:M,right:M,top:52,bottom:46}, theme:'plain', head:[head],
+        body: groups[g].map((i,n)=>[n+1,i.name,i.pos,i.kind].concat(hasTime?[i.time]:[]).concat(hasFine?[i.fine?'-'+i.fine.toLocaleString('en-US'):'']:[]).concat(hasNote?[i.note]:[])),
+        styles:{ fontSize:8, cellPadding:{top:4.2,bottom:4.2,left:5,right:5}, textColor:INK, lineWidth:0, overflow:'linebreak' },
+        headStyles:{ fillColor:[243,246,250], textColor:MUTED, fontSize:7.5, fontStyle:'bold' },
+        alternateRowStyles:{ fillColor:[248,250,252] }, columnStyles:cs,
+        didParseCell:d=>{ if(d.section!=='body') return;
+          if(d.column.index===stI){ d.cell.text=['']; }
+          if(d.column.index===fnI){ d.cell.styles.textColor=[185,28,28]; d.cell.styles.fontStyle='bold'; } },
+        didDrawCell:d=>{ if(d.section==='body' && d.column.index===stI){ const k=String(d.cell.raw||''); if(!k) return;
+          doc.setFont('helvetica','bold'); doc.setFontSize(7); const tw=doc.getTextWidth(k)+12;
+          doc.setFillColor(...(COL[k]||[100,116,139])); doc.roundedRect(d.cell.x+5, d.cell.y+(d.cell.height-13)/2, tw, 13, 3, 3, 'F');
+          doc.setTextColor(255,255,255); doc.text(k, d.cell.x+5+tw/2, d.cell.y+d.cell.height/2+2.4, {align:'center'}); } },
+        didDrawPage:d=>pageHead(d.pageNumber)
+      });
+      y=doc.lastAutoTable.finalY+16;
     });
-    doc.save('Mahudhurio_' + new Date().toISOString().slice(0,10) + '.pdf');
-    msg.className='msg ok'; msg.textContent='PDF imepakuliwa ✓';
+    // Mguu wa kila ukurasa
+    const pages=doc.internal.getNumberOfPages(), now=new Date();
+    const gen='Generated: '+pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' at '+pad(now.getHours())+':'+pad(now.getMinutes());
+    const tot='Total: '+items.length+' | P: '+cnt['Present']+' | L: '+cnt['Late']+' | A: '+cnt['Absent']+(hasFine?' | Fines: '+totalFines.toLocaleString('en-US')+' TZS':'');
+    for(let p=1;p<=pages;p++){ doc.setPage(p);
+      doc.setDrawColor(203,213,225); doc.setLineWidth(.6); doc.line(M,H-34,W-M,H-34);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...MUTED);
+      doc.text(gen, M, H-22); doc.text('Page '+p+' of '+pages, W/2, H-22, {align:'center'}); doc.text(tot, W-M, H-22, {align:'right'}); }
+    doc.save('Attendance_Report_'+day+'.pdf');
+    msg.className='msg ok'; msg.textContent='PDF imepakuliwa ✓ ('+items.length+' wafanyakazi)';
   }catch(e){ msg.className='msg err'; msg.textContent='Imeshindwa kutengeneza PDF: '+e.message; }
 }
 
