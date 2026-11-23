@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><script>try{var m=localStorage.getItem('hekima_theme_mode'),t=m=='auto'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):(localStorage.getItem('hekima_theme')||'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}</script><script src="assets/hekima-nav.js"></script><style id="hkLdCss">#hkLoader{position:fixed;inset:0;z-index:2147483000;background:rgba(0,16,48,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;transition:opacity .35s}#hkLoader.out{opacity:0;pointer-events:none}html[data-theme="light"] #hkLoader{background:rgba(244,246,248,.72)}html[data-theme="light"] #hkLoader b{color:#001848}#hkLoader .r{position:relative;width:112px;height:112px;display:flex;align-items:center;justify-content:center}#hkLoader .r::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(21,101,232,0) 0%,rgba(21,101,232,.18) 35%,#1565e8 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));animation:hkspin 1.3s linear infinite;filter:drop-shadow(0 0 6px rgba(21,101,232,.7))}#hkLoader b{position:relative;color:#fff;font:700 13px/1 "Trebuchet MS",system-ui,sans-serif;font-variant:small-caps;letter-spacing:1px}@keyframes hkspin{to{transform:rotate(360deg)}}#authLoading{opacity:0!important}</style><script id="hkLdJs">(function(){var d=document,t0=Date.now(),done=false,L=d.createElement("div");L.id="hkLoader";L.innerHTML='<div class="r"><b>Loading...</b></div>';d.documentElement.appendChild(L);
+<head><script>try{var m=localStorage.getItem('hekima_theme_mode'),t=m=='auto'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):(localStorage.getItem('hekima_theme')||'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}</script><script src="assets/hekima-nav.js"></script><script src="assets/hekima-mkeka.js"></script><style id="hkLdCss">#hkLoader{position:fixed;inset:0;z-index:2147483000;background:rgba(0,16,48,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;transition:opacity .35s}#hkLoader.out{opacity:0;pointer-events:none}html[data-theme="light"] #hkLoader{background:rgba(244,246,248,.72)}html[data-theme="light"] #hkLoader b{color:#001848}#hkLoader .r{position:relative;width:112px;height:112px;display:flex;align-items:center;justify-content:center}#hkLoader .r::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(21,101,232,0) 0%,rgba(21,101,232,.18) 35%,#1565e8 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));animation:hkspin 1.3s linear infinite;filter:drop-shadow(0 0 6px rgba(21,101,232,.7))}#hkLoader b{position:relative;color:#fff;font:700 13px/1 "Trebuchet MS",system-ui,sans-serif;font-variant:small-caps;letter-spacing:1px}@keyframes hkspin{to{transform:rotate(360deg)}}#authLoading{opacity:0!important}</style><script id="hkLdJs">(function(){var d=document,t0=Date.now(),done=false,L=d.createElement("div");L.id="hkLoader";L.innerHTML='<div class="r"><b>Loading...</b></div>';d.documentElement.appendChild(L);
 function hide(){if(done)return;done=true;var w=Math.max(0,450-(Date.now()-t0));setTimeout(function(){L.classList.add("out");setTimeout(function(){L.style.display="none"},400)},w)}
 function show(){done=false;t0=Date.now();L.style.display="flex";L.classList.remove("out");setTimeout(hide,7000)}
 function ready(){var g=d.getElementById("authGate");if(!g||g.style.display==="none")return true;var a=d.getElementById("authLoading");return !a||getComputedStyle(a).display==="none"}
@@ -267,8 +267,183 @@ addEventListener("beforeunload",show)})();</script>
   </div>
 
   <div class="panel" id="panel-muundo">
-    <div class="card" style="margin-bottom:12px;"><h3>Wafanyakazi wapya — kukagua</h3><div id="mgPendEmps"><div class="empty">Inapakia...</div></div></div>
-    <div class="card" style="margin-bottom:12px;">
+    <style>.mu-pills{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;}.mu-pills .btn{flex:none;padding:8px 14px;font-size:13px;white-space:nowrap;}.mu-h{font-weight:700;font-size:12.5px;margin:14px 0 2px;color:var(--text);}.mu-hint{font-size:11.5px;color:var(--sub);margin:0 0 8px;}.mk-br{border:1px solid var(--border);border-radius:12px;margin:0 0 8px;background:var(--panel);}.mk-br>summary{padding:10px 12px;cursor:pointer;font-size:13.5px;}.mk-br>summary .mk-s{color:var(--sub);font-size:12px;margin-left:6px;}.mk-bd{padding:0 10px 10px;}.mk-mg{display:flex;align-items:center;gap:8px;margin:2px 0 8px;font-size:12px;color:var(--sub);}.mk-mg input{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:7px;font-family:inherit;}.mk-zh{display:flex;align-items:center;gap:6px;margin:8px 0 4px;padding:6px 8px;border-radius:8px;background:var(--panel2);border-left:6px solid #ccc;font-size:13px;font-weight:700;}.mk-zh span.mk-zn{flex:1;min-width:0;}.mk-zh button{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:8px;padding:4px 9px;font-size:12px;font-weight:600;cursor:pointer;}.mk-ag{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--border);font-size:12.5px;cursor:pointer;}.mk-ag .mk-no{width:26px;color:var(--sub);text-align:right;}.mk-ag .mk-cd{width:44px;font-weight:700;}.mk-ag .mk-nm{flex:1;min-width:0;font-weight:600;}.mk-ag .mk-mt{color:var(--sub);font-size:11px;text-align:right;max-width:38%;}.mk-ed{border:1px dashed var(--border);border-radius:12px;padding:12px;margin:0 0 12px;}.mk-lead{background:var(--panel2);border-radius:10px;padding:8px 10px;margin:0 0 6px;}.mk-ar{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:8px;padding:3px 8px;font-size:12px;cursor:pointer;}.mu-old{font-size:12px;color:var(--sub);background:var(--panel2);border:1px dashed var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px;}</style>
+    <div class="mu-pills" id="muPills">
+      <button class="btn mu-pill" data-sec="watu" onclick="muSec('watu')">Watu</button>
+      <button class="btn secondary mu-pill" data-sec="timu" onclick="muSec('timu')">Muundo wa Timu</button>
+      <button class="btn secondary mu-pill" data-sec="updates" onclick="muSec('updates')">Updates</button>
+      <button class="btn secondary mu-pill" data-sec="majukumu" onclick="muSec('majukumu')">Majukumu</button>
+      <button class="btn secondary mu-pill" data-sec="zaidi" onclick="muSec('zaidi')">Zaidi</button>
+    </div>
+    <div class="mu-sec" data-sec="watu">
+<div class="card" style="margin-bottom:12px;"><h3>Wafanyakazi wapya — kukagua</h3><div id="mgPendEmps"><div class="empty">Inapakia...</div></div></div>
+<div class="card" id="uwEditor" style="display:none">
+      <h3 id="uwEditTitle">Mtu</h3>
+      <input type="hidden" id="ue-id">
+      <div class="mu-h" style="margin-top:0;">1. Taarifa za mtu</div>
+      <div class="row2">
+        <div class="field"><label>Jina kamili</label><input id="ue-name"></div>
+        <div class="field"><label>Agent code</label><input id="ue-code" style="text-transform:uppercase" placeholder="mfano: JUM"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Email (akaunti ya kuingia)</label><input id="ue-email" type="email"></div>
+        <div class="field" id="ue-passWrap"><label>Nywila (acha wazi kutengeneza)</label><input id="ue-pass" placeholder="Auto"></div>
+      </div>
+      <div class="mu-h">2. Cheo na uongozi</div>
+      <div class="mu-hint">Msimamizi = anayeripoti kwake. Agent: weka Zone Manager wake hapa.</div>
+      <div class="row2">
+        <div class="field"><label>Cheo</label><select id="ue-pos"></select></div>
+        <div class="field"><label>Idara</label><input id="ue-dept" placeholder="mfano: Operations"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Msimamizi (anaripoti kwa)</label><select id="ue-sup"></select></div>
+        <div class="field"><label>Simu</label><input id="ue-phone" placeholder="0xxxxxxxxx"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Tarehe ya kuajiriwa</label><input id="ue-hire" type="date"></div>
+        <div class="field" id="ue-roleWrap"><label>Ruhusa ya mfumo</label>
+          <select id="ue-role">
+            <option value="agent">Agent (Loans pekee)</option>
+            <option value="hr">HR Officer</option>
+            <option value="operations">Operations Officer</option>
+            <option value="manager">Manager (Admin Mdogo)</option>
+            <option value="admin">Admin Mkuu (Ufikiaji Wote)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" id="ue-deptsWrap"><label>Idara anazoruhusiwa (hiari, mfano: Loans, Combine)</label><input id="ue-depts"></div>
+      <div class="mu-h">3. Muundo wa timu (kwa agents)</div>
+      <div class="mu-hint">Weka Tawi ili agent aonekane kwenye Muundo wa Timu na PDF.</div>
+      <div class="row2">
+        <div class="field"><label>Tawi (kwa agents)</label><input id="ue-branch" placeholder="mfano: DSM"></div>
+        <div class="field"><label>Eneo (kwa agents)</label><input id="ue-area" placeholder="mfano: KAWE"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <button class="btn" id="ue-save" onclick="uwSave()">Hifadhi</button>
+        <button class="btn secondary" onclick="uwClose()">Ghairi</button>
+      </div>
+      <div class="msg" id="ue-msg"></div>
+    </div>
+<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;">
+        <h3 style="margin:0">Watu</h3>
+        <button class="btn" onclick="uwEdit('')">+ Ongeza mtu</button>
+      </div>
+      <div id="uwList"><div class="empty">Inapakia...</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+        <button class="btn secondary" onclick="uwCreds()">Pakua nywila (CSV)</button>
+      </div>
+      <div class="msg" id="uwMsg"></div>
+    </div>
+    </div>
+    <div class="mu-sec" data-sec="timu" style="display:none">
+<div class="card" id="mbCard">
+      <h3>Mkeka wa Timu</h3>
+      <div class="mu-hint"><span id="mbCount">Inapakia...</span> <span id="mbDirty" style="color:var(--red);font-weight:700;"></span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px;">
+        <button class="btn" onclick="muSave()">Hifadhi mkeka</button>
+        <button class="btn secondary" onclick="muPdf()">Pakua PDF</button>
+      </div>
+      <div class="msg" id="muSaveMsg"></div>
+      <div class="msg" id="mbMsg"></div>
+      <div id="mbEd" class="mk-ed" style="display:none;">
+        <div class="mu-h" style="margin-top:0;" id="mbEdTitle">Agent mpya</div>
+        <div class="field"><label>Chagua kutoka kwa watu (hiari)</label><select id="mbEdPick" onchange="mbEdPick()"></select></div>
+        <div class="row2">
+          <div class="field"><label>Jina la agent</label><input id="mbEdName" placeholder="mfano: MARIAM 4"></div>
+          <div class="field"><label>AG code</label><input id="mbEdCode" style="text-transform:uppercase" placeholder="mfano: MRM"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Tawi (Branch)</label><input id="mbEdBranch" list="mbBrList" style="text-transform:uppercase" placeholder="mfano: DSM" oninput="mbZoneList()" onchange="mbLeadFill()"></div>
+          <div class="field"><label>Zone</label><input id="mbEdZone" list="mbZnList" placeholder="mfano: ABASI 2***" onchange="mbLeadFill()"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Eneo (Area)</label><input id="mbEdArea" placeholder="mfano: BUNJU B"></div>
+          <div class="field"><label>Update</label><input id="mbEdUpd" placeholder="mfano: UPDATE 1"></div>
+        </div>
+        <div class="mu-h">Viongozi (hiari)</div>
+        <div class="row2">
+          <div class="field"><label>Manager wa tawi</label><input id="mbEdMgr" placeholder="mf. DICKSON (CIO)"></div>
+          <div class="field"><label>Supervisor wa zone</label><input id="mbEdSup" placeholder="jina na cheo"></div>
+        </div>
+        <datalist id="mbBrList"></datalist><datalist id="mbZnList"></datalist>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <button class="btn" onclick="mbEdSave()">Weka</button>
+          <button class="btn secondary" onclick="mbEdClose()">Ghairi</button>
+          <button class="btn secondary" id="mbEdDel" onclick="mbEdDel()" style="margin-left:auto;color:var(--red);">Futa agent</button>
+        </div>
+      </div>
+      <div id="mbZe" class="mk-ed" style="display:none;">
+        <div class="mu-h" style="margin-top:0;">Hariri zone</div>
+        <div class="field"><label>Jina la zone</label><input id="mbZeName" placeholder="mf. ABASI 2***"></div>
+        <div class="field"><label>Supervisor wa zone (jina na cheo)</label><input id="mbZeSup" placeholder="mf. ASHA (SUPERVISOR)"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"><button class="btn" onclick="mbZeSave()">Weka</button><button class="btn secondary" onclick="mbZeClose()">Ghairi</button></div>
+      </div>
+      <div id="muPreview"><div class="empty">Inapakia...</div></div>
+      <button class="btn secondary" style="width:100%;margin-top:10px;" onclick="mbNewBranch()">+ Tawi jipya</button>
+    </div>
+    <details class="card" id="mbImportCard">
+      <summary style="cursor:pointer;font-weight:700;">Bandika kutoka Excel (njia ya haraka)</summary>
+      <p class="mu-hint" style="margin-top:8px;">Nakili safu zako za Excel (BRANCH, AREAS, UPDATE, AG CODE, NO, AGENT, ZONE, MANAGER) pamoja na kichwa, kisha bandika hapa. Zone na Manager zilizounganishwa zinajazwa zenyewe.</p>
+      <textarea id="mbPaste" rows="6" class="field" style="width:100%;" placeholder="Bandika hapa..."></textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <button class="btn" onclick="mbImport('replace')">Badilisha mkeka wote</button>
+        <button class="btn secondary" onclick="mbImport('append')">Ongeza kwenye mkeka</button>
+      </div>
+      <div class="msg" id="mbImpMsg"></div>
+    </details>
+    <details class="card" id="mbBanCard">
+      <summary style="cursor:pointer;font-weight:700;">Kichwa na maelekezo ya juu ya PDF</summary>
+      <div class="field" style="margin-top:8px;"><label>Kichwa cha PDF</label><input id="muTitle" placeholder="BRANCH AGENT STRUCTURE"></div>
+      <div class="field"><label>Maelekezo ya juu (kijani)</label><input id="mbBan0" oninput="mbSetBan(0,this.value)"></div>
+      <div class="field"><label>Maelekezo ya juu (nyekundu)</label><input id="mbBan1" oninput="mbSetBan(1,this.value)"></div>
+      <div class="field"><label>Maelekezo ya juu (nyeusi)</label><input id="mbBan2" oninput="mbSetBan(2,this.value)"></div>
+    </details>
+    </div>
+    <div class="mu-sec" data-sec="updates" style="display:none">
+<div class="card" id="updCard">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;">
+        <h3 style="margin:0">Updates</h3>
+        <button class="btn" id="updNewBtn" onclick="updEdit('')" style="display:none">+ Unda update</button>
+      </div>
+      <div id="updList"><div class="empty">Inapakia...</div></div>
+      <div id="updEditor" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+        <input type="hidden" id="upd-id">
+        <div class="field"><label>Jina la update</label><input id="upd-name" placeholder="mfano: Mkoa wa Kwanza"></div>
+        <div class="field"><label>Kiongozi wa update</label><select id="upd-leader"></select></div>
+        <div class="field"><label>Agents (chagua wanaoingia kwenye update hii)</label><div id="upd-members" style="max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:6px 8px;"></div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <button class="btn" id="upd-save" onclick="updSave()">Hifadhi update</button>
+          <button class="btn secondary" onclick="updClose()">Ghairi</button>
+        </div>
+        <div class="msg" id="upd-msg"></div>
+      </div>
+      <div class="msg" id="updMsg"></div>
+    </div>
+    </div>
+    <div class="mu-sec" data-sec="majukumu" style="display:none">
+<div class="card">
+      <h3>Cheo Kipya</h3>
+      <div class="row2">
+        <div class="field"><label>Jina la cheo</label><input id="posNewName" placeholder="mfano: Mkaguzi wa Ndani"></div>
+        <div class="field"><label>&nbsp;</label><button class="btn secondary" onclick="addPosition()" style="width:100%">Ongeza cheo</button></div>
+      </div>
+      <div class="msg" id="posNewMsg"></div>
+    </div>
+<div class="card" id="muTasksCard">
+      <h3>Majukumu Maalum</h3>
+      <div id="muTasks"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+        <button class="btn secondary" onclick="muTaskAdd()">+ Ongeza kazi</button>
+        <button class="btn" onclick="muSaveTasks()">Hifadhi majukumu</button>
+      </div>
+      <div class="msg" id="muTasksMsg"></div>
+      <div style="margin-top:8px;"><button class="btn secondary" onclick="muTasksPdf()">Pakua PDF ya Mkeka wa Kazi Maalum</button></div>
+    </div>
+    </div>
+    <div class="mu-sec" data-sec="zaidi" style="display:none">
+    <div class="mu-old">Hizi ni njia za zamani. <b>Watu → Hariri</b> inafanya kazi zote hizi (cheo, msimamizi, ruhusa, tawi) mahali pamoja, kwa hiyo mara nyingi huhitaji kutumia sehemu hii.</div>
+<div class="card" style="margin-bottom:12px;">
       <h3>Watumiaji</h3>
       <div class="xl-scroll"><table><thead><tr><th>Jina</th><th>Barua pepe</th><th>Jukumu</th><th>Cheo</th><th>Idara</th><th>Msimamizi</th><th>Hali</th></tr></thead>
         <tbody id="usersTableBody"></tbody></table></div>
@@ -320,112 +495,6 @@ addEventListener("beforeunload",show)})();</script>
         <div id="wList" style="margin-top:8px;"></div>
       </div>
     </div>
-    <div class="card" id="uwEditor" style="display:none">
-      <h3 id="uwEditTitle">Mtu</h3>
-      <input type="hidden" id="ue-id">
-      <div class="row2">
-        <div class="field"><label>Jina kamili</label><input id="ue-name"></div>
-        <div class="field"><label>Agent code</label><input id="ue-code" style="text-transform:uppercase" placeholder="mfano: JUM"></div>
-      </div>
-      <div class="row2">
-        <div class="field"><label>Email (akaunti ya kuingia)</label><input id="ue-email" type="email"></div>
-        <div class="field" id="ue-passWrap"><label>Nywila (acha wazi kutengeneza)</label><input id="ue-pass" placeholder="Auto"></div>
-      </div>
-      <div class="row2">
-        <div class="field"><label>Cheo</label><select id="ue-pos"></select></div>
-        <div class="field"><label>Idara</label><input id="ue-dept" placeholder="mfano: Operations"></div>
-      </div>
-      <div class="row2">
-        <div class="field"><label>Msimamizi (anaripoti kwa)</label><select id="ue-sup"></select></div>
-        <div class="field"><label>Simu</label><input id="ue-phone" placeholder="0xxxxxxxxx"></div>
-      </div>
-      <div class="row2">
-        <div class="field"><label>Tarehe ya kuajiriwa</label><input id="ue-hire" type="date"></div>
-        <div class="field" id="ue-roleWrap"><label>Ruhusa ya mfumo</label>
-          <select id="ue-role">
-            <option value="agent">Agent (Loans pekee)</option>
-            <option value="hr">HR Officer</option>
-            <option value="operations">Operations Officer</option>
-            <option value="manager">Manager (Admin Mdogo)</option>
-            <option value="admin">Admin Mkuu (Ufikiaji Wote)</option>
-          </select>
-        </div>
-      </div>
-      <div class="field" id="ue-deptsWrap"><label>Idara anazoruhusiwa (hiari, mfano: Loans, Combine)</label><input id="ue-depts"></div>
-      <div class="row2">
-        <div class="field"><label>Tawi (kwa agents)</label><input id="ue-branch" placeholder="mfano: DSM"></div>
-        <div class="field"><label>Eneo (kwa agents)</label><input id="ue-area" placeholder="mfano: KAWE"></div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-        <button class="btn" id="ue-save" onclick="uwSave()">Hifadhi</button>
-        <button class="btn secondary" onclick="uwClose()">Ghairi</button>
-      </div>
-      <div class="msg" id="ue-msg"></div>
-    </div>
-
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;">
-        <h3 style="margin:0">Watu</h3>
-        <button class="btn" onclick="uwEdit('')">+ Ongeza mtu</button>
-      </div>
-      <div id="uwList"><div class="empty">Inapakia...</div></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-        <button class="btn secondary" onclick="uwCreds()">Pakua nywila (CSV)</button>
-      </div>
-      <div class="msg" id="uwMsg"></div>
-    </div>
-
-    <div class="card" id="updCard">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;">
-        <h3 style="margin:0">Updates</h3>
-        <button class="btn" id="updNewBtn" onclick="updEdit('')" style="display:none">+ Unda update</button>
-      </div>
-      <div id="updList"><div class="empty">Inapakia...</div></div>
-      <div id="updEditor" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
-        <input type="hidden" id="upd-id">
-        <div class="field"><label>Jina la update</label><input id="upd-name" placeholder="mfano: Mkoa wa Kwanza"></div>
-        <div class="field"><label>Kiongozi wa update</label><select id="upd-leader"></select></div>
-        <div class="field"><label>Agents (chagua wanaoingia kwenye update hii)</label><div id="upd-members" style="max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:6px 8px;"></div></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-          <button class="btn" id="upd-save" onclick="updSave()">Hifadhi update</button>
-          <button class="btn secondary" onclick="updClose()">Ghairi</button>
-        </div>
-        <div class="msg" id="upd-msg"></div>
-      </div>
-      <div class="msg" id="updMsg"></div>
-    </div>
-    <div class="card">
-      <h3>Cheo Kipya</h3>
-      <div class="row2">
-        <div class="field"><label>Jina la cheo</label><input id="posNewName" placeholder="mfano: Mkaguzi wa Ndani"></div>
-        <div class="field"><label>&nbsp;</label><button class="btn secondary" onclick="addPosition()" style="width:100%">Ongeza cheo</button></div>
-      </div>
-      <div class="msg" id="posNewMsg"></div>
-    </div>
-
-    <div class="card" id="muTasksCard">
-      <h3>Majukumu Maalum</h3>
-      <div id="muTasks"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-        <button class="btn secondary" onclick="muTaskAdd()">+ Ongeza kazi</button>
-        <button class="btn" onclick="muSaveTasks()">Hifadhi majukumu</button>
-      </div>
-      <div class="msg" id="muTasksMsg"></div>
-      <div style="margin-top:8px;"><button class="btn secondary" onclick="muTasksPdf()">Pakua PDF ya Mkeka wa Kazi Maalum</button></div>
-    </div>
-
-    <div class="card">
-      <h3>Muundo</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-        <div class="field" style="margin:0"><label>Kichwa cha PDF</label><input id="muTitle" placeholder="BRANCH AGENT STRUCTURE"></div>
-        <div class="field" style="margin:0"><label>Maelezo madogo</label><input id="muSub" placeholder="Muundo kamili wa timu"></div>
-      </div>
-      <div id="muPreview"><div class="empty">Inapakia...</div></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
-        <button class="btn" onclick="muSave()">Hifadhi muundo</button>
-        <button class="btn secondary" onclick="muPdf()">Pakua PDF</button>
-      </div>
-      <div class="msg" id="muSaveMsg"></div>
     </div>
   </div>
 
@@ -858,7 +927,7 @@ async function mpLoadRuns(){
 /* ---- Kanuni za mshahara: cheo, wateja wa agent, agents wa zone ---- */
 const MP_RK='hk_pay_rules_v1';
 let MP_RULES={ min:{}, agent:{from:50,per:0}, zone:{per:0} }, MP_CALC={};
-function mpNorm(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,' '); }
+function mpNorm(s){ return String(s||'').toLowerCase().replace(/\*/g,'').replace(/\s+/g,' ').trim(); }
 function mpKind(pos){ const p=mpNorm(pos); if(p.includes('zone')) return 'zone'; if(p.includes('agent')) return 'agent'; return 'plain'; }
 function mpRulesRead(){
   try{ const r=JSON.parse(localStorage.getItem(MP_RK)||'null');
@@ -1228,28 +1297,193 @@ function muApply(mode){
 }
 function muDelRow(i){ MU_ROWS.splice(i,1); muRender(); }
 function muSetZone(i,v){ MU_ROWS[i].zone_profile_id = v || null; const p=MU_PEOPLE.find(x=>x.id===v); MU_ROWS[i].zone_manager = p ? p.full_name : ''; muMsg('muSaveMsg','Zone imebadilishwa. Bonyeza "Hifadhi muundo".', null); }
+/* ---- Mkeka: Tawi -> Zone -> Agent ---- */
+let MU_M2={ banners:null, managers:{}, supervisors:{} }, MB_EDI=-1, MB_OPEN={};
+const MB_META_KEY='hk_mkeka_meta_v1';
+function mbOk(){ return !!window.HkMkeka; }
+function mbMsg(t,ok){ const el=document.getElementById('mbMsg'); if(!el) return; el.className='msg'+(ok===true?' ok':(ok===false?' err':'')); el.textContent=t||''; }
+function mbDirty(on){ const el=document.getElementById('mbDirty'); if(el) el.textContent = on ? '● Mabadiliko hayajahifadhiwa' : ''; }
+function mbNormalize(){
+  const out=[]; let n=0;
+  HkMkeka.groups(MU_ROWS).forEach(b=>b.zones.forEach(z=>z.agents.forEach(a=>{ n++; a.r.agent_no=String(n); out.push(a.r); })));
+  MU_ROWS=out;
+}
+function mbPerson(name){ const k=HkMkeka.norm(name); if(!k) return null; return (MU_PEOPLE_FULL||[]).find(p=>HkMkeka.norm(p.full_name)===k)||null; }
 function muRender(){
-  const t=document.getElementById('muTitle'), st=document.getElementById('muSub');
+  const box=document.getElementById('muPreview'); if(!box) return;
+  const t=document.getElementById('muTitle');
   if(t && !t.dataset.set){ t.value = MU_META.title||''; t.dataset.set='1'; }
-  if(st && !st.dataset.set){ st.value = MU_META.subtitle||''; st.dataset.set='1'; }
-  const cnt=document.getElementById('muCount'); if(cnt) cnt.textContent = 'Muundo wa sasa · agents '+MU_ROWS.length;
-  const box=document.getElementById('muPreview');
-  if(!MU_ROWS.length){ box.innerHTML='<div class="empty">Bado hakuna mistari. Bandika muundo hapo juu.</div>'; return; }
-  const branches={};
-  MU_ROWS.forEach((r,i)=>{ (branches[r.branch]=branches[r.branch]||[]).push({r,i}); });
-  box.innerHTML = Object.keys(branches).map(b=>{
-    const list=branches[b];
-    return `<div style="margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--cyan);color:#231603;padding:7px 10px;border-radius:8px;font-weight:800;font-size:13px;"><span>${muE(b)}</span><span>${list.length} agents</span></div>
-      <div style="overflow-x:auto;"><div class="xl-scroll"><table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;">
-        <thead><tr style="color:var(--sub);text-align:left;border-bottom:1px solid var(--border);"><th style="padding:5px;">AREA</th><th style="padding:5px;">AG CODE</th><th style="padding:5px;">NO</th><th style="padding:5px;">AGENT</th><th style="padding:5px;">ZONE</th><th></th></tr></thead>
-        <tbody>${list.map(x=>`<tr style="border-bottom:1px solid var(--border);">
-          <td style="padding:5px;">${muE(x.r.area)}</td><td style="padding:5px;font-weight:700;">${muE(x.r.ag_code)}</td>
-          <td style="padding:5px;">${muE(x.r.agent_no)}</td><td style="padding:5px;">${muE(x.r.agent_name)}</td>
-          <td style="padding:5px;">${muE(x.r.zone_manager)}</td>
-          <td style="padding:5px;text-align:right;"><a href="#" style="color:var(--red);font-size:11px;" onclick="muDelRow(${x.i});return false;">futa</a></td></tr>`).join('')}</tbody>
-      </table></div></div></div>`;
+  const old=document.getElementById('muCount'); if(old) old.textContent='Muundo wa sasa · agents '+MU_ROWS.length;
+  if(!mbOk()){ box.innerHTML='<div class="empty">Pakia faili assets/hekima-mkeka.js kwenye repo ili mkeka mpya ufanye kazi.</div>'; return; }
+  const bans=(MU_M2.banners==null)?HkMkeka.DEFAULT_BANNERS:MU_M2.banners;
+  [0,1,2].forEach(i=>{ const el=document.getElementById('mbBan'+i); if(el && !el.dataset.set){ el.value=bans[i]||''; el.dataset.set='1'; } });
+  const G=HkMkeka.groups(MU_ROWS); let nz=0; G.forEach(b=>{ nz+=b.zones.length; });
+  const cnt=document.getElementById('mbCount'); if(cnt) cnt.textContent = MU_ROWS.length+' agents · '+nz+' zones · '+G.length+' matawi';
+  const bl=document.getElementById('mbBrList'); if(bl) bl.innerHTML=G.map(b=>'<option value="'+muE(b.name)+'">').join('');
+  if(!MU_ROWS.length){ box.innerHTML='<div class="empty">Bado hakuna agents. Bonyeza "+ Tawi jipya", au bandika kutoka Excel hapa chini.</div>'; return; }
+  let seq=0, zi=0; const pal=HkMkeka.PALETTE;
+  box.innerHTML = G.map((b,bi)=>{
+    const nA=b.zones.reduce((s,z)=>s+z.agents.length,0), mg=MU_M2.managers[b.name.toUpperCase()]||'';
+    const zones=b.zones.map(z=>{
+      const c=pal[zi++ % pal.length];
+      const rows=z.agents.map(a=>{ seq++; const r=a.r;
+        return `<div class="mk-ag" onclick="mbEdOpen(${a.i})"><span class="mk-no">${seq}</span><span class="mk-cd">${muE(r.ag_code||'—')}</span><span class="mk-nm">${muE(r.agent_name)}</span><span class="mk-mt">${muE([r.area,r.update_grp].filter(Boolean).join(' · '))}</span></div>`; }).join('');
+      const zn=z.name==='—'?'(bila zone)':z.name, jz=encodeURIComponent(z.name), jb=encodeURIComponent(b.name), sup=(MU_M2.supervisors||{})[b.name.toUpperCase()+'|'+z.name.toUpperCase()]||'';
+      return `<div class="mk-zh" style="border-left-color:rgb(${c[0]},${c[1]},${c[2]});background:rgba(${c[0]},${c[1]},${c[2]},.45);color:#001848;"><span class="mk-zn">${muE(zn)} <span style="font-weight:400;">(${z.agents.length})</span>${sup?`<div style="font-weight:400;font-size:11.5px;">Supervisor: ${muE(sup)}</div>`:`<div style="font-weight:400;font-size:11.5px;opacity:.7;">Supervisor: —</div>`}</span><button onclick="mbZeOpen(decodeURIComponent('${jb}'),decodeURIComponent('${jz}'))">Hariri</button><button onclick="mbEdOpen(-1,decodeURIComponent('${jb}'),decodeURIComponent('${jz}'))">+ Agent</button></div>${rows}`;
+    }).join('');
+    const jb=encodeURIComponent(b.name);
+    return `<details class="mk-br" ${MB_OPEN[b.name]?'open':''} ontoggle="MB_OPEN[decodeURIComponent('${jb}')]=this.open"><summary><b>${muE(b.name)}</b><span class="mk-s">${nA} agents · ${b.zones.length} zones</span><div class="mk-s" style="margin:2px 0 0;${mg?'':'color:var(--red);'}">${mg?'Manager: '+muE(mg):'Manager: hajawekwa'}</div></summary>
+      <div class="mk-bd">
+        <div class="mk-lead"><div class="mu-h" style="margin:2px 0 4px;">Viongozi wa tawi</div>
+          <div class="mk-mg"><span style="width:64px;">Manager</span><input value="${muE(mg)}" placeholder="jina na cheo, mf. DICKSON (CIO)" oninput="mbSetMgr(decodeURIComponent('${jb}'),this.value)"></div>
+          <div class="mk-mg" style="justify-content:flex-end;"><button class="mk-ar" onclick="mbRenBranch(decodeURIComponent('${jb}'))">Jina la tawi</button><button class="mk-ar" onclick="mbMoveBr(decodeURIComponent('${jb}'),-1)" ${bi===0?'disabled':''}>▲</button><button class="mk-ar" onclick="mbMoveBr(decodeURIComponent('${jb}'),1)" ${bi===G.length-1?'disabled':''}>▼</button></div>
+          <div class="mk-s" style="margin:0 0 4px;">Supervisor anawekwa kwa kila zone: bonyeza "Hariri" kwenye zone.</div></div>
+        ${zones}
+        <button class="btn secondary" style="width:100%;margin-top:10px;" onclick="mbNewZone(decodeURIComponent('${jb}'))">+ Zone mpya</button>
+      </div></details>`;
   }).join('');
+}
+function mbZoneList(){
+  const b=(document.getElementById('mbEdBranch').value||'').trim().toUpperCase(), seen=[];
+  MU_ROWS.forEach(r=>{ if(String(r.branch||'').toUpperCase()===b && r.zone_manager && !seen.includes(r.zone_manager)) seen.push(r.zone_manager); });
+  const el=document.getElementById('mbZnList'); if(el) el.innerHTML=seen.map(z=>'<option value="'+muE(z)+'">').join('');
+}
+function mbEdOpen(i,branch,zone){
+  const $=id=>document.getElementById(id);
+  MB_EDI = (i==null||i<0)?-1:i;
+  const r = MB_EDI>=0 ? MU_ROWS[MB_EDI] : {};
+  $('mbEdTitle').textContent = MB_EDI>=0 ? 'Hariri agent' : 'Agent mpya';
+  $('mbEdName').value=r.agent_name||''; $('mbEdCode').value=r.ag_code||''; $('mbEdBranch').value=r.branch||branch||'';
+  $('mbEdZone').value=r.zone_manager||zone||''; $('mbEdArea').value=r.area||''; $('mbEdUpd').value=r.update_grp||'';
+  $('mbEdDel').style.display = MB_EDI>=0 ? '' : 'none';
+  mbLeadFill();
+  const used=new Set(MU_ROWS.map(x=>x.ag_code).filter(Boolean));
+  const cands=(MU_PEOPLE_FULL||[]).filter(p=>/agent/i.test(p.position||p.job_position||'') && !/zone/i.test(p.position||p.job_position||'') && !(p.agent_code && used.has(p.agent_code)));
+  $('mbEdPick').innerHTML='<option value="">— andika mwenyewe —</option>'+cands.map(p=>`<option value="${muE(p.id)}">${muE(p.full_name)}${p.agent_code?' ('+muE(p.agent_code)+')':''}</option>`).join('');
+  $('mbEdPick').parentNode.style.display = (MB_EDI<0 && cands.length) ? '' : 'none';
+  mbZoneList(); mbMsg('');
+  const ed=$('mbEd'); ed.style.display='block'; if(ed.scrollIntoView) ed.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function mbLeadFill(){
+  const $=id=>document.getElementById(id), b=($('mbEdBranch').value||'').trim().toUpperCase(), z=($('mbEdZone').value||'').trim().toUpperCase();
+  $('mbEdMgr').value = MU_M2.managers[b] || '';
+  $('mbEdSup').value = z ? ((MU_M2.supervisors||{})[b+'|'+z]||'') : '';
+}
+let MB_ZE=null;
+function mbZeOpen(branch,zone){
+  MB_ZE={branch,zone};
+  document.getElementById('mbZeName').value = zone==='—'?'':zone;
+  document.getElementById('mbZeSup').value = (MU_M2.supervisors||{})[branch.toUpperCase()+'|'+String(zone).toUpperCase()]||'';
+  const ed=document.getElementById('mbZe'); ed.style.display='block'; if(ed.scrollIntoView) ed.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function mbZeClose(){ document.getElementById('mbZe').style.display='none'; MB_ZE=null; }
+function mbZeSave(){
+  if(!MB_ZE) return;
+  const U=v=>String(v||'').trim().toUpperCase(), {branch,zone}=MB_ZE;
+  const nn=U(document.getElementById('mbZeName').value), sp=String(document.getElementById('mbZeSup').value||'').trim();
+  if(!nn){ mbMsg('Andika jina la zone.',false); return; }
+  if(!MU_M2.supervisors) MU_M2.supervisors={};
+  const ok=branch.toUpperCase()+'|'+String(zone).toUpperCase(), nk=branch.toUpperCase()+'|'+nn;
+  if(nn!==zone){
+    const pr=mbPerson(nn);
+    MU_ROWS.forEach(r=>{ if(String(r.branch||'').trim()===branch && (String(r.zone_manager||'').trim()||'—')===zone){ r.zone_manager=nn; r.zone_profile_id=pr?pr.id:null; } });
+    delete MU_M2.supervisors[ok];
+  }
+  if(sp) MU_M2.supervisors[nk]=sp; else delete MU_M2.supervisors[nk];
+  mbNormalize(); mbZeClose(); muRender(); mbDirty(true); mbMsg('Zone imewekwa ✓ Bonyeza "Hifadhi mkeka" kuhifadhi.',true);
+}
+function mbRenBranch(branch){
+  const n=(prompt('Jina jipya la tawi',branch)||'').trim().toUpperCase(); if(!n || n===branch) return;
+  MU_ROWS.forEach(r=>{ if(String(r.branch||'').trim()===branch) r.branch=n; });
+  const mg=MU_M2.managers[branch.toUpperCase()]; if(mg!==undefined){ MU_M2.managers[n]=mg; delete MU_M2.managers[branch.toUpperCase()]; }
+  Object.keys(MU_M2.supervisors||{}).forEach(k=>{ if(k.indexOf(branch.toUpperCase()+'|')===0){ MU_M2.supervisors[n+k.slice(branch.length)]=MU_M2.supervisors[k]; delete MU_M2.supervisors[k]; } });
+  MB_OPEN[n]=true; mbNormalize(); muRender(); mbDirty(true);
+}
+function mbEdPick(){
+  const id=document.getElementById('mbEdPick').value; if(!id) return;
+  const p=(MU_PEOPLE_FULL||[]).find(x=>x.id===id); if(!p) return;
+  document.getElementById('mbEdName').value=String(p.full_name||'').toUpperCase();
+  if(p.agent_code) document.getElementById('mbEdCode').value=p.agent_code;
+}
+function mbEdClose(){ document.getElementById('mbEd').style.display='none'; }
+function mbEdSave(){
+  const $=id=>document.getElementById(id), U=v=>String(v||'').trim().toUpperCase();
+  const name=U($('mbEdName').value), branch=U($('mbEdBranch').value), zone=U($('mbEdZone').value);
+  if(!name){ mbMsg('Andika jina la agent.',false); return; }
+  if(!branch){ mbMsg('Weka Tawi (mfano: DSM).',false); return; }
+  const code=U($('mbEdCode').value), pr=zone?mbPerson(zone):null;
+  const row={ branch, area:U($('mbEdArea').value), update_grp:U($('mbEdUpd').value), ag_code:code, agent_no:'', agent_name:name, zone_manager:zone, zone_profile_id: pr?pr.id:null };
+  const dup = code && MU_ROWS.some((r,i)=>i!==MB_EDI && r.ag_code===code);
+  if(MB_EDI>=0){ MU_ROWS[MB_EDI]=Object.assign({},MU_ROWS[MB_EDI],row); }
+  else{
+    let at=-1; MU_ROWS.forEach((r,i)=>{ if(U(r.branch)===branch && U(r.zone_manager)===zone) at=i; });
+    if(at<0) MU_ROWS.forEach((r,i)=>{ if(U(r.branch)===branch) at=i; });
+    MU_ROWS.splice(at<0?MU_ROWS.length:at+1,0,row);
+  }
+  const mg=$('mbEdMgr').value.trim(), sp=$('mbEdSup').value.trim();
+  if(mg) MU_M2.managers[branch]=mg;
+  if(!MU_M2.supervisors) MU_M2.supervisors={};
+  if(zone){ const k=branch+'|'+zone; if(sp) MU_M2.supervisors[k]=sp; else delete MU_M2.supervisors[k]; }
+  MB_OPEN[branch]=true; mbNormalize(); mbEdClose(); muRender(); mbDirty(true);
+  mbMsg('Imewekwa ✓'+(dup?' · Onyo: AG code '+code+' inajirudia.':'')+' Bonyeza "Hifadhi mkeka" kuhifadhi.', dup?null:true);
+}
+function mbEdDel(){
+  if(MB_EDI<0) return; if(!confirm('Futa agent huyu kwenye mkeka?')) return;
+  MU_ROWS.splice(MB_EDI,1); MB_EDI=-1; mbNormalize(); mbEdClose(); muRender(); mbDirty(true); mbMsg('Amefutwa. Bonyeza "Hifadhi mkeka" kuhifadhi.',true);
+}
+function mbNewBranch(){ const n=(prompt('Jina la tawi jipya (mfano: DSM)')||'').trim(); if(n) mbEdOpen(-1,n.toUpperCase(),''); }
+function mbNewZone(branch){ const n=(prompt('Jina la zone mpya (mfano: ABASI 2***)')||'').trim(); if(n) mbEdOpen(-1,branch,n.toUpperCase()); }
+function mbRenZone(branch,zone){
+  const n=(prompt('Jina jipya la zone',zone==='—'?'':zone)||'').trim().toUpperCase(); if(!n) return;
+  const pr=mbPerson(n);
+  MU_ROWS.forEach(r=>{ if(String(r.branch||'').trim()===branch && (String(r.zone_manager||'').trim()||'—')===zone){ r.zone_manager=n; r.zone_profile_id=pr?pr.id:null; } });
+  mbNormalize(); muRender(); mbDirty(true);
+}
+function mbMoveBr(branch,dir){
+  const order=HkMkeka.groups(MU_ROWS).map(b=>b.name), i=order.indexOf(branch), j=i+dir;
+  if(i<0||j<0||j>=order.length) return; [order[i],order[j]]=[order[j],order[i]];
+  const idx={}; order.forEach((b,k)=>{ idx[b]=k; });
+  MU_ROWS=MU_ROWS.map((r,k)=>({r,k})).sort((a,b)=>(idx[String(a.r.branch||'').trim()||'—']-idx[String(b.r.branch||'').trim()||'—'])||(a.k-b.k)).map(x=>x.r);
+  mbNormalize(); muRender(); mbDirty(true);
+}
+function mbSetMgr(branch,v){ MU_M2.managers[branch.toUpperCase()]=String(v||'').trim(); mbDirty(true); }
+function mbSetBan(i,v){ if(MU_M2.banners==null) MU_M2.banners=HkMkeka.DEFAULT_BANNERS.slice(); MU_M2.banners[i]=v; mbDirty(true); }
+function mbImport(mode){
+  const el=document.getElementById('mbImpMsg'), say=(t,ok)=>{ el.className='msg'+(ok===true?' ok':(ok===false?' err':'')); el.textContent=t; };
+  const raw=document.getElementById('mbPaste').value, lines=raw.split(/\r?\n/).filter(l=>l.trim()!=='');
+  if(!lines.length){ say('Bandika safu zako za Excel kwanza.',false); return; }
+  const split=l=> l.indexOf('\t')>=0 ? l.split('\t') : (l.indexOf('|')>=0 ? l.split('|') : l.split(/\s{2,}/));
+  let cols={branch:0,area:1,upd:2,code:3,no:4,agent:5,zone:6,sup:-1,mgr:7}, start=0; const banners=[];
+  const hi=lines.findIndex(l=>{ const c=split(l).map(x=>HkMkeka.norm(x)); return c.includes('branch')||c.includes('tawi'); });
+  if(hi>=0){
+    const c=split(lines[hi]).map(x=>HkMkeka.norm(x)), f=(...k)=>c.findIndex(x=>k.includes(x));
+    cols={ branch:f('branch','tawi'), area:f('areas','area','eneo'), upd:f('update'), code:f('ag code','agcode','code'), no:f('no'), agent:f('agent'), zone:f('zone'), sup:f('supervisor','sup','msimamizi'), mgr:f('manager','meneja') };
+    lines.slice(0,hi).forEach(l=>{ const c1=split(l).map(x=>x.trim()).filter(Boolean); if(c1.length===1) banners.push(c1[0]); });
+    start=hi+1;
+  }
+  const rows=[], mgrs={}, sups={}; let skipped=0, lb='', lz='', lm='', ls='';
+  lines.slice(start).forEach(l=>{
+    const c=split(l).map(x=>x.trim()), g=k=>(cols[k]>=0 && cols[k]<c.length)?c[cols[k]]:'';
+    if(c.length<4){ skipped++; return; }
+    const branch=g('branch').toUpperCase(), agent=g('agent');
+    if(!branch||!agent){ skipped++; return; }
+    let zone=g('zone'), mgr=g('mgr');
+    let sup=g('sup');
+    if(!zone && branch===lb) zone=lz; if(!mgr && branch===lb) mgr=lm; if(!sup && branch===lb && zone===lz) sup=ls;
+    lb=branch; lz=zone; lm=mgr; ls=sup;
+    if(sup && zone && !sups[branch+'|'+zone.toUpperCase()]) sups[branch+'|'+zone.toUpperCase()]=sup;
+    const pr=zone?mbPerson(zone):null;
+    rows.push({ branch, area:g('area').toUpperCase(), update_grp:g('upd').toUpperCase(), ag_code:g('code').toUpperCase(), agent_no:'', agent_name:agent.toUpperCase(), zone_manager:zone.toUpperCase(), zone_profile_id:pr?pr.id:null });
+    if(mgr && !mgrs[branch]) mgrs[branch]=mgr;
+  });
+  if(!rows.length){ say('Sijaona mistari ya agents. Hakikisha umebandika safu pamoja na kichwa (BRANCH ... MANAGER).',false); return; }
+  if(mode==='replace') MU_ROWS=rows; else MU_ROWS=MU_ROWS.concat(rows);
+  Object.keys(mgrs).forEach(b=>{ if(mode==='replace' || !MU_M2.managers[b]) MU_M2.managers[b]=mgrs[b]; });
+  if(!MU_M2.supervisors) MU_M2.supervisors={}; if(mode==='replace') MU_M2.supervisors={};
+  Object.keys(sups).forEach(k=>{ MU_M2.supervisors[k]=sups[k]; });
+  if(banners.length){ MU_M2.banners=banners.slice(0,3); [0,1,2].forEach(i=>{ const e=document.getElementById('mbBan'+i); if(e) e.value=MU_M2.banners[i]||''; }); }
+  mbNormalize(); muRender(); mbDirty(true);
+  say('Imepakiwa: agents '+rows.length+(skipped?' · mistari iliyorukwa '+skipped:'')+'. Sasa bonyeza "Hifadhi mkeka" juu.',true);
 }
 
 /* ---- Mnyororo wa uongozi ---- */
@@ -1294,33 +1528,47 @@ async function muSaveTasks(){
   muMsg('muTasksMsg','Majukumu yamehifadhiwa ✓ ('+payload.length+')',true);
 }
 
+/* ---- Muundo: sehemu ndogo (Watu, Muundo wa Timu, Updates, Majukumu, Zaidi) ---- */
+function muSec(n){
+  document.querySelectorAll('#panel-muundo .mu-sec').forEach(e=>{ e.style.display = e.dataset.sec===n ? '' : 'none'; });
+  document.querySelectorAll('#muPills .mu-pill').forEach(b=>{ b.classList.toggle('secondary', b.dataset.sec!==n); });
+}
 /* ---- Pakia, hifadhi, PDF ---- */
 async function muLoad(){
   const g = await sb.rpc('org_get');
   if(g.error){ document.getElementById('muPreview').innerHTML='<div class="empty">Sehemu hii bado haijawekwa kwenye database.</div>'; return; }
   const d=g.data;
   MU_META={title:d.title||'BRANCH AGENT STRUCTURE', subtitle:d.subtitle||''};
+  if(mbOk()){ MU_M2=HkMkeka.decodeMeta(d.subtitle||''); if(MU_M2.banners==null && !Object.keys(MU_M2.managers).length && !Object.keys(MU_M2.supervisors||{}).length){ try{ const l=JSON.parse(localStorage.getItem(MB_META_KEY)||'null'); if(l) MU_M2={ banners:l.banners==null?null:l.banners, managers:l.managers||{}, supervisors:l.supervisors||{} }; }catch(e){} } }
   MU_ROWS=(d.rows||[]).map(r=>({branch:r.branch||'',area:r.area||'',update_grp:r.update_grp||'',ag_code:r.ag_code||'',agent_no:r.agent_no||'',agent_name:r.agent_name||'',zone_manager:r.zone_manager||'',zone_profile_id:r.zone_profile_id||null}));
   MU_TASKS=(d.tasks||[]).map(t=>({role_title:t.role_title||'',holder_profile_id:t.holder_profile_id||null,holder_name:t.holder_name||'',duties:t.duties||''}));
   MU_PEOPLE_FULL=d.people||[];
-  const t=document.getElementById('muTitle'), st=document.getElementById('muSub');
-  if(t){ t.dataset.set=''; } if(st){ st.dataset.set=''; }
+  const t=document.getElementById('muTitle'); if(t){ t.dataset.set=''; }
+  [0,1,2].forEach(k=>{ const e=document.getElementById('mbBan'+k); if(e) e.dataset.set=''; });
   muRender(); muRenderTasks();
 }
 async function muSave(){
-  const title=document.getElementById('muTitle').value.trim(), sub=document.getElementById('muSub').value.trim();
-  if(!MU_ROWS.length){ muMsg('muSaveMsg','Hakuna mistari ya kuhifadhi.',false); return; }
+  const title=(document.getElementById('muTitle').value||'').trim()||'BRANCH AGENT STRUCTURE';
+  if(!MU_ROWS.length){ muMsg('muSaveMsg','Hakuna agents wa kuhifadhi.',false); return; }
+  if(mbOk()) mbNormalize();
+  const sub = mbOk() ? HkMkeka.encodeMeta(MU_M2) : (MU_META.subtitle||'');
   const { data, error } = await sb.rpc('org_save',{ p_title:title, p_subtitle:sub, p_rows: MU_ROWS.map((r,i)=>({...r, sort_order:i+1})) });
   if(error){ muMsg('muSaveMsg','Imeshindwa: '+error.message,false); return; }
-  MU_META={title:title||'BRANCH AGENT STRUCTURE', subtitle:sub};
+  MU_META={title, subtitle:sub};
+  try{ localStorage.setItem(MB_META_KEY, JSON.stringify(MU_M2)); }catch(e){}
   const dups=(data.duplicate_codes||[]);
-  muMsg('muSaveMsg', 'Muundo umehifadhiwa ✓ (mistari '+data.saved+')' + (dups.length ? ' · Onyo: AG code zinajirudia: '+dups.join(', ') : ''), dups.length?null:true);
+  let extra='';
+  try{ const g=await sb.rpc('org_get'); if(!g.error && g.data && String(g.data.subtitle||'')!==sub) extra=' · Onyo: database haikuhifadhi maelekezo/mameneja yote; yamebaki kwenye kifaa hiki tu.'; }catch(e){}
+  muMsg('muSaveMsg','Mkeka umehifadhiwa ✓ (agents '+data.saved+')'+(dups.length?' · Onyo: AG code zinajirudia: '+dups.join(', '):'')+extra, (dups.length||extra)?null:true);
+  mbDirty(false); muRender();
 }
 async function muPdf(){
-  const title=document.getElementById('muTitle').value.trim();
-  if(!MU_ROWS.length){ muMsg('muSaveMsg','Hakuna mistari ya kupakua.',false); return; }
-  try{ await orgDownloadPdf({title:title||MU_META.title, subtitle:document.getElementById('muSub').value.trim()||MU_META.subtitle}, MU_ROWS, [], MU_PEOPLE_FULL); }
-  catch(e){ muMsg('muSaveMsg','Imeshindwa kutengeneza PDF: '+e.message,false); }
+  const title=(document.getElementById('muTitle').value||'').trim()||MU_META.title;
+  if(!MU_ROWS.length){ muMsg('muSaveMsg','Hakuna agents wa kupakua.',false); return; }
+  try{
+    if(mbOk()){ mbNormalize(); await HkMkeka.pdf({ title, subtitle:HkMkeka.encodeMeta(MU_M2) }, MU_ROWS, MU_PEOPLE_FULL); }
+    else { await orgDownloadPdf({ title, subtitle:MU_META.subtitle }, MU_ROWS, [], MU_PEOPLE_FULL); }
+  }catch(e){ muMsg('muSaveMsg','Imeshindwa kutengeneza PDF: '+e.message,false); }
 }
 </script>
 
