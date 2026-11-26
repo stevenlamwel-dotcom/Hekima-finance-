@@ -1,0 +1,2246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script>try{var m=localStorage.getItem('hekima_theme_mode'),t=m=='auto'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):(localStorage.getItem('hekima_theme')||'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}</script><script src="assets/hekima-nav.js"></script><script src="assets/hekima-mkeka.js"></script><style id="hkLdCss">#hkLoader{position:fixed;inset:0;z-index:2147483000;background:rgba(0,16,48,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;transition:opacity .35s}#hkLoader.out{opacity:0;pointer-events:none}html[data-theme="light"] #hkLoader{background:rgba(244,246,248,.72)}html[data-theme="light"] #hkLoader b{color:#001848}#hkLoader .r{position:relative;width:112px;height:112px;display:flex;align-items:center;justify-content:center}#hkLoader .r::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(21,101,232,0) 0%,rgba(21,101,232,.18) 35%,#1565e8 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));animation:hkspin 1.3s linear infinite;filter:drop-shadow(0 0 6px rgba(21,101,232,.7))}#hkLoader b{position:relative;color:#fff;font:700 13px/1 "Trebuchet MS",system-ui,sans-serif;font-variant:small-caps;letter-spacing:1px}@keyframes hkspin{to{transform:rotate(360deg)}}#authLoading{opacity:0!important}</style><script id="hkLdJs">(function(){var d=document,t0=Date.now(),done=false,L=d.createElement("div");L.id="hkLoader";L.innerHTML='<div class="r"><b>Loading...</b></div>';d.documentElement.appendChild(L);
+function hide(){if(done)return;done=true;var w=Math.max(0,450-(Date.now()-t0));setTimeout(function(){L.classList.add("out");setTimeout(function(){L.style.display="none"},400)},w)}
+function show(){done=false;t0=Date.now();L.style.display="flex";L.classList.remove("out");setTimeout(hide,7000)}
+function ready(){var g=d.getElementById("authGate");if(!g||g.style.display==="none")return true;var a=d.getElementById("authLoading");return !a||getComputedStyle(a).display==="none"}
+function poll(){if(done)return;if(d.readyState==="complete"&&ready())hide();else setTimeout(poll,120)}
+poll();setTimeout(hide,10000);
+addEventListener("pageshow",function(e){if(e.persisted)hide()});
+addEventListener("beforeunload",show)})();</script>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hekima Finance — Management Department</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#00183c; --panel:#0b2a5b; --panel2:#082150; --border:#1d3f74;
+    --cyan:#cc9c24; --cyan-dim:rgba(204,156,36,0.16);
+    --green:#008454; --red:#e2645a; --text:#eef2f6; --sub:#93a7ba;
+  }
+  html[data-theme="light"]{
+    --bg:#f5f6f1; --panel:#ffffff; --panel2:#e9edf3; --border:#dee1d7;
+    --text:#001848; --sub:#51606c;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding-bottom:60px;}
+  .wrap{max-width:760px;margin:0 auto;padding:20px 16px 40px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:8px;flex-wrap:wrap;}
+  .topbar h1{font-size:17px;margin:0;font-weight:600;}
+  .icon-toggle-btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;}
+  .back-link{color:var(--cyan);text-decoration:none;font-size:13px;}
+  .logout-link{font-size:11px;color:var(--sub);cursor:pointer;text-decoration:underline;margin-left:10px;}
+
+  .auth-gate{
+    position:fixed;inset:0;
+    background:radial-gradient(120% 90% at 12% 0%, rgba(31,157,116,0.32), transparent 55%),
+      radial-gradient(120% 90% at 88% 100%, rgba(204,156,36,0.28), transparent 55%),
+      linear-gradient(160deg,#00183c 0%, #0b2a5b 60%, #00183c 100%);
+    display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
+  }
+  .auth-loading{color:#dbe3ea;font-size:13px;text-align:center;}
+  .login-box{width:100%;max-width:380px;background:rgba(255,255,255,0.98);border:1px solid rgba(255,255,255,0.4);border-radius:26px;padding:32px 26px 26px;box-shadow:0 30px 70px rgba(0,0,0,0.35);}
+  .login-greeting{font-size:13px;font-weight:600;color:#b9863a;margin-bottom:6px;}
+  .login-box h2{margin:0 0 4px;font-size:26px;font-weight:800;color:#001848;}
+  .login-box p{margin:0 0 22px;font-size:13.5px;color:#5b6b80;}
+  .login-label{display:block;font-size:12.5px;color:#51606c;font-weight:600;margin:0 0 6px;}
+  .login-field{position:relative;margin-bottom:16px;}
+  .login-field .fico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#8a97a6;}
+  .login-input{width:100%;background:#f5f6f4;border:1.5px solid #e1e4dd;color:#001848;padding:13px 14px 13px 42px;border-radius:12px;font-size:15px;}
+  .login-input:focus{outline:none;border-color:#cc9c24;background:#fff;}
+  .pw-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#8a97a6;cursor:pointer;padding:7px;display:flex;}
+  .login-btn{width:100%;background:#00183c;color:#fff;border:none;padding:15px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+  .login-btn:active{background:#0b2a5b;}
+  .login-err{color:#c0392b;font-size:12.5px;margin-top:12px;min-height:14px;text-align:center;}
+  .login-help{text-align:center;margin-top:16px;font-size:13px;}
+  .login-help a{color:#0b2a5b;text-decoration:none;font-weight:600;}
+  .login-foot{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:12px;color:rgba(255,255,255,0.55);}
+  .denied{max-width:380px;background:rgba(255,255,255,0.98);border-radius:20px;padding:30px;text-align:center;color:#001848;}
+
+  .tabs{display:flex;gap:8px;margin-bottom:18px;overflow-x:auto;padding-bottom:2px;}
+  .tab{flex:none;padding:10px 16px;border-radius:10px;background:var(--panel);border:1px solid var(--border);color:var(--sub);font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap;}
+  .tab.active{background:var(--cyan);color:#231603;border-color:var(--cyan);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px;}
+  .card h3{margin:0 0 12px;font-size:15px;}
+  .field{margin-bottom:10px;}
+  .field label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px;}
+  .field input, .field select, .field textarea{
+    width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    padding:10px 12px;border-radius:9px;font-size:14px;
+  }
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .btn{background:var(--cyan);color:#231603;border:none;padding:11px 18px;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer;}
+  .btn.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border);}
+  .msg{font-size:12.5px;margin-top:8px;min-height:14px;}
+  .msg.err{color:var(--red);}
+  .msg.ok{color:var(--green);}
+  .empty{color:var(--sub);font-size:13px;padding:14px 0;text-align:center;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;color:var(--sub);font-weight:600;font-size:11.5px;padding:8px 8px;border-bottom:1px solid var(--border);}
+  td{padding:8px 8px;border-bottom:1px solid var(--border);}
+  .scrollx{overflow-x:auto;}
+  .badge{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;}
+  .badge.active{background:rgba(31,157,116,0.15);color:var(--green);}
+  .badge.inactive{background:rgba(226,100,90,0.15);color:var(--red);}
+  .report-item{border-bottom:1px solid var(--border);padding:10px 0;font-size:13px;}
+  .report-item:last-child{border-bottom:none;}
+  .report-item .meta{color:var(--sub);font-size:11.5px;margin-bottom:4px;}
+  .kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+  .kpi-box{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;}
+  .kpi-box .num{font-size:22px;font-weight:800;}
+  .kpi-box .lbl{font-size:11.5px;color:var(--sub);margin-top:2px;}
+  .lock-note{font-size:12px;color:var(--sub);padding:10px 0;}
+  /* XL-FIT */
+  input,select,textarea{max-width:100%;box-sizing:border-box;}
+  table{max-width:100%;}
+  .xl-scroll{overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch;}
+  /* HEKIMA: watermark ya chapa (uwazi 5%), haizuii kubofya */
+  .hk-wm{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.05;background:url(assets/hekima-watermark.png) center center/min(72vw,520px) no-repeat;}
+
+  /* ===== HEKIMA FINANCE — brand (CSS pekee; logic haijaguswa) ===== */
+  body{font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;letter-spacing:.005em;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{letter-spacing:-.01em;color:var(--hk-navy,#001848);}
+  .card{border-radius:16px;box-shadow:0 2px 12px rgba(0,24,72,.06);border:1px solid var(--line,#dfe4ec);}
+  .btn{border-radius:10px;font-weight:700;}
+  .field{border-radius:10px;}
+  .empty{border:1px dashed #c9d2df;border-radius:12px;padding:16px;text-align:center;color:var(--sub,#51606c);background:#fbfcfe;}
+  .msg{border-radius:10px;font-size:12.5px;}
+  .xl-scroll,.scrollx{border-radius:12px;}
+  @media (max-width:640px){ .card{padding:12px!important;} .btn{padding:10px 12px;} }
+  .btn.secondary{background:#fff;color:var(--hk-navy,#001848);border:1px solid var(--hk-navy,#001848);}
+
+  /* ===== HEKIMA: Management awamu ya 2 (CSS pekee) ===== */
+  body{font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;letter-spacing:.005em;-webkit-font-smoothing:antialiased;}
+  h1{font-size:21px;letter-spacing:-.01em;color:#fff;background:linear-gradient(120deg,#001848,#0b2a5b);padding:12px 16px;border-radius:14px;margin:4px 0 14px;box-shadow:0 6px 16px rgba(0,24,72,.14);}
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{flex:0 0 auto;border:1px solid var(--line,#dfe4ec);background:#fff;color:var(--hk-navy,#001848);border-radius:10px;padding:9px 13px;font-weight:700;font-size:13px;cursor:pointer;}
+  .tab.active{background:var(--hk-gold,#cc9c24);border-color:var(--hk-gold,#cc9c24);color:#1d1400;}
+  .card{background:#fff;border:1px solid var(--line,#dfe4ec);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 2px 12px rgba(0,24,72,.06);}
+  .card h3,.panel h3{color:var(--hk-navy,#001848);font-size:15px;letter-spacing:-.01em;margin:0 0 10px;}
+  .panel{background:#fff;border:1px solid var(--line,#dfe4ec);border-radius:16px;padding:14px;margin-bottom:12px;}
+  .btn{border-radius:10px;font-weight:700;padding:10px 14px;border:0;cursor:pointer;background:var(--hk-green,#008454);color:#fff;}
+  .btn.secondary{background:#fff;color:var(--hk-navy,#001848);border:1px solid var(--hk-navy,#001848);}
+  .field{border-radius:10px;}
+  .empty{background:#fbfcfe;border:1px dashed #c9d2df;border-radius:12px;padding:16px;text-align:center;color:var(--sub,#51606c);}
+  .msg{border-radius:10px;font-size:12.5px;padding:8px 10px;}
+  .xl-scroll{border-radius:12px;background:#fff;border:1px solid var(--line,#dfe4ec);}
+  .num{font-variant-numeric:tabular-nums;font-weight:800;}
+  @media (max-width:640px){
+    h1{font-size:18px;}
+    .card,.panel{padding:12px;}
+    .btn{padding:10px 12px;}
+  }
+</style>
+<link rel="stylesheet" href="assets/hekima-brand.css">
+<link rel="stylesheet" href="assets/hekima-topbar.css">
+<link rel="stylesheet" href="assets/hekima-shell.css"><script defer src="assets/hekima-shell.js"></script><style>.card input,.card select,.card textarea{max-width:100%;min-width:0;box-sizing:border-box}.card [style*="grid-template-columns"]{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))!important}.xl-scroll{max-width:100%;overflow-x:auto}</style></head>
+<body>
+<div class="hk-wm" aria-hidden="true"></div>
+
+<div class="auth-gate" id="authGate">
+  <div class="auth-loading" id="authLoading">Loading...</div>
+  <div class="login-box" id="loginBox" style="display:none">
+    <div class="login-greeting" id="loginGreeting">Habari</div>
+    <h2>Ingia</h2>
+    <p>Tumia akaunti yako ya Hekima Finance kuingia.</p>
+    <label class="login-label" for="loginEmail">Barua pepe</label>
+    <div class="login-field">
+      <svg class="fico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9 6 9-6M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/></svg>
+      <input class="login-input" id="loginEmail" type="email" placeholder="jina@hekimafinance.co.tz">
+    </div>
+    <label class="login-label" for="loginPass">Nywila</label>
+    <div class="login-field">
+      <svg class="fico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <input class="login-input" id="loginPass" type="password" placeholder="••••••••">
+      <button type="button" class="pw-eye" id="pwEyeBtn" onclick="togglePwVisibility()" aria-label="Onyesha nywila">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Ingia</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-help"><a href="mailto:stevenlamwel@gmail.com">Umesahau nywila? Wasiliana na msimamizi</a></div>
+  </div>
+  <div class="denied" id="deniedBox" style="display:none">
+    <h2 style="margin:0 0 10px;font-size:20px;">Huna ruhusa</h2>
+    <p style="color:#5b6b80;font-size:14px;">Sehemu ya Management inapatikana kwa uongozi mkuu pekee.</p>
+    <a href="portal.html" style="display:inline-block;margin-top:14px;color:#0b2a5b;font-weight:600;">‹ Rudi kwenye menyu</a>
+  </div>
+  <div class="login-foot">Hekima Finance &middot; Iringa, Tanzania</div>
+</div>
+
+<div id="appContent" style="display:none">
+<div class="wrap">
+  <div class="topbar">
+    <h1>Management Department</h1>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      <a href="portal.html" class="back-link">‹ Menu</a>
+      <button class="icon-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn">🌙</button>
+      <span class="logout-link" onclick="doLogout()">Log Out</span>
+    </div>
+  </div>
+  <p style="font-size:12.5px;color:var(--sub);margin-top:-8px;">Ofisi kuu ya Hekima Finance. Hupokea ripoti kutoka Operations na kutoka idara zote, na hutoa mamlaka ya ufikiaji.</p>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="reports" onclick="switchTab('reports')">Ripoti za Operations</div>
+    <div class="tab" data-tab="debts" onclick="switchTab('debts')">Madeni ya Wafanyakazi</div>
+    <div class="tab" data-tab="payroll" onclick="switchTab('payroll')">Payroll</div>
+    <div class="tab" data-tab="futa" onclick="switchTab('futa')">Futa (CEO)</div>
+    <div class="tab" data-tab="muundo" onclick="switchTab('muundo')">Watu &amp; Muundo</div>
+    <div class="tab" data-tab="mikoa" onclick="switchTab('mikoa')">Mikoa (CEO)</div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="panel active" id="panel-reports">
+    <div class="card">
+      <h3>Ripoti Kutoka Operations Department</h3>
+      <div id="reportsList"></div>
+      <div class="empty" id="reportsEmpty" style="display:none">Bado hakuna ripoti kutoka Operations.</div>
+    </div>
+  </div>
+
+  <!-- USERS / PERMISSIONS -->
+  <!-- MADENI YA WAFANYAKAZI -->
+  <div class="panel" id="panel-debts">
+    <div class="card">
+      <h3>Mtiririko wa Madeni</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Kila deni linafuatiliwa hadi liishe. Makato ya kila mwezi unayoweka hapa yanajazwa yenyewe kwenye Payroll (unaweza kuyabadilisha mwezi husika).</p>
+      <div id="mdList"><div class="empty">Inapakia...</div></div>
+      <div class="msg" id="mdMsg"></div>
+    </div>
+    <div class="card">
+      <h3>Maombi Yanayosubiri (kutoka HR)</h3>
+      <div id="debtPendingList"></div>
+      <div class="empty" id="debtPendingEmpty" style="display:none">Hakuna ombi linalosubiri.</div>
+    </div>
+    <div class="card">
+      <h3>Weka Deni/Faini Moja kwa Moja</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Hii inaidhinishwa papo hapo, bila kupitia HR.</p>
+      <div class="field"><label>Mfanyakazi</label><select id="dcEmp"></select></div>
+      <div class="field"><label>Aina</label>
+        <select id="dcKind"><option value="hasara">Hasara</option><option value="faini">Faini</option><option value="mkopo">Mkopo</option><option value="nyingine">Nyingine</option></select>
+      </div>
+      <div class="field"><label>Kiasi (TZS)</label><input id="dcAmount" type="number" min="1"></div>
+      <div class="field"><label>Maelezo (hiari)</label><input id="dcNote"></div>
+      <button class="btn" id="dcBtn" onclick="ceoAddDebtDirect()">Hifadhi Deni</button>
+      <div class="msg" id="dcMsg"></div>
+    </div>
+    <div class="card">
+      <h3>Madeni Yote</h3>
+      <div class="scrollx"><div class="xl-scroll"><table>
+        <thead><tr><th>Jina</th><th>Aina</th><th>Kiasi</th><th>Kilichobaki</th><th>Chanzo</th><th>Hali</th></tr></thead>
+        <tbody id="debtAllTableBody"></tbody>
+      </table></div></div>
+      <div class="empty" id="debtAllEmpty" style="display:none">Hakuna madeni bado.</div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-payroll">
+    <div class="card">
+      <h3>Tengeneza Payroll ya Mwezi</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Mshahara wa kila mfanyakazi unahesabiwa wenyewe kutokana na cheo chake, wateja wa agent na agents wa zone (kanuni hapa chini). Unaweza kubadilisha kiasi cha yeyote kabla ya kutuma. Makato ya madeni yanajazwa kutoka ratiba ya deni. Kisha unamtumia HR kuhakiki, na BALANCE ndio wanalipa.</p>
+      <div class="row2">
+        <div class="field"><label>Mwezi</label><input id="mpPeriod" type="month"></div>
+        <div class="field"><label>&nbsp;</label><button class="btn" onclick="mpCreate()" style="width:100%">Tengeneza</button></div>
+      </div>
+      <div class="msg" id="mpMsg"></div>
+    </div>
+    <style>.mpr-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--border);font-size:13px;}.mpr-row input{width:130px;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:7px;text-align:right;font-family:inherit;}.mpr-h{font-weight:700;font-size:12.5px;margin:12px 0 2px;}.mpr-s{font-size:11.5px;color:var(--sub);margin:0 0 4px;}</style>
+    <div class="card" id="mpRulesCard" style="margin-bottom:12px;">
+      <h3>Kanuni za Mshahara</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 8px;">Weka mshahara wa chini wa kila cheo. Agent na Zone wanaongezeka kulingana na kazi yao.</p>
+      <div id="mpRulesBox"><div class="empty">Inapakia...</div></div>
+      <button class="btn" style="width:100%;margin-top:12px;" onclick="mpRulesSave()">Hifadhi kanuni</button>
+      <div class="msg" id="mpRulesMsg"></div>
+    </div>
+    <div class="card" style="margin-bottom:12px;"><h3>Mikopo ya wafanyakazi — idhini ya CEO</h3><div id="mgLoanList"><div class="empty">Inapakia...</div></div></div>
+    <div class="card"><h3>Payroll Zote</h3><div id="mpRuns"><div class="empty">Inapakia...</div></div></div>
+    <div class="card" id="mpDetailCard" style="display:none"><h3 id="mpDetailTitle"></h3><div id="mpDetail"></div><div class="msg" id="mpDetailMsg"></div></div>
+  </div>
+
+  <div class="panel" id="panel-muundo">
+    <style>.mu-pills{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;}.mu-pills .btn{flex:none;padding:8px 14px;font-size:13px;white-space:nowrap;}.mu-h{font-weight:700;font-size:12.5px;margin:14px 0 2px;color:var(--text);}.mu-hint{font-size:11.5px;color:var(--sub);margin:0 0 8px;}.mk-br{border:1px solid var(--border);border-radius:12px;margin:0 0 8px;background:var(--panel);}.mk-br>summary{padding:10px 12px;cursor:pointer;font-size:13.5px;}.mk-br>summary .mk-s{color:var(--sub);font-size:12px;margin-left:6px;}.mk-bd{padding:0 10px 10px;}.mk-mg{display:flex;align-items:center;gap:8px;margin:2px 0 8px;font-size:12px;color:var(--sub);}.mk-mg input{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:7px;font-family:inherit;}.mk-zh{display:flex;align-items:center;gap:6px;margin:8px 0 4px;padding:6px 8px;border-radius:8px;background:var(--panel2);border-left:6px solid #ccc;font-size:13px;font-weight:700;}.mk-zh span.mk-zn{flex:1;min-width:0;}.mk-zh button{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:8px;padding:4px 9px;font-size:12px;font-weight:600;cursor:pointer;}.mk-ag{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--border);font-size:12.5px;cursor:pointer;}.mk-ag .mk-no{width:26px;color:var(--sub);text-align:right;}.mk-ag .mk-cd{width:44px;font-weight:700;}.mk-ag .mk-nm{flex:1;min-width:0;font-weight:600;}.mk-ag .mk-mt{color:var(--sub);font-size:11px;text-align:right;max-width:38%;}.mk-ed{border:1px dashed var(--border);border-radius:12px;padding:12px;margin:0 0 12px;}.mk-zc{border:1px solid var(--border);border-left:6px solid #ccc;border-radius:10px;padding:8px 10px;margin:10px 0 0;background:var(--panel);}.mk-zt{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13.5px;}.mk-sr{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12px;color:var(--sub);}.mk-sr>span{width:72px;flex:none;}.mk-pk{flex:1;min-width:0;text-align:left;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:8px 10px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;}.mk-pk.empty{color:var(--red);font-weight:500;}.mk-bad{font-size:10.5px;color:var(--red);font-weight:600;}.mk-ag .mk-nm small{display:block;color:var(--sub);font-weight:400;font-size:11px;}.mk-lead{background:var(--panel2);border-radius:10px;padding:8px 10px;margin:0 0 6px;}.mb-bd{position:fixed;inset:0;background:rgba(0,0,0,.45);}.mb-sh{position:fixed;left:0;right:0;bottom:0;max-height:84vh;background:var(--panel);border-radius:18px 18px 0 0;padding:14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 -8px 30px rgba(0,0,0,.25);}.mb-t{font-weight:700;font-size:15px;}.mb-sh>input{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:10px;font:inherit;}.mb-all{font-size:12px;color:var(--sub);display:flex;gap:8px;align-items:center;}.mb-l{overflow:auto;flex:1;min-height:80px;}.mb-it{display:flex;gap:10px;align-items:center;padding:10px 6px;border-bottom:1px solid var(--border);cursor:pointer;}.mb-it.on{background:var(--panel2);}.mb-it.off{opacity:.45;cursor:default;}.mb-ck{width:22px;font-size:18px;}.mb-tx{display:flex;flex-direction:column;min-width:0;}.mb-tx small{color:var(--sub);font-size:11.5px;}.mb-f{display:flex;gap:8px;justify-content:flex-end;}#mbPicker,#mbFormSheet{display:none;position:fixed;inset:0;z-index:2147482000;}.mk-ar{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:8px;padding:3px 8px;font-size:12px;cursor:pointer;}.mu-old{font-size:12px;color:var(--sub);background:var(--panel2);border:1px dashed var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px;}</style>
+    <div class="mu-pills" id="muPills">
+      <button class="btn mu-pill" data-sec="watu" onclick="muSec('watu')">Watu</button>
+      <button class="btn secondary mu-pill" data-sec="timu" onclick="muSec('timu')">Muundo wa Timu</button>
+      <button class="btn secondary mu-pill" data-sec="updates" onclick="muSec('updates')">Updates</button>
+      <button class="btn secondary mu-pill" data-sec="majukumu" onclick="muSec('majukumu')">Majukumu</button>
+      <button class="btn secondary mu-pill" data-sec="zaidi" onclick="muSec('zaidi')">Zaidi</button>
+    </div>
+    <div class="mu-sec" data-sec="watu">
+<div class="card" style="margin-bottom:12px;"><h3>Wafanyakazi wapya — kukagua</h3><div id="mgPendEmps"><div class="empty">Inapakia...</div></div></div>
+<div class="card" id="uwEditor" style="display:none">
+      <h3 id="uwEditTitle">Mtu</h3>
+      <input type="hidden" id="ue-id">
+      <div class="mu-h" style="margin-top:0;">1. Taarifa za mtu</div>
+      <div class="row2">
+        <div class="field"><label>Jina kamili</label><input id="ue-name"></div>
+        <div class="field"><label>Agent code</label><input id="ue-code" style="text-transform:uppercase" placeholder="mfano: JUM"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Email (akaunti ya kuingia)</label><input id="ue-email" type="email"></div>
+        <div class="field" id="ue-passWrap"><label>Nywila (acha wazi kutengeneza)</label><input id="ue-pass" placeholder="Auto"></div>
+      </div>
+      <div class="mu-h">2. Cheo na uongozi</div>
+      <div class="mu-hint">Msimamizi = anayeripoti kwake. Agent: weka Zone Manager wake hapa.</div>
+      <div class="row2">
+        <div class="field"><label>Cheo</label><select id="ue-pos"></select></div>
+        <div class="field"><label>Idara</label><input id="ue-dept" placeholder="mfano: Operations"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Msimamizi (anaripoti kwa)</label><select id="ue-sup"></select></div>
+        <div class="field"><label>Simu</label><input id="ue-phone" placeholder="0xxxxxxxxx"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Tarehe ya kuajiriwa</label><input id="ue-hire" type="date"></div>
+        <div class="field" id="ue-roleWrap"><label>Ruhusa ya mfumo</label>
+          <select id="ue-role">
+            <option value="agent">Agent (Loans pekee)</option>
+            <option value="hr">HR Officer</option>
+            <option value="operations">Operations Officer</option>
+            <option value="manager">Manager (Admin Mdogo)</option>
+            <option value="admin">Admin Mkuu (Ufikiaji Wote)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" id="ue-deptsWrap"><label>Idara anazoruhusiwa (hiari, mfano: Loans, Combine)</label><input id="ue-depts"></div>
+      <div class="mu-h">3. Muundo wa timu (kwa agents)</div>
+      <div class="mu-hint">Weka Tawi ili agent aonekane kwenye Muundo wa Timu na PDF.</div>
+      <div class="row2">
+        <div class="field"><label>Tawi (kwa agents)</label><input id="ue-branch" placeholder="mfano: DSM"></div>
+        <div class="field"><label>Eneo (kwa agents)</label><input id="ue-area" placeholder="mfano: KAWE"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <button class="btn" id="ue-save" onclick="uwSave()">Hifadhi</button>
+        <button class="btn secondary" onclick="uwClose()">Ghairi</button>
+      </div>
+      <div class="msg" id="ue-msg"></div>
+    </div>
+<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;">
+        <h3 style="margin:0">Watu</h3>
+        <button class="btn" onclick="uwEdit('')">+ Ongeza mtu</button>
+      </div>
+      <div id="uwList"><div class="empty">Inapakia...</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+        <button class="btn secondary" onclick="uwCreds()">Pakua nywila (CSV)</button>
+      </div>
+      <div class="msg" id="uwMsg"></div>
+    </div>
+    </div>
+    <div class="mu-sec" data-sec="timu" style="display:none">
+<div class="card" id="mbCard">
+      <h3>Mkeka wa Timu</h3>
+      <div class="mu-hint"><span id="mbCount">Inapakia...</span> <span id="mbDirty" style="color:var(--red);font-weight:700;"></span></div>
+      <div class="mu-hint" id="mbUnplaced"></div>
+      <div class="mu-hint">Hatua: Tawi → Manager → Zone → Supervisor → Agents. Unachagua wafanyakazi waliopo kwenye mfumo tu, orodha inachujwa kwa cheo chao.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 8px;">
+        <button class="btn" onclick="muSave()">Hifadhi mkeka</button>
+        <button class="btn secondary" onclick="muPdf()">Pakua PDF</button>
+      </div>
+      <label class="mu-hint" style="display:flex;gap:8px;align-items:flex-start;margin:0 0 8px;"><input type="checkbox" id="mbSync" checked style="margin-top:2px;"><span>Sasisha pia "Msimamizi" wa kila mtu (Agent → Zone → Supervisor → Manager) ninapohifadhi</span></label>
+      <div class="msg" id="muSaveMsg"></div>
+      <div class="msg" id="mbMsg"></div>
+      <div id="muPreview"><div class="empty">Inapakia...</div></div>
+      <button class="btn secondary" style="width:100%;margin-top:10px;" onclick="mbNewBranch()">+ Tawi jipya</button>
+    </div>
+    <details class="card" id="mbImportCard">
+      <summary style="cursor:pointer;font-weight:700;">Bandika kutoka Excel (njia ya haraka)</summary>
+      <p class="mu-hint" style="margin-top:8px;">Nakili safu zako za Excel (BRANCH, AREAS, UPDATE, AG CODE, NO, AGENT, ZONE, MANAGER) pamoja na kichwa, kisha bandika hapa. Zone na Manager zilizounganishwa zinajazwa zenyewe.</p>
+      <textarea id="mbPaste" rows="6" class="field" style="width:100%;" placeholder="Bandika hapa..."></textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <button class="btn" onclick="mbImport('replace')">Badilisha mkeka wote</button>
+        <button class="btn secondary" onclick="mbImport('append')">Ongeza kwenye mkeka</button>
+      </div>
+      <div class="msg" id="mbImpMsg"></div>
+    </details>
+    <details class="card" id="mbBanCard">
+      <summary style="cursor:pointer;font-weight:700;">Kichwa na maelekezo ya juu ya PDF</summary>
+      <div class="field" style="margin-top:8px;"><label>Kichwa cha PDF</label><input id="muTitle" placeholder="BRANCH AGENT STRUCTURE"></div>
+      <div class="field"><label>Maelekezo ya juu (kijani)</label><input id="mbBan0" oninput="mbSetBan(0,this.value)"></div>
+      <div class="field"><label>Maelekezo ya juu (nyekundu)</label><input id="mbBan1" oninput="mbSetBan(1,this.value)"></div>
+      <div class="field"><label>Maelekezo ya juu (nyeusi)</label><input id="mbBan2" oninput="mbSetBan(2,this.value)"></div>
+    </details>
+    </div>
+    <div class="mu-sec" data-sec="updates" style="display:none">
+<div class="card" id="updCard">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;">
+        <h3 style="margin:0">Updates</h3>
+        <button class="btn" id="updNewBtn" onclick="updEdit('')" style="display:none">+ Unda update</button>
+      </div>
+      <div id="updList"><div class="empty">Inapakia...</div></div>
+      <div id="updEditor" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+        <input type="hidden" id="upd-id">
+        <div class="field"><label>Jina la update</label><input id="upd-name" placeholder="mfano: Mkoa wa Kwanza"></div>
+        <div class="field"><label>Kiongozi wa update</label><select id="upd-leader"></select></div>
+        <div class="field"><label>Agents (chagua wanaoingia kwenye update hii)</label><div id="upd-members" style="max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:6px 8px;"></div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <button class="btn" id="upd-save" onclick="updSave()">Hifadhi update</button>
+          <button class="btn secondary" onclick="updClose()">Ghairi</button>
+        </div>
+        <div class="msg" id="upd-msg"></div>
+      </div>
+      <div class="msg" id="updMsg"></div>
+    </div>
+    </div>
+    <div class="mu-sec" data-sec="majukumu" style="display:none">
+<div class="card">
+      <h3>Cheo Kipya</h3>
+      <div class="row2">
+        <div class="field"><label>Jina la cheo</label><input id="posNewName" placeholder="mfano: Mkaguzi wa Ndani"></div>
+        <div class="field"><label>&nbsp;</label><button class="btn secondary" onclick="addPosition()" style="width:100%">Ongeza cheo</button></div>
+      </div>
+      <div class="msg" id="posNewMsg"></div>
+    </div>
+<div class="card" id="muTasksCard">
+      <h3>Majukumu Maalum</h3>
+      <div id="muTasks"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+        <button class="btn secondary" onclick="muTaskAdd()">+ Ongeza kazi</button>
+        <button class="btn" onclick="muSaveTasks()">Hifadhi majukumu</button>
+      </div>
+      <div class="msg" id="muTasksMsg"></div>
+      <div style="margin-top:8px;"><button class="btn secondary" onclick="muTasksPdf()">Pakua PDF ya Mkeka wa Kazi Maalum</button></div>
+    </div>
+    </div>
+    <div class="mu-sec" data-sec="zaidi" style="display:none">
+    <div class="mu-old">Hizi ni njia za zamani. <b>Watu → Hariri</b> inafanya kazi zote hizi (cheo, msimamizi, ruhusa, tawi) mahali pamoja, kwa hiyo mara nyingi huhitaji kutumia sehemu hii.</div>
+<div class="card" style="margin-bottom:12px;">
+      <h3>Watumiaji</h3>
+      <div class="xl-scroll"><table><thead><tr><th>Jina</th><th>Barua pepe</th><th>Jukumu</th><th>Cheo</th><th>Idara</th><th>Msimamizi</th><th>Hali</th></tr></thead>
+        <tbody id="usersTableBody"></tbody></table></div>
+      <div class="empty" id="usersEmpty" style="display:none;">Bado hakuna watumiaji.</div>
+      <div class="card" style="margin-bottom:12px;">
+        <h3>Muundo wa shirika (agents)</h3>
+        <div class="sec-desc" id="muCount">Muundo wa sasa · agents 0</div>
+        <textarea id="muPaste" rows="5" class="field" style="width:100%;" placeholder="Bandika mistari: Jina | Namba | Zone | Supervisor"></textarea>
+        <div class="row" style="margin-top:8px;gap:8px;">
+          <button class="btn" onclick="muApply('replace')">Badilisha muundo</button>
+          <button class="btn secondary" onclick="muApply('append')">Ongeza mistari</button>
+        </div>
+        <div class="msg" id="muMsg" style="margin-top:8px;"></div>
+        <div id="muChain" style="margin-top:10px;"></div>
+        <div class="msg" id="muChainMsg" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px;">
+        <h3>Weka cheo cha mtumiaji</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <select class="field" id="posUserSelect"></select>
+          <select class="field" id="posSupervisor"></select>
+          <select class="field" id="posPosition"><option value="">— Chagua cheo —</option><option value="Agent">Agent</option><option value="Supervisor">Supervisor</option><option value="Zone Manager">Zone Manager</option><option value="HR">HR</option><option value="Balance">Balance</option><option value="Combine">Combine</option><option value="Operations">Operations</option><option value="Management">Management</option><option value="CEO">CEO</option></select>
+          <input class="field" id="posDept" placeholder="Idara">
+          <input class="field" id="posPhone" placeholder="Simu">
+          <input class="field" id="posHireDate" type="date">
+        </div>
+        <button class="btn" style="margin-top:10px;" onclick="savePosition()">Hifadhi cheo</button>
+        <div class="msg" id="posMsg" style="margin-top:8px;"></div>
+      </div>
+
+      <div id="superAdminOnlyCard" style="margin-bottom:12px;"></div>
+      <div class="card" style="margin-bottom:12px;">
+        <h3>Badilisha ruhusa ya mtumiaji</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <select class="field" id="userSelect"></select>
+          <select class="field" id="userRole"><option value="agent">agent</option><option value="hr">hr</option><option value="admin">admin</option></select>
+          <input class="field" id="userDepts" placeholder="Idara zinazoruhusiwa (koma)" style="grid-column:1 / span 2;">
+        </div>
+        <button class="btn" style="margin-top:10px;" onclick="updateUserRole()">Hifadhi ruhusa</button>
+        <div class="msg" id="userMsg" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px;">
+        <h3>Ongeza mfanyakazi mpya</h3>
+        <button class="btn" id="wCreateBtn" onclick="wCreate()">Tengeneza mfanyakazi</button>
+        <div class="msg" id="wMsg" style="margin-top:8px;"></div>
+        <div class="sec-desc" id="wProgress" style="margin-top:6px;"></div>
+        <div id="wList" style="margin-top:8px;"></div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <!-- MIKOA (CEO) -->
+  <div class="panel" id="panel-mikoa">
+    <div class="card">
+      <h3>Mikoa ya kampuni</h3>
+      <p style="font-size:12.5px;color:var(--sub);margin:-4px 0 10px;">Kila mkoa una Combine na Balance yake ndani ya Balance kuu. CEO pekee ndiye anayeongeza mkoa.</p>
+      <div id="mkList" style="font-size:13px;color:var(--sub);">Inapakia...</div>
+      <div id="mkAdd" style="display:none;margin-top:12px;">
+        <div class="field"><label>Jina la mkoa</label><input id="mkName" placeholder="mfano: Kagera"></div>
+        <div class="field"><label>Msimbo (herufi kubwa, bila nafasi)</label><input id="mkCode" style="text-transform:uppercase" placeholder="mfano: KAGERA"></div>
+        <button class="btn" onclick="mkAdd()">Ongeza mkoa</button>
+      </div>
+      <div class="msg" id="mkMsg"></div>
+    </div>
+    <div class="card">
+      <h3>Mawakala na mikoa yao</h3>
+      <div id="mkAgents" style="font-size:13px;color:var(--sub);">Inapakia...</div>
+      <div class="msg" id="mkMsg2"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-futa">
+    <div class="card">
+      <p style="font-size:12px;color:var(--sub);margin:0;">Sehemu hii ni ya CEO pekee. Kila ufutaji unaandikwa kwenye kumbukumbu (audit log) na database inakataa mtu mwingine. Utaombwa kuandika FUTA kuthibitisha.</p>
+    </div>
+    <div class="card"><h3>Futa Mfanyakazi</h3><div id="fEmps"><div class="empty">Fungua tab hii kupakia...</div></div></div>
+    <div class="card"><h3>Futa Account</h3><div id="fAccts"></div></div>
+    <div class="card">
+      <h3>Futa Mteja / Historia ya Malipo</h3>
+      <div class="field"><input id="fClientQ" placeholder="Tafuta jina la mteja..." oninput="fSearchClients()"></div>
+      <div id="fClients"></div>
+    </div>
+    <div class="msg" id="fMsg"></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://euhteovuhdvefzaavlqx.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1aHRlb3Z1aGR2ZWZ6YWF2bHF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NjQwNjEsImV4cCI6MjA5NzE0MDA2MX0.gaV1mShFhVHVpxAqCptJsiSr4r-d3_OYvdtH0bpR58Q";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let CURRENT_ROLE = null;
+
+function switchTab(name,silent){
+  if(!silent && window.HkNav) HkNav.tab(name);
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+name));
+  if(name==='debts'){ loadDebtsEmp(); loadPendingDebtRequests(); loadAllDebts(); mdLoad(); }
+  if(name==='payroll'){ mpLoadRuns(); mpRulesLoad(); }
+  if(name==='futa'){ fLoadAll(); }
+  if(name==='muundo'){ uwLoad(); loadUsers(); loadVyeo(); }
+  if(name==='mikoa'){ mkLoad(); }
+}
+
+async function loadDebtsEmp(){
+  const { data, error } = await sb.from('mikopo_profiles').select('id, full_name, email').eq('active', true).order('full_name');
+  if(error) return;
+  document.getElementById('dcEmp').innerHTML = (data||[]).map(p => `<option value="${p.id}">${p.full_name||p.email}</option>`).join('');
+}
+
+async function openDebtLetter(path){
+  const { data, error } = await sb.storage.from('debt-letters').createSignedUrl(path, 300);
+  if(error){ alert('Imeshindwa kufungua barua: '+error.message); return; }
+  window.open(data.signedUrl, '_blank');
+}
+
+async function loadPendingDebtRequests(){
+  const box = document.getElementById('debtPendingList');
+  const { data, error } = await sb.rpc('list_all_debts', { p_status: 'inasubiri' });
+  if(error){ box.innerHTML=''; document.getElementById('debtPendingEmpty').style.display='block'; return; }
+  const rows = (data||[]).filter(r=>r.source==='hr_request' || r.source==='staff_loan_request');
+  document.getElementById('debtPendingEmpty').style.display = rows.length ? 'none' : 'block';
+  box.innerHTML = rows.map(r => `
+    <div style="border:1px solid var(--border);border-radius:10px;padding:10px;margin-top:8px;">
+      <div style="display:flex;justify-content:space-between;font-weight:700;"><span>${r.full_name}</span><span>${Number(r.amount).toLocaleString('en-US')}</span></div>
+      <div style="font-size:11.5px;color:var(--sub);margin-top:3px;">${r.kind} · Imeombwa na ${r.requested_by_name||'-'}${r.note?' · '+r.note:''}</div>
+      ${r.letter_path ? `<a href="#" onclick="openDebtLetter('${r.letter_path}');return false;" style="font-size:12px;color:var(--gold);display:inline-block;margin-top:6px;">📄 Fungua Barua ya Kukiri Deni</a>` : `<div style="font-size:11px;color:var(--sub);margin-top:4px;">Ombi la mkopo la mfanyakazi mwenyewe</div>`}
+      <div style="display:flex;gap:8px;margin-top:9px;">
+        <button onclick="decideDebtRequest('${r.id}',true)" style="flex:1;background:var(--green);border:none;color:#052015;padding:9px;border-radius:8px;font-weight:700;cursor:pointer;">Kubali</button>
+        <button onclick="decideDebtRequest('${r.id}',false)" style="flex:1;background:var(--red);border:none;color:#2a0805;padding:9px;border-radius:8px;font-weight:700;cursor:pointer;">Kataa</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function decideDebtRequest(id, approve){
+  const { error } = await sb.rpc('ceo_decide_debt_request', { p_id: id, p_approve: approve, p_note: null });
+  if(error){ alert('Imeshindwa: '+error.message); return; }
+  loadPendingDebtRequests(); loadAllDebts();
+}
+
+async function ceoAddDebtDirect(){
+  const msg = document.getElementById('dcMsg');
+  msg.className='msg'; msg.textContent='';
+  const profile_id = document.getElementById('dcEmp').value;
+  const kind = document.getElementById('dcKind').value;
+  const amount = parseFloat(document.getElementById('dcAmount').value);
+  const note = document.getElementById('dcNote').value.trim() || null;
+  if(!profile_id || !amount || amount<=0){ msg.className='msg err'; msg.textContent='Chagua mfanyakazi na kiasi sahihi.'; return; }
+  document.getElementById('dcBtn').disabled = true;
+  const { error } = await sb.rpc('ceo_add_debt_direct', { p_profile_id: profile_id, p_kind: kind, p_amount: amount, p_note: note });
+  document.getElementById('dcBtn').disabled = false;
+  if(error){ msg.className='msg err'; msg.textContent='Hitilafu: '+error.message; return; }
+  msg.className='msg ok'; msg.textContent='✓ Deni limehifadhiwa.';
+  document.getElementById('dcAmount').value=''; document.getElementById('dcNote').value='';
+  loadAllDebts();
+}
+
+async function loadAllDebts(){
+  const body = document.getElementById('debtAllTableBody');
+  const { data, error } = await sb.rpc('list_all_debts');
+  if(error){ body.innerHTML=''; return; }
+  const rows = data||[];
+  const srcLbl = { dwo:'DWO', hr_request:'HR', ceo_direct:'CEO' };
+  body.innerHTML = rows.map(r => `
+    <tr><td>${r.full_name}</td><td>${r.kind}</td><td>${Number(r.amount).toLocaleString('en-US')}</td>
+    <td>${Number(r.balance).toLocaleString('en-US')}</td><td>${srcLbl[r.source]||r.source}</td>
+    <td><span class="badge ${r.status==='imekubaliwa'?'active':(r.status==='imekataliwa'?'inactive':'')}">${r.status}</span></td></tr>
+  `).join('');
+  document.getElementById('debtAllEmpty').style.display = rows.length ? 'none' : 'block';
+}
+
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeToggleBtn').textContent = theme==='light' ? '☀️' : '🌙';
+  localStorage.setItem('hekima_theme', theme);
+}
+function toggleTheme(){
+  const cur = localStorage.getItem('hekima_theme') || 'light';
+  applyTheme(cur === 'light' ? 'dark' : 'light');
+}
+
+async function loadKpis(){
+  const [{count:empCount}, {count:loanCount}, {count:clientCount}] = await Promise.all([
+    sb.from('hr_employees').select('*', {count:'exact', head:true}),
+    sb.from('mikopo_loans').select('*', {count:'exact', head:true}).eq('status','active'),
+    sb.from('mikopo_clients').select('*', {count:'exact', head:true})
+  ]);
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi-box"><div class="num">${empCount ?? '—'}</div><div class="lbl">Wafanyakazi Waliosajiliwa</div></div>
+    <div class="kpi-box"><div class="num">${loanCount ?? '—'}</div><div class="lbl">Mikopo Inayoendelea</div></div>
+  `;
+}
+
+async function loadReports(){
+  const { data, error } = await sb.from('ops_reports').select('*').order('created_at', {ascending:false}).limit(50);
+  const list = document.getElementById('reportsList');
+  if(error){ list.innerHTML=''; return; }
+  const statusLabel = { draft:'Rasimu', sent:'Mpya — Haijathibitishwa', acknowledged:'Imethibitishwa' };
+  list.innerHTML = (data||[]).map(r => `
+    <div class="report-item">
+      <div class="meta">Kipindi ${r.period} · <span class="badge ${r.status==='acknowledged'?'active':'inactive'}">${statusLabel[r.status]||r.status}</span></div>
+      <div><b>Utekelezaji:</b> ${r.execution_summary||'—'}</div>
+      ${r.implementation_plan ? `<div><b>Mipango:</b> ${r.implementation_plan}</div>` : ''}
+      ${r.vision_notes ? `<div><b>Dira:</b> ${r.vision_notes}</div>` : ''}
+      ${r.kpi_notes ? `<div><b>KPIs:</b> ${r.kpi_notes}</div>` : ''}
+      ${r.status !== 'acknowledged' ? `<button class="btn secondary" style="margin-top:8px;" onclick="ackReport('${r.id}')">Thibitisha Kupokea</button>` : ''}
+    </div>`).join('');
+  document.getElementById('reportsEmpty').style.display = (data||[]).length ? 'none':'block';
+}
+
+async function ackReport(id){
+  const { data:{ user } } = await sb.auth.getUser();
+  const { error } = await sb.from('ops_reports').update({ status:'acknowledged', acknowledged_by:user?user.id:null }).eq('id', id);
+  if(error){ alert(error.message); return; }
+  loadReports();
+}
+
+async function mgCreateAccount(){
+  const msg = document.getElementById('mgAcMsg');
+  msg.className='msg'; msg.textContent='';
+  const full_name = document.getElementById('mgAcName').value.trim();
+  const agent_code = document.getElementById('mgAcAgentCode').value.trim().toUpperCase() || null;
+  const email = document.getElementById('mgAcEmail').value.trim();
+  const password = document.getElementById('mgAcPass').value;
+  if(!full_name || !email || !password || password.length < 6){
+    msg.className='msg err'; msg.textContent='Jaza jina, email na password (angalau herufi 6).';
+    return;
+  }
+  document.getElementById('mgAcBtn').disabled = true;
+  try{
+    if(agent_code){
+      const { data: existing } = await sb.from('mikopo_agents').select('code').eq('code', agent_code).maybeSingle();
+      if(!existing){
+        const { error: agErr } = await sb.from('mikopo_agents').insert({ code: agent_code, name: full_name });
+        if(agErr) throw agErr;
+      }
+    }
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-agent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ email, password, full_name, agent_code })
+    });
+    const result = await res.json();
+    if(!res.ok || result.error) throw new Error(result.error || 'Hitilafu isiyojulikana');
+    msg.className='msg ok'; msg.textContent='✓ Akaunti imetengenezwa. Mpe email na password hii.';
+    document.getElementById('mgAcName').value=''; document.getElementById('mgAcAgentCode').value='';
+    document.getElementById('mgAcEmail').value=''; document.getElementById('mgAcPass').value='';
+    loadUsers();
+  } catch(err){
+    msg.className='msg err'; msg.textContent='Hitilafu: '+(err.message||err);
+  } finally {
+    document.getElementById('mgAcBtn').disabled = false;
+  }
+}
+
+async function loadUsers(){
+  if(!document.getElementById('usersTableBody')) return;
+  const [pr, dir] = await Promise.all([
+    sb.from('mikopo_profiles').select('*').order('full_name'),
+    sb.rpc('list_staff_directory')
+  ]);
+  const data = pr.data||[];
+  const body = document.getElementById('usersTableBody');
+  if(pr.error){ body.innerHTML=''; return; }
+  const byEmail = {};
+  ((dir && dir.data)||[]).forEach(d=>{ if(d.email) byEmail[String(d.email).toLowerCase()] = d; });
+  body.innerHTML = data.map(u => {
+    const d = byEmail[String(u.email||'').toLowerCase()] || {};
+    const jukumu = u.role + (u.allowed_depts && u.allowed_depts.length ? ' ('+u.allowed_depts.join(', ')+')' : '');
+    return `<tr><td>${u.full_name||'—'}</td><td>${u.email||''}</td><td>${jukumu}</td>
+      <td>${d.position||'—'}</td><td>${d.department||'—'}</td><td>${d.supervisor_name||'—'}</td>
+      <td><span class="badge ${u.active?'active':'inactive'}">${u.active?'Active':'Inactive'}</span></td></tr>`;
+  }).join('');
+  document.getElementById('usersEmpty').style.display = data.length ? 'none':'block';
+  document.getElementById('userSelect').innerHTML = data.map(u => `<option value="${u.id}">${u.full_name||u.email} (${u.role})</option>`).join('');
+  const label = u => `${u.full_name||'—'} · ${u.email||'bila email'}${u.agent_code ? ' · '+u.agent_code : ''}`;
+  document.getElementById('posUserSelect').innerHTML = data.map(u => `<option value="${u.id}">${label(u)}</option>`).join('');
+  document.getElementById('posSupervisor').innerHTML = '<option value="">— Hakuna —</option>' + data.map(u => `<option value="${u.id}">${label(u)}</option>`).join('');
+}
+
+async function loadVyeo(){
+  if(!document.getElementById('vyeoTableBody')) return;
+  const { data, error } = await sb.rpc('list_staff_directory');
+  const body = document.getElementById('vyeoTableBody');
+  if(error){ body.innerHTML=''; document.getElementById('vyeoEmpty').style.display='block'; document.getElementById('vyeoEmpty').textContent='Imeshindwa kupakia: '+error.message; return; }
+  const rows = (data||[]).filter(r=>r.position);
+  body.innerHTML = rows.map(r => `
+    <tr><td>${r.full_name||'—'}<div style="font-size:11px;color:var(--sub)">${r.email||''}</div></td><td>${r.position}</td><td>${r.department||'—'}</td><td>${r.supervisor_name||'—'}</td></tr>
+  `).join('');
+  document.getElementById('vyeoEmpty').style.display = rows.length ? 'none':'block';
+}
+
+async function savePosition(){
+  const msg = document.getElementById('posMsg');
+  const profileId = document.getElementById('posUserSelect').value;
+  if(!profileId){ msg.textContent='Chagua mtumiaji'; msg.className='msg err'; return; }
+  const position = document.getElementById('posPosition').value;
+  const department = document.getElementById('posDept').value.trim() || null;
+  const supervisorId = document.getElementById('posSupervisor').value || null;
+  const phone = document.getElementById('posPhone').value.trim() || null;
+  const hireDate = document.getElementById('posHireDate').value || null;
+  const { error } = await sb.rpc('set_staff_position', {
+    p_profile_id: profileId, p_position: position, p_department: department,
+    p_supervisor_id: supervisorId, p_phone: phone, p_hire_date: hireDate
+  });
+  if(error){ msg.textContent = error.message; msg.className='msg err'; return; }
+  msg.textContent = 'Cheo kimehifadhiwa.'; msg.className='msg ok';
+  loadVyeo();
+}
+
+async function updateUserRole(){
+  if(CURRENT_ROLE !== 'admin'){ document.getElementById('userMsg').textContent='Ni Admin Mkuu pekee anayeweza kubadilisha ruhusa.'; document.getElementById('userMsg').className='msg err'; return; }
+  const id = document.getElementById('userSelect').value;
+  const role = document.getElementById('userRole').value;
+  const deptsRaw = document.getElementById('userDepts').value.trim();
+  const allowed_depts = deptsRaw ? deptsRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  const msg = document.getElementById('userMsg');
+  if(!id){ msg.textContent='Chagua mtumiaji'; msg.className='msg err'; return; }
+  const { error } = await sb.from('mikopo_profiles').update({ role, allowed_depts }).eq('id', id);
+  if(error){ msg.textContent = error.message; msg.className='msg err'; return; }
+  msg.textContent = 'Ruhusa zimehifadhiwa.'; msg.className='msg ok';
+  document.getElementById('userDepts').value='';
+  loadUsers();
+}
+
+async function checkAuth(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(session){
+    const { data: isTop, error } = await sb.rpc('current_top_management');
+    if(isTop && !error){ CURRENT_ROLE = 'admin'; enterApp(); }
+    else {
+      document.getElementById('authLoading').style.display='none';
+      document.getElementById('loginBox').style.display='none';
+      document.getElementById('deniedBox').style.display='block';
+      document.getElementById('appContent').style.display='none';
+    }
+  } else {
+    document.getElementById('authLoading').style.display='none';
+    document.getElementById('loginBox').style.display='block';
+    document.getElementById('appContent').style.display='none';
+  }
+}
+function enterApp(){
+  document.getElementById('authGate').style.display='none';
+  document.getElementById('appContent').style.display='block';
+  if(CURRENT_ROLE !== 'admin'){
+    const card = document.getElementById('superAdminOnlyCard');
+    if(card) card.innerHTML = '<h3>Mpe Mtu Mamlaka ya Usimamizi</h3><div class="lock-note">🔒 Sehemu hii ni ya Admin Mkuu pekee. Wewe una mamlaka ya Manager (mdogo) — unaweza kuona ripoti na watumiaji, lakini si kubadilisha ruhusa.</div>';
+  }
+  loadKpis();
+  loadReports();
+  loadUsers();
+  loadVyeo();
+}
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  document.getElementById('loginErr').textContent='';
+  const {error} = await sb.auth.signInWithPassword({email,password:pass});
+  if(error){ document.getElementById('loginErr').textContent = error.message; return; }
+  const role = await isCurrentUserActiveAdmin();
+  if(role){ CURRENT_ROLE = role; enterApp(); }
+  else {
+    document.getElementById('loginBox').style.display='none';
+    document.getElementById('deniedBox').style.display='block';
+  }
+}
+async function doLogout(){ await sb.auth.signOut(); location.reload(); }
+
+function setLoginGreeting(){
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Habari za Asubuhi' : h < 17 ? 'Habari za Mchana' : 'Habari za Jioni';
+  const el = document.getElementById('loginGreeting');
+  if(el) el.textContent = g;
+}
+function togglePwVisibility(){
+  const input = document.getElementById('loginPass');
+  const btn = document.getElementById('pwEyeBtn');
+  if(!input) return;
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  if(btn) btn.style.opacity = showing ? '1' : '0.55';
+}
+setLoginGreeting();
+applyTheme(localStorage.getItem('hekima_theme') || 'light');
+checkAuth();
+</script>
+
+<script>
+/* ======== Mtiririko wa Madeni, Payroll ya CEO, na Futa (CEO) ======== */
+const mE = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const mN = n => (Number(n)||0).toLocaleString('en-US');
+function mSay(id, text, ok){ const el=document.getElementById(id); if(!el) return; el.className='msg'+(ok===true?' ok':(ok===false?' err':'')); el.textContent=text||''; }
+function mConfirmDelete(what){ return (prompt(`Utafuta ${what}. Hatua hii haiwezi kurudishwa.\nAndika FUTA kuthibitisha:`)||'').trim().toUpperCase()==='FUTA'; }
+
+/* ---- Madeni ---- */
+async function mdLoad(){
+  const box=document.getElementById('mdList'); if(!box) return;
+  const { data, error } = await sb.rpc('debts_overview');
+  if(error){ box.innerHTML='<div class="empty">Sehemu hii bado haijawekwa kwenye database (SQL ya Sehemu 2 haijaendeshwa).</div>'; return; }
+  const rows=data||[];
+  box.innerHTML = rows.length ? rows.map(d=>{
+    const paid=Number(d.amount)-Number(d.balance), pct=d.amount>0?Math.min(100,Math.round(paid/d.amount*100)):0;
+    const done = d.status==='imekubaliwa' && Number(d.balance)<=0;
+    const chip = d.status==='inasubiri' ? ['Inasubiri idhini','var(--sub)'] : d.status==='imekataliwa' ? ['Limekataliwa','var(--red)'] : done ? ['Limeisha ✓','var(--green)'] : ['Linaendelea','var(--cyan)'];
+    const hist=(d.deductions||[]).map(x=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0;border-top:1px solid var(--border);">
+      <span style="color:var(--sub);">${new Date(x.at).toLocaleDateString('en-GB')} · ${mE(x.note||'Kato')}</span>
+      <span>-${mN(x.amount)} <a href="#" style="color:var(--red);margin-left:8px;" onclick="mdDelDeduction('${x.id}');return false;">futa</a></span></div>`).join('');
+    return `<div style="border-top:1px solid var(--border);padding:12px 0;">
+      <div style="display:flex;justify-content:space-between;gap:8px;"><b>${mE(d.full_name)} <span style="color:var(--sub);font-weight:400;">· ${mE(d.kind)}</span></b><span style="font-size:11px;font-weight:700;color:${chip[1]};">${chip[0]}</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:8px 0;font-size:12px;">
+        <div style="background:var(--panel2);border-radius:8px;padding:7px;"><div style="color:var(--sub);font-size:10.5px;">Deni</div><b>${mN(d.amount)}</b></div>
+        <div style="background:var(--panel2);border-radius:8px;padding:7px;"><div style="color:var(--sub);font-size:10.5px;">Limelipwa</div><b>${mN(paid)}</b></div>
+        <div style="background:var(--panel2);border-radius:8px;padding:7px;"><div style="color:var(--sub);font-size:10.5px;">Limebaki</div><b style="color:${done?'var(--green)':'var(--red)'};">${mN(d.balance)}</b></div>
+      </div>
+      <div style="height:6px;background:var(--panel2);border-radius:3px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:var(--green);"></div></div>
+      ${d.status==='imekubaliwa' && !done ? `<div style="display:flex;gap:8px;align-items:center;margin:10px 0 4px;flex-wrap:wrap;">
+        <span style="font-size:12px;color:var(--sub);">Kato kwa mwezi</span>
+        <input type="number" min="0" id="mdInst-${d.id}" value="${d.monthly_deduction||''}" placeholder="0" style="width:110px;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:7px;">
+        <button class="btn secondary" style="padding:6px 12px;font-size:12px;" onclick="mdSaveInst('${d.id}')">Hifadhi</button>
+        <span style="font-size:11.5px;color:var(--sub);">${d.months_left?('Miezi '+d.months_left+' imebaki'):'Weka kato ili kuona miezi'}</span></div>` : ''}
+      ${hist?`<div style="margin-top:6px;">${hist}</div>`:''}
+      <div style="text-align:right;margin-top:6px;"><a href="#" style="color:var(--red);font-size:12px;" onclick="mdDelDebt('${d.id}','${mE(d.full_name).replace(/'/g,'')}');return false;">Futa deni (CEO)</a></div>
+    </div>`;
+  }).join('') : '<div class="empty">Hakuna madeni bado.</div>';
+}
+async function mdSaveInst(id){
+  const v=parseFloat(document.getElementById('mdInst-'+id).value)||0;
+  const { error } = await sb.rpc('debt_set_installment',{ p_debt_id:id, p_monthly:v });
+  if(error){ mSay('mdMsg','Imeshindwa: '+error.message,false); return; }
+  mSay('mdMsg','Kato la kila mwezi limehifadhiwa ✓',true); mdLoad();
+}
+async function mdDelDeduction(id){
+  if(!mConfirmDelete('historia hii ya kato (salio la deni litarudi)')) return;
+  const { error } = await sb.rpc('ceo_delete_debt_deduction',{ p_deduction_id:id });
+  if(error){ mSay('mdMsg','Imeshindwa: '+error.message,false); return; }
+  mSay('mdMsg','Imefutwa ✓',true); mdLoad(); if(typeof loadAllDebts==='function') loadAllDebts();
+}
+async function mdDelDebt(id, who){
+  if(!mConfirmDelete('deni la '+who)) return;
+  const { error } = await sb.rpc('ceo_delete_debt',{ p_debt_id:id });
+  if(error){ mSay('mdMsg','Imeshindwa: '+error.message,false); return; }
+  mSay('mdMsg','Deni limefutwa ✓',true); mdLoad(); if(typeof loadAllDebts==='function') loadAllDebts();
+}
+
+/* ---- Payroll (CEO) ---- */
+let MP_RUNS=[], MP_OPEN=null;
+const MP_ST={rasimu:['Rasimu (CEO)','var(--sub)'],kwa_hr:['Inasubiri HR','var(--cyan)'],inasubiri_ceo:['Imehakikiwa na HR - inasubiri idhini yako','var(--text)'],imeidhinishwa:['Imeidhinishwa - inasubiri Balance','var(--text)'],imekataliwa:['Imekataliwa','var(--text)'],imehakikiwa:['Imeidhinishwa - inasubiri Balance','var(--text)'],imelipwa:['Imelipwa ✓','var(--green)']};
+async function mpCeoDecide(runId, approve){
+  let note=null;
+  if(!approve){ note=prompt('Andika sababu ya kukataa:'); if(!note||!note.trim()) return; }
+  const { error } = await sb.rpc('payroll_ceo_decide',{ p_run_id: runId, p_approve: approve, p_note: note });
+  if(error){ alert('Imeshindwa: '+error.message); return; }
+  await mpLoadRuns();
+}
+async function mpLoadRuns(){
+  mgLoanLoad();
+  const per=document.getElementById('mpPeriod'); if(per && !per.value) per.value=new Date().toLocaleDateString('sv-SE').slice(0,7);
+  const box=document.getElementById('mpRuns');
+  const { data, error } = await sb.rpc('payroll_list_runs');
+  if(error){ box.innerHTML='<div class="empty">Sehemu hii bado haijawekwa kwenye database (SQL ya Sehemu 2 haijaendeshwa).</div>'; return; }
+  MP_RUNS=data||[];
+  box.innerHTML = MP_RUNS.length ? MP_RUNS.map(r=>{
+    const st=MP_ST[r.status]||[r.status,'var(--sub)'];
+    return `<div style="border-top:1px solid var(--border);padding:10px 0;">
+      <div style="display:flex;justify-content:space-between;"><b>${mE(r.period)}</b><span style="font-size:11px;font-weight:700;color:${st[1]};">${st[0]}</span></div>
+      <div style="font-size:12px;color:var(--sub);margin:4px 0;">Wafanyakazi ${r.employees} · Mshahara ${mN(r.total_gross)} · Makato ${mN(r.total_deductions)} · <b style="color:var(--text);">Atapata ${mN(r.total_net)}</b></div>
+      ${r.hr_note?`<div style="font-size:12px;color:var(--red);margin-bottom:4px;">HR: ${mE(r.hr_note)}</div>`:''}
+      ${r.status==='inasubiri_ceo'?`<div style="display:flex;gap:8px;margin-bottom:6px;"><button class="btn" style="padding:6px 12px;font-size:12px;" onclick="mpCeoDecide('${r.id}',true)">Idhinisha</button><button class="btn secondary" style="padding:6px 12px;font-size:12px;color:var(--text);border-color:var(--red);" onclick="mpCeoDecide('${r.id}',false)">Kataa + sababu</button></div>`:''}
+      <div style="display:flex;gap:8px;"><button class="btn secondary" style="padding:6px 12px;font-size:12px;" onclick="mpOpen('${r.id}')">Fungua</button>
+      ${r.status!=='imelipwa'?`<button class="btn secondary" style="padding:6px 12px;font-size:12px;color:var(--text);border-color:var(--red);" onclick="mpDelete('${r.id}','${mE(r.period)}')">Futa</button>`:''}</div>
+    </div>`;
+  }).join('') : '<div class="empty">Hakuna payroll bado.</div>';
+}
+/* ---- Kanuni za mshahara: cheo, wateja wa agent, agents wa zone ---- */
+const MP_RK='hk_pay_rules_v1';
+let MP_RULES={ min:{}, agent:{from:50,per:0}, zone:{per:0} }, MP_CALC={};
+function mpNorm(s){ return String(s||'').toLowerCase().replace(/\*/g,'').replace(/\s+/g,' ').trim(); }
+function mpKind(pos){ const p=mpNorm(pos); if(p.includes('zone')) return 'zone'; if(p.includes('agent')) return 'agent'; return 'plain'; }
+function mpRulesRead(){
+  try{ const r=JSON.parse(localStorage.getItem(MP_RK)||'null');
+    if(r && r.min) MP_RULES={ min:r.min||{}, agent:Object.assign({from:50,per:0}, r.agent||{}), zone:Object.assign({per:0}, r.zone||{}) };
+  }catch(e){}
+}
+async function mpRulesLoad(){
+  mpRulesRead();
+  const box=document.getElementById('mpRulesBox'); if(!box) return;
+  const { data } = await sb.from('hr_employees').select('position');
+  const pos={}; (data||[]).forEach(e=>{ const p=String(e.position||'').trim(); if(p && !pos[mpNorm(p)]) pos[mpNorm(p)]=p; });
+  if(!Object.keys(pos).some(k=>mpKind(k)==='agent')) pos['agent']='Agent';
+  if(!Object.keys(pos).some(k=>mpKind(k)==='zone')) pos['zone manager']='Zone Manager';
+  const keys=Object.keys(pos).sort((a,b)=>pos[a].localeCompare(pos[b]));
+  const v=x=>(x>0?x:'');
+  box.innerHTML =
+    `<div class="mpr-h" style="margin-top:0;">Mshahara wa chini kwa cheo (TZS)</div>`+
+    keys.map(k=>`<div class="mpr-row"><span>${mE(pos[k])}</span><input type="number" min="0" inputmode="numeric" data-pos="${mE(k)}" value="${v(MP_RULES.min[k])}" placeholder="0"></div>`).join('')+
+    `<div class="mpr-h">Agent: ongezeko la wateja</div><p class="mpr-s">Mteja wa [N] na kuendelea analipiwa ongezeko kwa kila mteja.</p>
+     <div class="mpr-row"><span>Kuanzia mteja wa</span><input type="number" min="1" id="mprAgFrom" value="${MP_RULES.agent.from||50}"></div>
+     <div class="mpr-row"><span>Ongeza (TZS) kwa kila mteja</span><input type="number" min="0" inputmode="numeric" id="mprAgPer" value="${v(MP_RULES.agent.per)}" placeholder="0"></div>
+     <div class="mpr-h">Zone: ongezeko la agents</div><p class="mpr-s">Agents wanaotoka kwenye Muundo (Zone aliyewekwa kwa kila agent).</p>
+     <div class="mpr-row"><span>Ongeza (TZS) kwa kila agent</span><input type="number" min="0" inputmode="numeric" id="mprZnPer" value="${v(MP_RULES.zone.per)}" placeholder="0"></div>`;
+}
+function mpRulesSave(){
+  const min={}; document.querySelectorAll('#mpRulesBox input[data-pos]').forEach(i=>{ const n=parseFloat(i.value); if(n>0) min[i.dataset.pos]=n; });
+  const g=id=>parseFloat((document.getElementById(id)||{}).value)||0;
+  MP_RULES={ min, agent:{ from:Math.max(1,g('mprAgFrom')||50), per:g('mprAgPer') }, zone:{ per:g('mprZnPer') } };
+  try{ localStorage.setItem(MP_RK, JSON.stringify(MP_RULES)); mSay('mpRulesMsg','Kanuni zimehifadhiwa ✓ (zinatumika payroll mpya na "Hesabu upya")',true); }
+  catch(e){ mSay('mpRulesMsg','Imeshindwa kuhifadhi kwenye kifaa hiki.',false); }
+}
+async function mpCalc(emps){
+  const out={};
+  const counts={};
+  await Promise.all(emps.filter(e=>mpKind(e.position)==='agent' && e.agent_code).map(async e=>{
+    const r=await sb.from('mikopo_clients').select('*',{count:'exact',head:true}).eq('agent_code',e.agent_code);
+    counts[e.id]=r.count||0;
+  }));
+  let zoneRows=[];
+  if(emps.some(e=>mpKind(e.position)==='zone')){ const g=await sb.rpc('org_get'); zoneRows=(g.data && g.data.rows)||[]; }
+  emps.forEach(e=>{
+    const k=mpKind(e.position), r=MP_RULES.min[mpNorm(e.position)];
+    const min = r!=null ? r : (parseFloat(e.base_salary)||0);
+    let gross=min, text=(e.position||'Cheo hakijawekwa')+' · msingi '+mN(min);
+    if(k==='agent'){
+      const n=counts[e.id]||0, T=MP_RULES.agent.from||50;
+      const extra = n>=T ? (n-T+1)*(MP_RULES.agent.per||0) : 0;
+      gross+=extra; text+=' · wateja '+n+(extra?' (kuanzia '+T+': +'+mN(extra)+')':'');
+    }else if(k==='zone'){
+      const nm=mpNorm(e.full_name), n=zoneRows.filter(x=>mpNorm(x.zone_manager)===nm).length;
+      const extra=n*(MP_RULES.zone.per||0);
+      gross+=extra; text+=' · agents '+n+(extra?' (+'+mN(extra)+')':'');
+    }
+    out[e.id]={ gross, text };
+  });
+  return out;
+}
+async function mpAutoFill(runId){
+  mpRulesRead();
+  const { data: items, error } = await sb.rpc('payroll_run_items',{ p_run_id: runId });
+  if(error) return { done:0, skipped:0 };
+  const { data: emps } = await sb.from('hr_employees').select('id, full_name, position, agent_code, base_salary');
+  const list=emps||[], calc=await mpCalc(list), byId={}, byName={};
+  list.forEach(e=>{ byId[e.id]=e; const n=mpNorm(e.full_name); (byName[n]=byName[n]||[]).push(e); });
+  let done=0, skipped=0; MP_CALC={};
+  for(const it of (items||[])){
+    const e = byId[it.employee_id] || ((byName[mpNorm(it.full_name)]||[]).length===1 ? byName[mpNorm(it.full_name)][0] : null);
+    if(!e || !calc[e.id]){ skipped++; continue; }
+    const c=calc[e.id]; MP_CALC[it.item_id]=c.text;
+    const ded=(it.deductions||[]).map(x=>({ debt_id:x.debt_id, amount:x.amount }));
+    const r=await sb.rpc('payroll_set_item',{ p_item_id:it.item_id, p_gross:c.gross, p_deductions:ded });
+    if(r.error) skipped++; else done++;
+  }
+  return { done, skipped };
+}
+async function mpRecalcAll(runId){
+  if(!confirm('Kuhesabu upya mishahara yote kwa kanuni? Mabadiliko uliyofanya kwa mkono yatafutwa.')) return;
+  mSay('mpDetailMsg','Inahesabu...',true);
+  const r=await mpAutoFill(runId);
+  await mpLoadRuns(); await mpOpen(runId);
+  mSay('mpDetailMsg','Mishahara imehesabiwa upya ✓ ('+r.done+')'+(r.skipped?' · hawakuhesabiwa: '+r.skipped:''),true);
+}
+async function mpCreate(){
+  const per=document.getElementById('mpPeriod').value;
+  if(!per){ mSay('mpMsg','Chagua mwezi.',false); return; }
+  const { data, error } = await sb.rpc('payroll_create_run',{ p_period: per });
+  if(error){ mSay('mpMsg','Imeshindwa: '+error.message,false); return; }
+  mSay('mpMsg','Inahesabu mishahara...',true);
+  const r=await mpAutoFill(data);
+  const has=Object.keys(MP_RULES.min).length || MP_RULES.agent.per>0 || MP_RULES.zone.per>0;
+  mSay('mpMsg','Payroll ya '+per+' imetengenezwa ✓ · mishahara imehesabiwa: '+r.done+(r.skipped?' · haikuhesabiwa: '+r.skipped:'')+(has?'':' · Bado hujaweka kanuni, imetumika mshahara wa msingi.'),true);
+  await mpLoadRuns(); mpOpen(data);
+}
+async function mpOpen(runId){
+  MP_OPEN=runId;
+  const run=MP_RUNS.find(r=>r.id===runId)||{}; const edit = run.status==='rasimu';
+  const { data, error } = await sb.rpc('payroll_run_items',{ p_run_id: runId });
+  const card=document.getElementById('mpDetailCard'), box=document.getElementById('mpDetail');
+  card.style.display='block';
+  document.getElementById('mpDetailTitle').textContent='Payroll ya '+(run.period||'');
+  if(error){ box.innerHTML=''; mSay('mpDetailMsg',error.message,false); return; }
+  if(edit){
+    document.querySelectorAll('#mpDetailCard .mpHelp').forEach(n=>n.remove());
+    const { data: emps } = await sb.from('hr_employees').select('id,full_name').order('full_name');
+    const opts=(emps||[]).map(e=>`<option value="${e.id}">${mE(e.full_name)}</option>`).join('');
+    box.insertAdjacentHTML('beforebegin', `<div class="mpHelp" style="border:1px dashed var(--border);border-radius:12px;padding:10px;margin-bottom:10px;">
+      <div style="font-weight:700;margin-bottom:6px;">Ongeza mfanyakazi kwenye payroll hii</div>
+      <div style="display:flex;gap:8px;"><select id="mpAddEmp" style="flex:1;">${opts}</select>
+      <button class="btn" onclick="mpAddEmployee('${runId}')">Ongeza</button></div>
+      <div class="msg" id="mpAddMsg" style="margin-top:6px;"></div></div>`);
+    box.insertAdjacentHTML('beforebegin', `<button class="btn secondary mpHelp" style="width:100%;margin-bottom:10px;" onclick="mpRecalcAll('${runId}')">Hesabu upya mishahara kwa kanuni</button>`);
+  }
+  box.innerHTML = (data||[]).map(it=>{
+    const ded = {}; (it.deductions||[]).forEach(x=>ded[x.debt_id]=x.amount);
+    const debts=(it.open_debts||[]).map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;margin-top:5px;">
+      <span style="color:var(--sub);">Kato: ${mE(d.kind)} (limebaki ${mN(d.balance)})</span>
+      ${edit?`<input type="number" min="0" data-debt="${d.debt_id}" data-item="${it.item_id}" value="${ded[d.debt_id]||0}" oninput="mpRecalc('${it.item_id}')" style="width:100px;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:5px 7px;border-radius:7px;">`:`<b>${mN(ded[d.debt_id]||0)}</b>`}</div>`).join('');
+    return `<div style="border-top:1px solid var(--border);padding:11px 0;" data-it="${it.item_id}">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><b>${mE(it.full_name)} <span style="color:var(--sub);font-weight:400;font-size:11.5px;">${mE(it.job_position||'')}</span></b>
+        ${edit?`<input type="number" min="0" id="mpG-${it.item_id}" value="${it.gross}" oninput="mpRecalc('${it.item_id}')" style="width:120px;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:7px;text-align:right;">`:`<b>${mN(it.gross)}</b>`}</div>
+      ${edit&&MP_CALC[it.item_id]?`<div style="font-size:11.5px;color:var(--sub);margin-top:3px;">${mE(MP_CALC[it.item_id])}</div>`:''}
+      ${debts}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:13px;"><span>Anapata: <b id="mpNet-${it.item_id}">${mN(it.net)}</b></span>
+        ${edit?`<button class="btn secondary" style="padding:5px 12px;font-size:12px;" onclick="mpSaveItem('${it.item_id}')">Hifadhi</button>`:''}</div>
+    </div>`;
+  }).join('') + (edit ? `<div style="margin-top:12px;"><button class="btn" style="width:100%" onclick="mpSubmit('${runId}')">Tuma kwa HR kuhakiki</button><p style="font-size:11.5px;color:var(--sub);margin:6px 0 0;">Hifadhi kila mfanyakazi kwanza. Baada ya kutuma, huwezi kubadilisha mpaka HR arudishe.</p></div>` : '');
+  mSay('mpDetailMsg','');
+  card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function mpDeds(itemId){
+  return [...document.querySelectorAll(`input[data-item="${itemId}"]`)].map(i=>({ debt_id:i.dataset.debt, amount: parseFloat(i.value)||0 })).filter(x=>x.amount>0);
+}
+function mpRecalc(itemId){
+  const g=parseFloat(document.getElementById('mpG-'+itemId).value)||0;
+  const d=mpDeds(itemId).reduce((s,x)=>s+x.amount,0);
+  const el=document.getElementById('mpNet-'+itemId); el.textContent=mN(g-d); el.style.color = (g-d)<0 ? 'var(--red)' : '';
+}
+async function mpSaveItem(itemId){
+  const g=parseFloat(document.getElementById('mpG-'+itemId).value)||0;
+  const { error } = await sb.rpc('payroll_set_item',{ p_item_id:itemId, p_gross:g, p_deductions: mpDeds(itemId) });
+  if(error){ mSay('mpDetailMsg','Imeshindwa: '+error.message,false); return; }
+  mSay('mpDetailMsg','Imehifadhiwa ✓',true); mpLoadRuns();
+}
+async function mpSubmit(runId){
+  if(!confirm('Kutuma payroll hii kwa HR? Huwezi kuibadilisha baada ya kutuma.')) return;
+  const { error } = await sb.rpc('payroll_submit',{ p_run_id:runId });
+  if(error){ mSay('mpDetailMsg','Imeshindwa: '+error.message,false); return; }
+  mSay('mpDetailMsg','Imetumwa kwa HR ✓',true); await mpLoadRuns(); mpOpen(runId);
+}
+async function mpDelete(runId, period){
+  if(!mConfirmDelete('payroll ya '+period)) return;
+  const { error } = await sb.rpc('ceo_delete_payroll_run',{ p_run_id:runId });
+  if(error){ mSay('mpMsg','Imeshindwa: '+error.message,false); return; }
+  document.getElementById('mpDetailCard').style.display='none'; mSay('mpMsg','Payroll imefutwa ✓',true); mpLoadRuns();
+}
+
+/* ---- Futa (CEO) ---- */
+async function fLoadAll(){ fLoadEmps(); fLoadAccts(); fSearchClients(); }
+async function fLoadEmps(){
+  const { data, error } = await sb.from('hr_employees').select('id, full_name, position, status').order('full_name');
+  const box=document.getElementById('fEmps'); if(error){ box.innerHTML='<div class="empty">'+mE(error.message)+'</div>'; return; }
+  box.innerHTML=(data||[]).map(e=>`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding:8px 0;font-size:13px;"><span>${mE(e.full_name)} <span style="color:var(--sub);font-size:11.5px;">${mE(e.position||'')}</span></span>
+    <button class="btn secondary" style="padding:5px 11px;font-size:12px;color:var(--red);" onclick="fDel('ceo_delete_hr_employee',{p_employee_id:'${e.id}'},'mfanyakazi ${mE(e.full_name).replace(/'/g,'')}',fLoadEmps)">Futa</button></div>`).join('') || '<div class="empty">Hakuna wafanyakazi.</div>';
+}
+async function fLoadAccts(){
+  const { data, error } = await sb.from('mikopo_profiles').select('id, full_name, email, role, active').order('full_name');
+  const box=document.getElementById('fAccts'); if(error){ box.innerHTML='<div class="empty">'+mE(error.message)+'</div>'; return; }
+  box.innerHTML=(data||[]).map(a=>`<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding:8px 0;font-size:13px;"><span>${mE(a.full_name||a.email)} <span style="color:var(--sub);font-size:11.5px;">${mE(a.role||'')}${a.active?'':' · hai'}</span></span>
+    <button class="btn secondary" style="padding:5px 11px;font-size:12px;color:var(--red);" onclick="fDel('ceo_delete_account',{p_profile_id:'${a.id}'},'account ya ${mE(a.full_name||a.email).replace(/'/g,'')}',fLoadAccts)">Futa</button></div>`).join('') || '<div class="empty">Hakuna accounts.</div>';
+}
+async function fSearchClients(){
+  const q=(document.getElementById('fClientQ').value||'').trim(); const box=document.getElementById('fClients');
+  if(q.length<2){ box.innerHTML='<div class="empty">Andika angalau herufi 2 kutafuta.</div>'; return; }
+  const { data, error } = await sb.from('mikopo_clients').select('id, jina, agent_code').ilike('jina','%'+q+'%').order('jina').limit(15);
+  if(error){ box.innerHTML='<div class="empty">'+mE(error.message)+'</div>'; return; }
+  box.innerHTML=(data||[]).map(c=>`<div style="border-top:1px solid var(--border);padding:8px 0;font-size:13px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;"><span>${mE(c.jina)} <span style="color:var(--sub);font-size:11.5px;">${mE(c.agent_code||'')}</span></span>
+    <span style="display:flex;gap:6px;"><button class="btn secondary" style="padding:5px 11px;font-size:12px;" onclick="fPayments('${c.id}')">Malipo</button>
+    <button class="btn secondary" style="padding:5px 11px;font-size:12px;color:var(--red);" onclick="fDel('ceo_delete_client',{p_client_id:'${c.id}'},'mteja ${mE(c.jina).replace(/'/g,'')} pamoja na mikopo na malipo yake yote',fSearchClients)">Futa</button></span></div>
+    <div id="fPay-${c.id}"></div></div>`).join('') || '<div class="empty">Hakuna mteja aliyepatikana.</div>';
+}
+async function fPayments(cid){
+  const { data, error } = await sb.from('mikopo_payments').select('id, kiasi, tarehe').eq('client_id',cid).order('tarehe',{ascending:false}).limit(40);
+  const box=document.getElementById('fPay-'+cid); if(error){ box.innerHTML=mE(error.message); return; }
+  box.innerHTML=(data||[]).map(p=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0 3px 10px;"><span style="color:var(--sub);">${new Date(p.tarehe).toLocaleDateString('en-GB')}</span><span>${mN(p.kiasi)} <a href="#" style="color:var(--red);margin-left:8px;" onclick="fDel('ceo_delete_payment',{p_payment_id:'${p.id}'},'malipo ya ${mN(p.kiasi)}',()=>fPayments('${cid}'));return false;">futa</a></span></div>`).join('') || '<div style="font-size:12px;color:var(--sub);padding:4px 10px;">Hakuna malipo.</div>';
+}
+async function fDel(fn, args, what, reload){
+  if(!mConfirmDelete(what)) return;
+  const { error } = await sb.rpc(fn, args);
+  if(error){ mSay('fMsg','Imeshindwa: '+error.message,false); return; }
+  mSay('fMsg','Imefutwa ✓',true); reload && reload();
+}
+
+async function mpAddEmployee(runId){
+  const id=document.getElementById('mpAddEmp').value;
+  const { error } = await sb.rpc('payroll_add_item',{ p_run_id: runId, p_employee_id: id });
+  if(error){ mSay('mpAddMsg', error.message, false); return; }
+  mSay('mpAddMsg','Mfanyakazi ameongezwa ✓', true);
+  mpOpen(runId);
+}
+</script>
+<script>
+/* ======== Muundo wa Timu: PDF (karatasi nyeupe, Manager > Supervisor > Zone > Agents) ======== */
+let _orgLibsP = null;
+function orgLoadLibs(){
+  if(window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable) return Promise.resolve();
+  if(_orgLibsP) return _orgLibsP;
+  const add = src => new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=()=>rej(new Error('Imeshindwa kupakia maktaba ya PDF')); document.head.appendChild(s); });
+  _orgLibsP = add('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+    .then(()=>add('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'))
+    .catch(e=>{ _orgLibsP=null; throw e; });
+  return _orgLibsP;
+}
+// Jina la kwanza tu; yanayojirudia yanapata namba: Steve, Steve2, Steve3 ...
+function orgShortNames(people, rows){
+  const first = n => String(n||'').trim().split(/\s+/)[0] || '';
+  const names = [];
+  (people||[]).forEach(p=>{ if(p.full_name) names.push(p.full_name); });
+  (rows||[]).forEach(r=>{ if(r.agent_name && !names.includes(r.agent_name)) names.push(r.agent_name); });
+  const total = {}; names.forEach(n=>{ const k=first(n).toLowerCase(); total[k]=(total[k]||0)+1; });
+  const seen = {}, out = {};
+  names.forEach(n=>{ const f=first(n), k=f.toLowerCase(); seen[k]=(seen[k]||0)+1; out[n] = (total[k]>1 && seen[k]>1) ? f+seen[k] : f; });
+  return n => out[n] || first(n);
+}
+// Mti: manager -> supervisor -> zone -> agents, kutoka kwenye mnyororo wa "anaripoti kwa"
+function orgBuildTree(rows, people){
+  const parent = {};
+  (people||[]).forEach(p=>{ if(p.full_name && p.supervisor) parent[p.full_name] = p.supervisor; });
+  (rows||[]).forEach(r=>{
+    if(r.zone_manager && !parent[r.zone_manager] && r.supervisor) parent[r.zone_manager] = r.supervisor;
+    if(r.supervisor && !parent[r.supervisor] && r.manager) parent[r.supervisor] = r.manager;
+  });
+  const agents = [], byCode = {};
+  (rows||[]).forEach(r=>{ if(r.ag_code) byCode[r.ag_code] = r; });
+  (people||[]).forEach(p=>{
+    if(!p.full_name || (p.position||'') !== 'Agent') return;
+    const r = p.agent_code ? byCode[p.agent_code] : null;
+    agents.push({ name:p.full_name, code:p.agent_code||'', branch:(r&&r.branch)||'', area:(r&&r.area)||'',
+                  update:(r&&r.update_grp)||'', no:(r&&r.agent_no)||'', zone:p.supervisor||(r&&r.zone_manager)||'' });
+  });
+  (rows||[]).forEach(r=>{
+    if(r.ag_code && agents.some(a=>a.code===r.ag_code)) return;
+    agents.push({ name:r.agent_name||'', code:r.ag_code||'', branch:r.branch||'', area:r.area||'', update:r.update_grp||'', no:r.agent_no||'', zone:r.zone_manager||'' });
+  });
+  const zones = new Set(agents.map(a=>a.zone).filter(Boolean));
+  (people||[]).forEach(p=>{ if((p.position||'')==='Zone Manager' && p.full_name) zones.add(p.full_name); });
+  const sups = new Set();
+  zones.forEach(z=>{ if(parent[z]) sups.add(parent[z]); });
+  (people||[]).forEach(p=>{ if((p.position||'')==='Supervisor' && p.full_name) sups.add(p.full_name); });
+  const tree = {}, MG='—', SP='—', ZN='—';
+  const slot = (m,s,z) => { tree[m]=tree[m]||{}; tree[m][s]=tree[m][s]||{}; tree[m][s][z]=tree[m][s][z]||[]; return tree[m][s][z]; };
+  zones.forEach(z=>{ const s=parent[z]||SP; const m=(s!==SP && parent[s])||MG; slot(m,s,z); });
+  sups.forEach(s=>{ const m=parent[s]||MG; tree[m]=tree[m]||{}; tree[m][s]=tree[m][s]||{}; });
+  (people||[]).forEach(p=>{ if((p.position||'')==='Manager' && p.full_name){ tree[p.full_name]=tree[p.full_name]||{}; } });
+  agents.forEach(a=>{ const z=a.zone||ZN; const s=(z!==ZN && parent[z])?parent[z]:SP; const m=(s!==SP && parent[s])?parent[s]:MG; slot(m,s,z).push(a); });
+  return tree;
+}
+async function orgDownloadPdf(meta, rows, tasks, people){
+  await orgLoadLibs();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'landscape', unit:'pt', format:'a4' });
+  const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
+  const NAVY=[0,24,60], GOLD=[204,156,36], GREY=[232,236,242], INK=[18,32,47], MUTED=[90,104,120];
+  const title = (meta && meta.title) || 'BRANCH AGENT STRUCTURE';
+  const subtitle = (meta && meta.subtitle) || 'Complete saved structure';
+  const stamp = new Date().toLocaleDateString('en-GB');
+  const nm = orgShortNames(people, rows);
+  const tree = orgBuildTree(rows, people);
+  const MG='—', SP='—';
+  const head = (ttl) => (data) => {
+    doc.setTextColor(...NAVY); doc.setFont(undefined,'bold'); doc.setFontSize(15); doc.text(title, 30, 34);
+    doc.setTextColor(...MUTED); doc.setFont(undefined,'normal'); doc.setFontSize(8.5);
+    doc.text(subtitle + '  ·  Generated ' + stamp + '  ·  ' + ttl + ' ' + data.pageNumber, 30, 49);
+    doc.setDrawColor(...GOLD); doc.setLineWidth(1.2); doc.line(30, 56, W-30, 56);
+  };
+  const posOf = {}; (people||[]).forEach(p=>{ if(p.full_name) posOf[p.full_name] = p.position || ''; });
+  const stars = n => { const ps = posOf[n] || ''; if(/director/i.test(ps)) return '******'; if(ps==='Manager') return '*****'; if(ps==='Supervisor') return '***'; if(ps==='Zone Manager') return '**'; return ''; };
+  const bold = t => ({ content: t, styles: { fontStyle: 'bold' } });
+  const label = n => (n==='—' ? '—' : nm(n) + stars(n));
+  const flat = [];
+  const sorted = (o) => Object.keys(o).sort((a,b)=>(a==='—')-(b==='—') || a.localeCompare(b));
+  sorted(tree).forEach(m => sorted(tree[m]).forEach(s => sorted(tree[m][s]).forEach(z =>
+    tree[m][s][z].forEach(a => flat.push({ a, z, s }))
+  )));
+  const zoneN = {}, supN = {};
+  flat.forEach(x => { const kz = x.s + '|' + x.z; zoneN[kz] = (zoneN[kz]||0) + 1; supN[x.s] = (supN[x.s]||0) + 1; });
+  const body = [];
+  let prevZ = null, prevS = null;
+  flat.forEach(({ a, z, s }) => {
+    const kz = s + '|' + z;
+    const row = [a.branch, a.area, a.update, a.code, a.no, bold(nm(a.name))];
+    if(kz !== prevZ) row.push({ content: z==='—' ? '—' : label(z), rowSpan: zoneN[kz], styles: { fontStyle:'bold', valign:'middle' } });
+    if(s !== prevS) row.push({ content: s==='—' ? '—' : label(s), rowSpan: supN[s], styles: { fontStyle:'bold', valign:'middle' } });
+    body.push(row);
+    prevZ = kz; prevS = s;
+  });
+  doc.autoTable({
+    head: [['TAWI','ENEO','UPDATE','AG CODE','NO','AGENT','ZONE MANAGER','SUPERVISOR']],
+    body,
+    startY: 68, margin: { top: 68, bottom: 30, left: 30, right: 30 },
+    styles: { fontSize: 8, cellPadding: 3.5, textColor: INK, lineColor:[214,219,226], lineWidth: 0.4, fillColor:[255,255,255] },
+    headStyles: { fillColor: NAVY, textColor: [255,255,255], fontStyle:'bold' },
+    didDrawPage: head('Ukurasa')
+  });
+  const safe = title.replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_|_$/g,'') || 'Muundo';
+  doc.save(safe + '_' + new Date().toISOString().slice(0,10) + '.pdf');
+}
+
+// Mkeka wa Kazi Maalum: PDF yake yenyewe, tofauti na muundo wa agents
+async function orgDownloadTasksPdf(meta, tasks){
+  await orgLoadLibs();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'landscape', unit:'pt', format:'a4' });
+  const W = doc.internal.pageSize.getWidth();
+  const NAVY=[0,24,60], GOLD=[204,156,36], INK=[18,32,47], MUTED=[90,104,120];
+  const title = (meta && meta.title) || 'MKEKA WA KAZI MAALUM';
+  const subtitle = (meta && meta.subtitle) || 'Viongozi na kazi zao maalum';
+  const stamp = new Date().toLocaleDateString('en-GB');
+  doc.autoTable({
+    head: [['CHEO','MSHIKAJI','MAJUKUMU']],
+    body: (tasks||[]).map(t=>[t.role_title||'', t.holder_name||'—', t.duties||'—']),
+    startY: 68, margin: { top: 68, bottom: 30, left: 30, right: 30 },
+    columnStyles: { 0:{cellWidth:170}, 1:{cellWidth:180} },
+    styles: { fontSize: 8.5, cellPadding: 4, textColor: INK, lineColor:[214,219,226], lineWidth: 0.4, fillColor:[255,255,255] },
+    headStyles: { fillColor: NAVY, textColor: [255,255,255], fontStyle:'bold' },
+    didDrawPage: data => {
+      doc.setTextColor(...NAVY); doc.setFont(undefined,'bold'); doc.setFontSize(15); doc.text(title, 30, 34);
+      doc.setTextColor(...MUTED); doc.setFont(undefined,'normal'); doc.setFontSize(8.5);
+      doc.text(subtitle + '  ·  Imetengenezwa ' + stamp + '  ·  Ukurasa ' + data.pageNumber, 30, 49);
+      doc.setDrawColor(...GOLD); doc.setLineWidth(1.2); doc.line(30, 56, W-30, 56);
+    }
+  });
+  const safe = title.replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_|_$/g,'') || 'Mkeka';
+  doc.save(safe + '_' + new Date().toISOString().slice(0,10) + '.pdf');
+}
+</script>
+
+<script>
+/* ======== Muundo wa Timu: agents, mnyororo wa uongozi, majukumu maalum, PDF ======== */
+let MU_PEOPLE_FULL=[];
+let MU_ROWS=[], MU_META={title:'BRANCH AGENT STRUCTURE', subtitle:''}, MU_PEOPLE=[], MU_TASKS=[], MU_PEOPLE_OK=false;
+const muE = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function muMsg(id,t,ok){ const el=document.getElementById(id); if(!el) return; el.className='msg'+(ok===true?' ok':(ok===false?' err':'')); el.textContent=t||''; }
+const muInp = 'background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:7px;font-size:12px;font-family:inherit;';
+function muPeopleOptions(sel){
+  return '<option value="">— chagua —</option>' + MU_PEOPLE.map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${muE(p.full_name)}${p.agent_code?' ('+muE(p.agent_code)+')':''}</option>`).join('');
+}
+function muParse(text){
+  const out=[];
+  String(text||'').split(/\r?\n/).forEach(line=>{
+    const raw=line.trim(); if(!raw) return;
+    const cols = raw.includes('|') ? raw.split('|') : raw.split('\t');
+    const c = cols.map(x=>x.trim().replace(/^[—–-]+$/,''));
+    if(/^branch$|^tawi$/i.test(c[0]||'') || /ag code/i.test(raw)) return;
+    if(!c[0]) return;
+    out.push({ branch:c[0], area:c[1]||'', update_grp:c[2]||'', ag_code:(c[3]||'').toUpperCase(), agent_no:c[4]||'', agent_name:c[5]||'', zone_manager:c[6]||'', zone_profile_id:null });
+  });
+  return out;
+}
+function muApply(mode){
+  const rows=muParse(document.getElementById('muPaste').value);
+  if(!rows.length){ muMsg('muMsg','Hakuna mistari sahihi. Tumia | kutenganisha safu.',false); return; }
+  MU_ROWS = mode==='replace' ? rows : MU_ROWS.concat(rows);
+  document.getElementById('muPaste').value='';
+  muMsg('muMsg', (mode==='replace'?'Orodha imebadilishwa: ':'Mistari imeongezwa: ')+rows.length+' · Chagua Zone kwa kila agent kisha Hifadhi.', true);
+  muRender();
+}
+function muDelRow(i){ MU_ROWS.splice(i,1); muRender(); }
+function muSetZone(i,v){ MU_ROWS[i].zone_profile_id = v || null; const p=MU_PEOPLE.find(x=>x.id===v); MU_ROWS[i].zone_manager = p ? p.full_name : ''; muMsg('muSaveMsg','Zone imebadilishwa. Bonyeza "Hifadhi muundo".', null); }
+/* ---- Mkeka: kupanga wafanyakazi waliopo (Tawi → Manager → Zone → Supervisor → Agents) ---- */
+let MU_M2={ banners:null, managers:{}, supervisors:{}, mgrIds:{}, supIds:{}, zones:{} }, MB_OPEN={}, MB_EXTRA=[], MB_H=[], MB_PK=null;
+const MB_META_KEY='hk_mkeka_meta_v1';
+const mbU=v=>String(v==null?'':v).trim().toUpperCase();
+function mbOk(){ return !!window.HkMkeka; }
+function mbMsg(t,ok){ const el=document.getElementById('mbMsg'); if(!el) return; el.className='msg'+(ok===true?' ok':(ok===false?' err':'')); el.textContent=t||''; }
+function mbDirty(on){ const el=document.getElementById('mbDirty'); if(el) el.textContent = on ? '● Mabadiliko hayajahifadhiwa' : ''; }
+function mbDone(msg){ mbNormalize(); muRender(); mbDirty(true); mbMsg(msg||'Imewekwa ✓ Bonyeza "Hifadhi mkeka" kuhifadhi.',true); }
+function mbNormalize(){
+  const out=[]; let n=0;
+  HkMkeka.groups(MU_ROWS).forEach(b=>b.zones.forEach(z=>z.agents.forEach(a=>{ n++; a.r.agent_no=String(n); out.push(a.r); })));
+  MU_ROWS=out;
+}
+/* cheo -> aina ya kiongozi */
+function mbKind(pos){ const p=HkMkeka.norm(pos); if(/zone/.test(p)) return 'zone'; if(/supervis|msimamizi/.test(p)) return 'sup'; if(/agent/.test(p)) return 'agent'; return 'lead'; }
+function mbIsLead(pos){ return mbKind(pos)==='lead' && /manager|meneja|director|mkurugenzi|ceo|cio|coo|head|mkuu|kiongozi|chief|officer|afisa/.test(HkMkeka.norm(pos)); }
+function mbPeople(){ return (typeof UW_PEOPLE!=='undefined' ? UW_PEOPLE : []).filter(p=>p.active!==false); }
+function mbById(id){ return (typeof UW_PEOPLE!=='undefined' ? UW_PEOPLE : []).find(p=>p.id===id)||null; }
+function mbPerson(name){ const k=HkMkeka.norm(name); if(!k) return null; const m=mbPeople().filter(p=>HkMkeka.norm(p.full_name)===k); return m.length===1?m[0]:null; }
+function mbAgentOf(r){
+  if(r.ag_code){ const m=mbPeople().filter(p=>p.agent_code && p.agent_code===r.ag_code); if(m.length===1) return m[0]; }
+  return mbPerson(r.agent_name);
+}
+function mbZoneKey(b,z){ return mbU(b)+'|'+mbU(z); }
+function mbBranches(){
+  const names=HkMkeka.groups(MU_ROWS).map(g=>g.name), add=b=>{ if(b && !names.includes(b)) names.push(b); };
+  Object.keys(MU_M2.managers).forEach(add); Object.keys(MU_M2.zones).forEach(k=>add(k.slice(0,k.indexOf('|')))); MB_EXTRA.forEach(add);
+  return names;
+}
+function mbZonesOf(branch){
+  const out=[], seen={};
+  HkMkeka.groups(MU_ROWS).filter(g=>g.name===branch).forEach(g=>g.zones.forEach(z=>{ if(!seen[z.name]){ seen[z.name]=1; out.push(z.name); } }));
+  Object.keys(MU_M2.zones).forEach(k=>{ const i=k.indexOf('|'); if(k.slice(0,i)===branch){ const z=k.slice(i+1); if(!seen[z]){ seen[z]=1; out.push(z); } } });
+  return out;
+}
+function mbZoneId(branch,zone){
+  const k=mbZoneKey(branch,zone); if(MU_M2.zones[k]) return MU_M2.zones[k];
+  const r=MU_ROWS.find(x=>mbU(x.branch)===branch && (mbU(x.zone_manager)||'—')===zone && x.zone_profile_id); if(r) return r.zone_profile_id;
+  const p=zone==='—'?null:mbPerson(zone); return p?p.id:null;
+}
+function mbItem(p,off){ return { id:p.id, title:p.full_name+(p.agent_code?' ('+p.agent_code+')':''), sub:p.job_position||'Bila cheo', off:off||null }; }
+
+/* ---- orodha ya kuchagua (bottom sheet) ---- */
+function mbPickClose(){ const el=document.getElementById('mbPicker'); if(el) el.style.display='none'; MB_PK=null; }
+function mbPick(o){
+  MB_PK={ o, sel:new Set() };
+  let el=document.getElementById('mbPicker');
+  if(!el){
+    el=document.createElement('div'); el.id='mbPicker';
+    el.innerHTML='<div class="mb-bd" onclick="mbPickClose()"></div><div class="mb-sh"><div class="mb-t" id="mbPkT"></div><input id="mbPkQ" placeholder="Tafuta jina..." oninput="mbPkRender()"><label class="mb-all" id="mbPkAllW"><input type="checkbox" id="mbPkAll" onchange="mbPkRender()"> Onyesha wafanyakazi wote (bila kuchuja cheo)</label><div class="mb-l" id="mbPkL"></div><div class="mb-f"><button class="btn secondary" onclick="mbPickClose()">Ghairi</button><button class="btn" id="mbPkOk" onclick="mbPickDone()">Weka</button></div></div>';
+    document.body.appendChild(el);
+  }
+  document.getElementById('mbPkT').textContent=o.title;
+  document.getElementById('mbPkQ').value='';
+  document.getElementById('mbPkAll').checked=false;
+  document.getElementById('mbPkAllW').style.display=o.allToggle?'':'none';
+  document.getElementById('mbPkOk').style.display=o.multi?'':'none';
+  el.style.display='block'; mbPkRender();
+}
+function mbPkRender(){
+  if(!MB_PK) return; const o=MB_PK.o, all=document.getElementById('mbPkAll').checked, q=HkMkeka.norm(document.getElementById('mbPkQ').value);
+  const items=o.getItems(all).filter(it=>!q || HkMkeka.norm(it.title+' '+(it.sub||'')).includes(q));
+  const box=document.getElementById('mbPkL');
+  if(!items.length){ box.innerHTML='<div class="empty" style="margin:10px 0;">'+muE(o.empty||'Hakuna wa kuchagua.')+'</div>'; }
+  else box.innerHTML=items.map(it=>{
+    const on=MB_PK.sel.has(it.id);
+    return `<div class="mb-it${it.off?' off':''}${on?' on':''}" onclick="mbPkTap('${String(it.id).replace(/'/g,"\\'")}',${it.off?1:0})"><span class="mb-ck">${o.multi?(on?'☑':'☐'):''}</span><span class="mb-tx"><b>${muE(it.title)}</b><small>${muE(it.sub||'')}${it.off?' · '+muE(it.off):''}</small></span></div>`; }).join('');
+  const ok=document.getElementById('mbPkOk'); if(ok) ok.textContent='Weka ('+MB_PK.sel.size+')';
+}
+function mbPkTap(id,off){
+  if(!MB_PK||off) return;
+  if(MB_PK.o.multi){ if(MB_PK.sel.has(id)) MB_PK.sel.delete(id); else MB_PK.sel.add(id); mbPkRender(); }
+  else { const o=MB_PK.o; mbPickClose(); o.onDone([id]); }
+}
+function mbPickDone(){ if(!MB_PK) return; const o=MB_PK.o, ids=[...MB_PK.sel]; if(!ids.length) return; mbPickClose(); o.onDone(ids); }
+
+/* ---- fomu ndogo: eneo na update ya agent ---- */
+function mbFormClose(){ const el=document.getElementById('mbFormSheet'); if(el) el.style.display='none'; }
+function mbForm(title,fields,onSave){
+  let el=document.getElementById('mbFormSheet');
+  if(!el){ el=document.createElement('div'); el.id='mbFormSheet'; document.body.appendChild(el); }
+  el.innerHTML='<div class="mb-bd" onclick="mbFormClose()"></div><div class="mb-sh"><div class="mb-t">'+muE(title)+'</div>'+fields.map((f,i)=>'<div class="field"><label>'+muE(f.label)+'</label><input id="mbFf'+i+'" value="'+muE(f.value||'')+'" placeholder="'+muE(f.ph||'')+'"></div>').join('')+'<div class="mb-f"><button class="btn secondary" onclick="mbFormClose()">Ghairi</button><button class="btn" id="mbFfOk">Weka</button></div></div>';
+  el.style.display='block';
+  document.getElementById('mbFfOk').onclick=function(){ const v=fields.map((f,i)=>document.getElementById('mbFf'+i).value.trim()); mbFormClose(); onSave(v); };
+}
+
+/* ---- vitendo ---- */
+const MB_ACT={
+  mgr(o){ mbPick({ title:'Chagua Manager wa '+o.b, multi:false, allToggle:true, empty:'Hakuna mfanyakazi mwenye cheo cha Manager. Weka cheo kwenye Watu → Hariri, au washa "Onyesha wafanyakazi wote".',
+    getItems:all=>mbPeople().filter(p=>all||mbIsLead(p.job_position)).map(p=>mbItem(p)),
+    onDone:ids=>{ const p=mbById(ids[0]); if(!p) return; MU_M2.managers[o.b]=p.full_name; MU_M2.mgrIds[o.b]=p.id; MB_OPEN[o.b]=true; mbDone(); } }); },
+  addZone(o){ const used={}; mbBranches().forEach(b=>mbZonesOf(b).forEach(z=>{ const id=mbZoneId(b,z); if(id) used[id]=b+' · '+z; }));
+    mbPick({ title:'Chagua Zone Manager wa '+o.b, multi:false, allToggle:true, empty:'Hakuna Zone Manager wa kuchagua. Weka cheo "Zone Manager" kwenye Watu → Hariri, au washa "Onyesha wafanyakazi wote".',
+    getItems:all=>mbPeople().filter(p=>all||mbKind(p.job_position)==='zone').map(p=>mbItem(p, used[p.id]?'tayari yupo '+used[p.id]:null)),
+    onDone:ids=>{ const p=mbById(ids[0]); if(!p) return; MU_M2.zones[mbZoneKey(o.b,p.full_name)]=p.id; MB_OPEN[o.b]=true; mbDone(); } }); },
+  sup(o){ mbPick({ title:'Supervisor wa zone '+o.z, multi:false, allToggle:true, empty:'Hakuna Supervisor wa kuchagua. Weka cheo "Supervisor" kwenye Watu → Hariri, au washa "Onyesha wafanyakazi wote".',
+    getItems:all=>[{id:'__none',title:'— Hakuna supervisor —',sub:''}].concat(mbPeople().filter(p=>all||mbKind(p.job_position)==='sup').map(p=>mbItem(p))),
+    onDone:ids=>{ const k=mbZoneKey(o.b,o.z); if(ids[0]==='__none'){ delete MU_M2.supervisors[k]; delete MU_M2.supIds[k]; } else { const p=mbById(ids[0]); if(!p) return; MU_M2.supervisors[k]=p.full_name; MU_M2.supIds[k]=p.id; } MB_OPEN[o.b]=true; mbDone(); } }); },
+  addAgents(o){ const used={}; MU_ROWS.forEach(r=>{ const a=mbAgentOf(r); if(a) used[a.id]=r.branch+' · '+(r.zone_manager||'—'); });
+    mbPick({ title:'Chagua agents wa '+o.z, multi:true, allToggle:true, empty:'Hakuna agents wa kuchagua. Weka cheo "Agent" kwenye Watu → Hariri, au washa "Onyesha wafanyakazi wote".',
+    getItems:all=>mbPeople().filter(p=>all||mbKind(p.job_position)==='agent').map(p=>mbItem(p, used[p.id]?'tayari yupo '+used[p.id]:null)),
+    onDone:ids=>{ const zid=mbZoneId(o.b,o.z); let at=-1;
+      MU_ROWS.forEach((r,i)=>{ if(mbU(r.branch)===o.b && (mbU(r.zone_manager)||'—')===o.z) at=i; });
+      if(at<0) MU_ROWS.forEach((r,i)=>{ if(mbU(r.branch)===o.b) at=i; });
+      const add=ids.map(id=>mbById(id)).filter(Boolean).map(p=>({ branch:o.b, area:'', update_grp:'', ag_code:mbU(p.agent_code), agent_no:'', agent_name:mbU(p.full_name), zone_manager:o.z==='—'?'':o.z, zone_profile_id:zid||null }));
+      MU_ROWS.splice(at<0?MU_ROWS.length:at+1,0,...add); MB_OPEN[o.b]=true; mbDone('Agents '+add.length+' wamewekwa ✓ Gusa jina la agent kuweka eneo na update.'); } }); },
+  editAg(o){ const r=MU_ROWS[o.i]; if(!r) return;
+    mbForm(r.agent_name,[{label:'Eneo (Area)',value:r.area,ph:'mf. BUNJU B'},{label:'Update',value:r.update_grp,ph:'mf. UPDATE 1'}],v=>{ r.area=mbU(v[0]); r.update_grp=mbU(v[1]); mbDone(); }); },
+  moveAg(o){ const r=MU_ROWS[o.i]; if(!r) return; const list=[];
+    mbBranches().forEach(b=>mbZonesOf(b).forEach(z=>list.push({b,z})));
+    mbPick({ title:'Hamisha '+r.agent_name+' kwenda zone', multi:false, empty:'Hakuna zone nyingine.',
+    getItems:()=>list.map((x,i)=>({id:String(i),title:x.b+' · '+(x.z==='—'?'(bila zone)':x.z),sub:'',off:(x.b===mbU(r.branch)&&x.z===(mbU(r.zone_manager)||'—'))?'alipo hapa':null})),
+    onDone:ids=>{ const x=list[+ids[0]]; if(!x) return; r.branch=x.b; r.zone_manager=x.z==='—'?'':x.z; r.zone_profile_id=mbZoneId(x.b,x.z)||null; MB_OPEN[x.b]=true; mbDone(); } }); },
+  rmAg(o){ const r=MU_ROWS[o.i]; if(!r||!confirm('Ondoa '+r.agent_name+' kwenye mkeka?')) return; MU_ROWS.splice(o.i,1); mbDone('Ameondolewa. Bonyeza "Hifadhi mkeka" kuhifadhi.'); },
+  rmZone(o){ if(!confirm('Ondoa zone '+o.z+' pamoja na agents wake kwenye mkeka? (Watu hawafutwi kwenye mfumo)')) return;
+    MU_ROWS=MU_ROWS.filter(r=>!(mbU(r.branch)===o.b && (mbU(r.zone_manager)||'—')===o.z));
+    const k=mbZoneKey(o.b,o.z); delete MU_M2.zones[k]; delete MU_M2.supervisors[k]; delete MU_M2.supIds[k]; mbDone('Zone imeondolewa.'); },
+  renBr(o){ const n=mbU(prompt('Jina jipya la tawi',o.b)||''); if(!n||n===o.b) return;
+    MU_ROWS.forEach(r=>{ if(mbU(r.branch)===o.b) r.branch=n; });
+    [['managers'],['mgrIds']].forEach(([f])=>{ if(MU_M2[f][o.b]!==undefined){ MU_M2[f][n]=MU_M2[f][o.b]; delete MU_M2[f][o.b]; } });
+    ['zones','supervisors','supIds'].forEach(f=>{ Object.keys(MU_M2[f]).forEach(k=>{ if(k.indexOf(o.b+'|')===0){ MU_M2[f][n+k.slice(o.b.length)]=MU_M2[f][k]; delete MU_M2[f][k]; } }); });
+    MB_EXTRA=MB_EXTRA.map(b=>b===o.b?n:b); MB_OPEN[n]=true; mbDone(); },
+  mvBr(o){ const order=HkMkeka.groups(MU_ROWS).map(b=>b.name), i=order.indexOf(o.b), j=i+o.d;
+    if(i<0||j<0||j>=order.length) return; [order[i],order[j]]=[order[j],order[i]];
+    const idx={}; order.forEach((b,k)=>{ idx[b]=k; });
+    MU_ROWS=MU_ROWS.map((r,k)=>({r,k})).sort((a,b)=>(idx[mbU(a.r.branch)||'—']-idx[mbU(b.r.branch)||'—'])||(a.k-b.k)).map(x=>x.r); mbDone(); }
+};
+function mbGo(i){ const o=MB_H[i]; if(o && MB_ACT[o.t]) MB_ACT[o.t](o); }
+function mbNewBranch(){ const n=mbU(prompt('Jina la tawi jipya (mfano: DSM)')||''); if(!n) return; if(!MB_EXTRA.includes(n)) MB_EXTRA.push(n); MB_OPEN[n]=true; mbDone('Tawi '+n+' limeongezwa. Sasa chagua Manager, kisha ongeza Zone.'); }
+function mbSetBan(i,v){ if(MU_M2.banners==null) MU_M2.banners=HkMkeka.DEFAULT_BANNERS.slice(); MU_M2.banners[i]=v; mbDirty(true); }
+
+function muRender(){
+  const box=document.getElementById('muPreview'); if(!box) return;
+  const t=document.getElementById('muTitle');
+  if(t && !t.dataset.set){ t.value = MU_META.title||''; t.dataset.set='1'; }
+  const old=document.getElementById('muCount'); if(old) old.textContent='Muundo wa sasa · agents '+MU_ROWS.length;
+  if(!mbOk()){ box.innerHTML='<div class="empty">Pakia faili assets/hekima-mkeka.js kwenye repo ili mkeka mpya ufanye kazi.</div>'; return; }
+  const bans=(MU_M2.banners==null)?HkMkeka.DEFAULT_BANNERS:MU_M2.banners;
+  [0,1,2].forEach(i=>{ const el=document.getElementById('mbBan'+i); if(el && !el.dataset.set){ el.value=bans[i]||''; el.dataset.set='1'; } });
+  const B=mbBranches(), G=HkMkeka.groups(MU_ROWS); let nz=0; B.forEach(b=>{ nz+=mbZonesOf(b).length; });
+  const cnt=document.getElementById('mbCount'); if(cnt) cnt.textContent = MU_ROWS.length+' agents · '+nz+' zones · '+B.length+' matawi';
+  // ambao bado hawajapangwa
+  const usedA=new Set(), usedZ=new Set(); MU_ROWS.forEach(r=>{ const a=mbAgentOf(r); if(a) usedA.add(a.id); });
+  B.forEach(b=>mbZonesOf(b).forEach(z=>{ const id=mbZoneId(b,z); if(id) usedZ.add(id); }));
+  const supIds=Object.values(MU_M2.supIds), mgrIds=Object.values(MU_M2.mgrIds), P=mbPeople();
+  const na=P.filter(p=>mbKind(p.job_position)==='agent' && !usedA.has(p.id)).length, nzo=P.filter(p=>mbKind(p.job_position)==='zone' && !usedZ.has(p.id)).length,
+        ns=P.filter(p=>mbKind(p.job_position)==='sup' && !supIds.includes(p.id)).length, nm=P.filter(p=>mbIsLead(p.job_position) && !mgrIds.includes(p.id)).length;
+  const un=document.getElementById('mbUnplaced');
+  if(un) un.innerHTML = (na+nzo+ns+nm)===0 ? '✓ Wafanyakazi wote wamepangwa.' : 'Bado hawajapangwa: <b>Agents '+na+'</b> · Zone '+nzo+' · Supervisors '+ns+' · Mameneja '+nm;
+  if(!P.length){ box.innerHTML='<div class="empty">Inapakia wafanyakazi... (au bado hakuna wafanyakazi kwenye mfumo)</div>'; return; }
+  MB_H=[]; const h=o=>{ MB_H.push(o); return MB_H.length-1; };
+  let seq=0, zi=0; const pal=HkMkeka.PALETTE;
+  const rowsOf=(b,z)=>{ const out=[]; MU_ROWS.forEach((r,i)=>{ if(mbU(r.branch)===b && (mbU(r.zone_manager)||'—')===z) out.push({r,i}); }); return out; };
+  // namba za mfululizo kwa mpangilio wa PDF
+  const seqOf={}; G.forEach(g=>g.zones.forEach(z=>z.agents.forEach(a=>{ seq++; seqOf[a.i]=seq; })));
+  box.innerHTML = B.length ? B.map((b,bi)=>{
+    const zs=mbZonesOf(b), nA=zs.reduce((s,z)=>s+rowsOf(b,z).length,0), mg=MU_M2.managers[b]||'';
+    const zhtml=zs.map(z=>{
+      const c=pal[zi++ % pal.length], k=mbZoneKey(b,z), sup=MU_M2.supervisors[k]||'', zid=mbZoneId(b,z), zp=zid?mbById(zid):null, ag=rowsOf(b,z);
+      const rows=ag.map(a=>{ const r=a.r, p=mbAgentOf(r);
+        return `<div class="mk-ag"><span class="mk-no">${seqOf[a.i]||''}</span><span class="mk-cd">${muE(r.ag_code||'—')}</span><span class="mk-nm" onclick="mbGo(${h({t:'editAg',i:a.i})})">${muE(r.agent_name)}${p?'':' <span class="mk-bad">si kwenye mfumo</span>'}<small>${muE([r.area,r.update_grp].filter(Boolean).join(' · ')||'weka eneo/update')}</small></span><button class="mk-ar" onclick="mbGo(${h({t:'moveAg',i:a.i})})">Hamisha</button><button class="mk-ar" onclick="mbGo(${h({t:'rmAg',i:a.i})})">✕</button></div>`; }).join('');
+      return `<div class="mk-zc" style="border-left-color:rgb(${c[0]},${c[1]},${c[2]});">
+        <div class="mk-zt"><div><b>${muE(z==='—'?'(bila zone)':z)}</b> <span class="mk-s">(${ag.length})</span>${zp?'':(z==='—'?'':' <span class="mk-bad">si kwenye mfumo</span>')}</div><button class="mk-ar" onclick="mbGo(${h({t:'rmZone',b,z})})">Ondoa zone</button></div>
+        <div class="mk-sr"><span>Supervisor</span><button class="mk-pk${sup?'':' empty'}" onclick="mbGo(${h({t:'sup',b,z})})">${sup?muE(sup):'Chagua supervisor'} ▾</button></div>
+        ${rows}
+        <button class="btn secondary" style="width:100%;margin-top:8px;" onclick="mbGo(${h({t:'addAgents',b,z})})">+ Ongeza agents</button></div>`; }).join('');
+    return `<details class="mk-br" ${MB_OPEN[b]?'open':''} ontoggle="MB_OPEN[${JSON.stringify(b).replace(/"/g,'&quot;')}]=this.open"><summary><b>${muE(b)}</b><span class="mk-s">${nA} agents · ${zs.length} zones</span><div class="mk-s" style="margin:2px 0 0;${mg?'':'color:var(--red);'}">${mg?'Manager: '+muE(mg):'Manager: hajachaguliwa'}</div></summary>
+      <div class="mk-bd">
+        <div class="mk-sr"><span>Manager</span><button class="mk-pk${mg?'':' empty'}" onclick="mbGo(${h({t:'mgr',b})})">${mg?muE(mg):'Chagua manager'} ▾</button></div>
+        ${zhtml}
+        <button class="btn secondary" style="width:100%;margin-top:10px;" onclick="mbGo(${h({t:'addZone',b})})">+ Ongeza Zone</button>
+        <div class="mk-mg" style="justify-content:flex-end;margin-top:8px;"><button class="mk-ar" onclick="mbGo(${h({t:'renBr',b})})">Jina la tawi</button><button class="mk-ar" onclick="mbGo(${h({t:'mvBr',b,d:-1})})" ${bi===0?'disabled':''}>▲</button><button class="mk-ar" onclick="mbGo(${h({t:'mvBr',b,d:1})})" ${bi===B.length-1?'disabled':''}>▼</button></div>
+      </div></details>`;
+  }).join('') : '<div class="empty">Bado hakuna tawi. Bonyeza "+ Tawi jipya".</div>';
+}
+function mbImport(mode){
+  const el=document.getElementById('mbImpMsg'), say=(t,ok)=>{ el.className='msg'+(ok===true?' ok':(ok===false?' err':'')); el.textContent=t; };
+  const raw=document.getElementById('mbPaste').value, lines=raw.split(/\r?\n/).filter(l=>l.trim()!=='');
+  if(!lines.length){ say('Bandika safu zako za Excel kwanza.',false); return; }
+  const split=l=> l.indexOf('\t')>=0 ? l.split('\t') : (l.indexOf('|')>=0 ? l.split('|') : l.split(/\s{2,}/));
+  let cols={branch:0,area:1,upd:2,code:3,no:4,agent:5,zone:6,sup:-1,mgr:7}, start=0; const banners=[];
+  const hi=lines.findIndex(l=>{ const c=split(l).map(x=>HkMkeka.norm(x)); return c.includes('branch')||c.includes('tawi'); });
+  if(hi>=0){
+    const c=split(lines[hi]).map(x=>HkMkeka.norm(x)), f=(...k)=>c.findIndex(x=>k.includes(x));
+    cols={ branch:f('branch','tawi'), area:f('areas','area','eneo'), upd:f('update'), code:f('ag code','agcode','code'), no:f('no'), agent:f('agent'), zone:f('zone'), sup:f('supervisor','sup','msimamizi'), mgr:f('manager','meneja') };
+    lines.slice(0,hi).forEach(l=>{ const c1=split(l).map(x=>x.trim()).filter(Boolean); if(c1.length===1) banners.push(c1[0]); });
+    start=hi+1;
+  }
+  const rows=[], mgrs={}, sups={}; let skipped=0, lb='', lz='', lm='', ls='', unmatched=0;
+  lines.slice(start).forEach(l=>{
+    const c=split(l).map(x=>x.trim()), g=k=>(cols[k]>=0 && cols[k]<c.length)?c[cols[k]]:'';
+    if(c.length<4){ skipped++; return; }
+    const branch=mbU(g('branch')), agent=g('agent');
+    if(!branch||!agent){ skipped++; return; }
+    let zone=g('zone'), mgr=g('mgr'), sup=g('sup');
+    if(!zone && branch===lb) zone=lz; if(!mgr && branch===lb) mgr=lm; if(!sup && branch===lb && zone===lz) sup=ls;
+    lb=branch; lz=zone; lm=mgr; ls=sup;
+    const pr=zone?mbPerson(zone):null, row={ branch, area:mbU(g('area')), update_grp:mbU(g('upd')), ag_code:mbU(g('code')), agent_no:'', agent_name:mbU(agent), zone_manager:mbU(zone), zone_profile_id:pr?pr.id:null };
+    if(!mbAgentOf(row)) unmatched++;
+    rows.push(row);
+    if(mgr && !mgrs[branch]) mgrs[branch]=mgr;
+    if(sup && zone && !sups[branch+'|'+mbU(zone)]) sups[branch+'|'+mbU(zone)]=sup;
+  });
+  if(!rows.length){ say('Sijaona mistari ya agents. Hakikisha umebandika safu pamoja na kichwa (BRANCH ... MANAGER).',false); return; }
+  if(mode==='replace'){ MU_ROWS=rows; MU_M2.zones={}; MU_M2.supervisors={}; MU_M2.supIds={}; } else MU_ROWS=MU_ROWS.concat(rows);
+  Object.keys(mgrs).forEach(b=>{ if(mode==='replace' || !MU_M2.managers[b]){ MU_M2.managers[b]=mgrs[b]; const p=mbPerson(mgrs[b]); if(p) MU_M2.mgrIds[b]=p.id; else delete MU_M2.mgrIds[b]; } });
+  Object.keys(sups).forEach(k=>{ MU_M2.supervisors[k]=sups[k]; const p=mbPerson(sups[k]); if(p) MU_M2.supIds[k]=p.id; });
+  if(banners.length){ MU_M2.banners=banners.slice(0,3); [0,1,2].forEach(i=>{ const e=document.getElementById('mbBan'+i); if(e) e.value=MU_M2.banners[i]||''; }); }
+  mbNormalize(); muRender(); mbDirty(true);
+  say('Imepakiwa: agents '+rows.length+(skipped?' · mistari iliyorukwa '+skipped:'')+(unmatched?' · '+unmatched+' hawapo kwenye mfumo (wameandikwa "si kwenye mfumo")':'')+'. Sasa bonyeza "Hifadhi mkeka" juu.',true);
+}
+/* Msimamizi wa kila mtu: Agent → Zone, Zone → Supervisor (au Manager), Supervisor → Manager (kama hana msimamizi) */
+async function mbSyncParents(){
+  const want=new Map(), cur=new Map((typeof UW_PEOPLE!=='undefined'?UW_PEOPLE:[]).map(p=>[p.id,p.supervisor_id||null]));
+  MU_ROWS.forEach(r=>{ const a=mbAgentOf(r); if(a && r.zone_profile_id && a.id!==r.zone_profile_id) want.set(a.id,r.zone_profile_id); });
+  mbBranches().forEach(b=>mbZonesOf(b).forEach(z=>{
+    const k=mbZoneKey(b,z), zid=mbZoneId(b,z), sid=MU_M2.supIds[k], mid=MU_M2.mgrIds[b];
+    if(zid){ const par=sid||mid; if(par && par!==zid) want.set(zid,par); }
+    if(sid && mid && sid!==mid && !cur.get(sid) && !want.has(sid)) want.set(sid,mid);
+  }));
+  let changed=0; const errs=[];
+  for(const [id,par] of want){
+    if(cur.get(id)===par) continue;
+    const { error } = await sb.rpc('org_set_parent',{ p_profile:id, p_parent:par });
+    if(error) errs.push((mbById(id)||{}).full_name+': '+error.message); else changed++;
+  }
+  return { changed, errs };
+}
+async function mbReloadPeople(){
+  const p=await sb.rpc('org_people_full');
+  if(!p.error && p.data){ UW_PEOPLE=p.data; MU_PEOPLE=UW_PEOPLE.map(x=>({id:x.id, full_name:x.full_name, agent_code:x.agent_code, job_position:x.job_position, supervisor_id:x.supervisor_id})); }
+}
+
+/* ---- Mnyororo wa uongozi ---- */
+function muRenderChain(){
+  const box=document.getElementById('muChain');
+  if(!MU_PEOPLE_OK){ box.innerHTML='<div class="empty">Mnyororo wa uongozi unaonekana kwa CEO tu.</div>'; return; }
+  if(!MU_PEOPLE.length){ box.innerHTML='<div class="empty">Hakuna watu.</div>'; return; }
+  box.innerHTML = `<div style="overflow-x:auto;"><div class="xl-scroll"><table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <thead><tr style="color:var(--sub);text-align:left;border-bottom:1px solid var(--border);"><th style="padding:5px;">Jina / Email</th><th style="padding:5px;">Cheo</th><th style="padding:5px;">Idara</th><th style="padding:5px;">Msimamizi</th><th></th></tr></thead>
+    <tbody>${MU_PEOPLE.map(p=>`<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:5px;">${muE(p.full_name)}${p.agent_code?' <span style="color:var(--sub)">('+muE(p.agent_code)+')</span>':''}</td>
+      <td style="padding:5px;color:var(--sub);">${muE(p.job_position||'—')}</td><td style="padding:5px;color:var(--sub);">—</td>
+      <td style="padding:5px;"><select id="par-${p.id}" style="${muInp}max-width:180px;"><option value="">— hakuna —</option>${MU_PEOPLE.filter(q=>q.id!==p.id).map(q=>`<option value="${q.id}" ${q.id===p.supervisor_id?'selected':''}>${muE(q.full_name)}</option>`).join('')}</select></td>
+      <td style="padding:5px;text-align:right;"><button class="btn secondary" style="padding:5px 10px;font-size:11.5px;" onclick="muSaveParent('${p.id}')">Hifadhi</button></td></tr>`).join('')}</tbody>
+  </table></div></div>`;
+}
+async function muSaveParent(id){
+  const v=document.getElementById('par-'+id).value || null;
+  const { error } = await sb.rpc('org_set_parent',{ p_profile:id, p_parent:v });
+  if(error){ muMsg('muChainMsg','Imeshindwa: '+error.message,false); return; }
+  muMsg('muChainMsg','Mnyororo umehifadhiwa ✓',true); muLoad();
+}
+
+/* ---- Majukumu maalum ---- */
+function muRenderTasks(){
+  const box=document.getElementById('muTasks');
+  if(!MU_TASKS.length){ box.innerHTML='<div class="empty">Bado hakuna kazi maalum.</div>'; return; }
+  box.innerHTML = MU_TASKS.map((t,i)=>`<div style="border-top:1px solid var(--border);padding:10px 0;display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+    <input value="${muE(t.role_title)}" placeholder="Cheo (mfano: Mkurugenzi)" oninput="MU_TASKS[${i}].role_title=this.value" style="${muInp}">
+    <select onchange="MU_TASKS[${i}].holder_profile_id=this.value||null;MU_TASKS[${i}].holder_name=(MU_PEOPLE.find(p=>p.id===this.value)||{}).full_name||''" style="${muInp}">${muPeopleOptions(t.holder_profile_id)}</select>
+    <textarea placeholder="Majukumu" oninput="MU_TASKS[${i}].duties=this.value" style="${muInp}grid-column:1 / span 2;min-height:54px;">${muE(t.duties)}</textarea>
+    <div style="grid-column:1 / span 2;text-align:right;"><a href="#" style="color:var(--red);font-size:11px;" onclick="muTaskDel(${i});return false;">futa kazi hii</a></div></div>`).join('');
+}
+function muTaskAdd(){ MU_TASKS.push({role_title:'',holder_profile_id:null,holder_name:'',duties:''}); muRenderTasks(); }
+function muTaskDel(i){ MU_TASKS.splice(i,1); muRenderTasks(); }
+async function muSaveTasks(){
+  const bad = MU_TASKS.findIndex(t=>!String(t.role_title||'').trim());
+  if(bad>=0){ muMsg('muTasksMsg','Kazi ya '+(bad+1)+' inahitaji cheo.',false); return; }
+  const payload = MU_TASKS.map((t,i)=>({ sort_order:i+1, role_title:t.role_title, holder_profile_id:t.holder_profile_id||null, holder_name:t.holder_name||'', duties:t.duties||'' }));
+  const { error } = await sb.rpc('org_tasks_save',{ p_rows: payload });
+  if(error){ muMsg('muTasksMsg','Imeshindwa: '+error.message,false); return; }
+  muMsg('muTasksMsg','Majukumu yamehifadhiwa ✓ ('+payload.length+')',true);
+}
+
+/* ---- Muundo: sehemu ndogo (Watu, Muundo wa Timu, Updates, Majukumu, Zaidi) ---- */
+function muSec(n){
+  document.querySelectorAll('#panel-muundo .mu-sec').forEach(e=>{ e.style.display = e.dataset.sec===n ? '' : 'none'; });
+  document.querySelectorAll('#muPills .mu-pill').forEach(b=>{ b.classList.toggle('secondary', b.dataset.sec!==n); });
+}
+/* ---- Pakia, hifadhi, PDF ---- */
+async function muLoad(){
+  const g = await sb.rpc('org_get');
+  if(g.error){ document.getElementById('muPreview').innerHTML='<div class="empty">Sehemu hii bado haijawekwa kwenye database.</div>'; return; }
+  const d=g.data;
+  MU_META={title:d.title||'BRANCH AGENT STRUCTURE', subtitle:d.subtitle||''};
+  if(mbOk()){ MU_M2=HkMkeka.decodeMeta(d.subtitle||''); if(MU_M2.banners==null && !Object.keys(MU_M2.managers).length && !Object.keys(MU_M2.supervisors||{}).length && !Object.keys(MU_M2.zones||{}).length){ try{ const l=JSON.parse(localStorage.getItem(MB_META_KEY)||'null'); if(l) MU_M2=Object.assign({banners:null,managers:{},supervisors:{},mgrIds:{},supIds:{},zones:{}},l); }catch(e){} } }
+  MU_ROWS=(d.rows||[]).map(r=>({branch:r.branch||'',area:r.area||'',update_grp:r.update_grp||'',ag_code:r.ag_code||'',agent_no:r.agent_no||'',agent_name:r.agent_name||'',zone_manager:r.zone_manager||'',zone_profile_id:r.zone_profile_id||null}));
+  MU_TASKS=(d.tasks||[]).map(t=>({role_title:t.role_title||'',holder_profile_id:t.holder_profile_id||null,holder_name:t.holder_name||'',duties:t.duties||''}));
+  MU_PEOPLE_FULL=d.people||[];
+  const t=document.getElementById('muTitle'); if(t){ t.dataset.set=''; }
+  [0,1,2].forEach(k=>{ const e=document.getElementById('mbBan'+k); if(e) e.dataset.set=''; });
+  muRender(); muRenderTasks();
+}
+async function muSave(){
+  const title=(document.getElementById('muTitle').value||'').trim()||'BRANCH AGENT STRUCTURE';
+  if(!MU_ROWS.length){ muMsg('muSaveMsg','Hakuna agents wa kuhifadhi. Ongeza Zone na agents kwanza.',false); return; }
+  if(mbOk()) mbNormalize();
+  const sub = mbOk() ? HkMkeka.encodeMeta(MU_M2) : (MU_META.subtitle||'');
+  const { data, error } = await sb.rpc('org_save',{ p_title:title, p_subtitle:sub, p_rows: MU_ROWS.map((r,i)=>({...r, sort_order:i+1})) });
+  if(error){ muMsg('muSaveMsg','Imeshindwa: '+error.message,false); return; }
+  MU_META={title, subtitle:sub};
+  try{ localStorage.setItem(MB_META_KEY, JSON.stringify(MU_M2)); }catch(e){}
+  const dups=(data.duplicate_codes||[]);
+  let extra='';
+  try{ const g=await sb.rpc('org_get'); if(!g.error && g.data && String(g.data.subtitle||'')!==sub) extra=' · Onyo: database haikuhifadhi viongozi/maelekezo yote; yamebaki kwenye kifaa hiki tu.'; }catch(e){}
+  let sync='';
+  const sy=document.getElementById('mbSync');
+  if(mbOk() && sy && sy.checked){
+    try{ const r=await mbSyncParents(); sync=' · Wasimamizi wamesasishwa: '+r.changed+(r.errs.length?' (imeshindwa: '+r.errs.slice(0,2).join('; ')+')':''); await mbReloadPeople(); }
+    catch(e){ sync=' · Msimamizi haukusasishwa: '+e.message; }
+  }
+  muMsg('muSaveMsg','Mkeka umehifadhiwa ✓ (agents '+data.saved+')'+(dups.length?' · Onyo: AG code zinajirudia: '+dups.join(', '):'')+extra+sync, (dups.length||extra)?null:true);
+  mbDirty(false); muRender();
+}
+async function muPdf(){
+  const title=(document.getElementById('muTitle').value||'').trim()||MU_META.title;
+  if(!MU_ROWS.length){ muMsg('muSaveMsg','Hakuna agents wa kupakua.',false); return; }
+  try{
+    if(mbOk()){ mbNormalize(); await HkMkeka.pdf({ title, subtitle:HkMkeka.encodeMeta(MU_M2) }, MU_ROWS, MU_PEOPLE_FULL); }
+    else { await orgDownloadPdf({ title, subtitle:MU_META.subtitle }, MU_ROWS, [], MU_PEOPLE_FULL); }
+  }catch(e){ muMsg('muSaveMsg','Imeshindwa kutengeneza PDF: '+e.message,false); }
+}
+</script>
+
+<script>
+/* ======== Watu na Akaunti: kuongeza, kupakia, kutengeneza akaunti, nafasi na mnyororo ======== */
+let W_ROWS=[], W_CREDS=[];
+const wE = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const wInp = 'background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:5px 7px;border-radius:7px;font-size:12px;font-family:inherit;width:100%;';
+let W_POS = ['Agent','Zone Manager','Supervisor','Manager','CEO'];
+function wMsg(t,ok){ const el=document.getElementById('wMsg'); el.className='msg'+(ok===true?' ok':(ok===false?' err':'')); el.textContent=t||''; }
+function wProg(t){ document.getElementById('wProgress').textContent=t||''; }
+function wAdd(){ W_ROWS.push({name:'',email:'',agent_code:'',position:'Agent',branch:'',area:'',parent_idx:'',status:'',profile_id:null,password:''}); wRender(); }
+function wDel(i){ W_ROWS.splice(i,1); W_ROWS.forEach(r=>{ if(r.parent_idx===i) r.parent_idx=''; else if(r.parent_idx>i) r.parent_idx--; }); wRender(); }
+function wRender(){
+  if(!document.getElementById('wList')) return;
+  const box=document.getElementById('wList');
+  if(!W_ROWS.length){ box.innerHTML='<div class="empty">Bado hakuna watu. Pakia faili au bonyeza "+ Ongeza mtu".</div>'; return; }
+  box.innerHTML = `<div style="overflow-x:auto;"><div class="xl-scroll"><table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <thead><tr style="color:var(--sub);text-align:left;border-bottom:1px solid var(--border);"><th style="padding:4px;">JINA</th><th style="padding:4px;">EMAIL</th><th style="padding:4px;">AGENT CODE</th><th style="padding:4px;">NAFASI</th><th style="padding:4px;">TAWI</th><th style="padding:4px;">ENEO</th><th style="padding:4px;">ANARIPOTI KWA</th><th style="padding:4px;">HALI</th><th></th></tr></thead>
+    <tbody>${W_ROWS.map((r,i)=>`<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:3px;min-width:120px;"><input style="${wInp}" value="${wE(r.name)}" oninput="W_ROWS[${i}].name=this.value"></td>
+      <td style="padding:3px;min-width:150px;"><input style="${wInp}" value="${wE(r.email)}" oninput="W_ROWS[${i}].email=this.value"></td>
+      <td style="padding:3px;width:80px;"><input style="${wInp}" value="${wE(r.agent_code)}" oninput="W_ROWS[${i}].agent_code=this.value.toUpperCase()"></td>
+      <td style="padding:3px;"><select style="${wInp}" onchange="W_ROWS[${i}].position=this.value">${W_POS.map(p=>`<option ${p===r.position?'selected':''}>${p}</option>`).join('')}</select></td>
+      <td style="padding:3px;width:90px;"><input style="${wInp}" value="${wE(r.branch)}" oninput="W_ROWS[${i}].branch=this.value"></td>
+      <td style="padding:3px;width:90px;"><input style="${wInp}" value="${wE(r.area)}" oninput="W_ROWS[${i}].area=this.value"></td>
+      <td style="padding:3px;min-width:130px;"><select style="${wInp}" onchange="W_ROWS[${i}].parent_idx=this.value===''?'':Number(this.value)"><option value="">— hakuna —</option>${W_ROWS.map((q,j)=>j===i?'':`<option value="${j}" ${r.parent_idx===j?'selected':''}>${wE(q.name||('Mtu '+(j+1)))}</option>`).join('')}</select></td>
+      <td style="padding:3px;font-size:11px;color:${/imeshindwa/i.test(r.status)?'var(--red)':'var(--sub)'};min-width:110px;">${wE(r.status)}</td>
+      <td style="padding:3px;text-align:right;"><a href="#" style="color:var(--red);font-size:11px;" onclick="wDel(${i});return false;">futa</a></td></tr>`).join('')}</tbody>
+  </table></div></div>`;
+}
+async function wUpload(input){
+  const f=input.files && input.files[0]; if(!f) return;
+  let table=[];
+  try{
+    if(/\.xlsx?$/i.test(f.name)){
+      await new Promise((res,rej)=>{ if(window.XLSX) return res(); const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; sc.onload=res; sc.onerror=()=>rej(new Error('Imeshindwa kupakia maktaba ya Excel')); document.head.appendChild(sc); });
+      const wb = XLSX.read(await f.arrayBuffer(), {type:'array'});
+      table = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:''});
+    } else {
+      const text = await f.text();
+      const delim = text.split(/\r?\n/)[0].includes(';') ? ';' : ',';
+      table = text.split(/\r?\n/).filter(l=>l.trim()).map(l=>l.split(delim).map(c=>c.trim().replace(/^"|"$/g,'')));
+    }
+  }catch(e){ wMsg('Imeshindwa kusoma faili: '+e.message,false); return; }
+  const head = (table[0]||[]).map(h=>String(h).toLowerCase().trim());
+  const col = names => head.findIndex(h=>names.includes(h));
+  const cN=col(['jina','name','full_name','jina kamili']), cE=col(['email','barua pepe']), cC=col(['agent code','agent_code','code','ag code']),
+        cP=col(['nafasi','position']), cB=col(['tawi','branch']), cA=col(['eneo','area']), cR=col(['anaripoti kwa','reports to','parent_email']);
+  if(cN<0){ wMsg('Faili lazima liwe na safu ya "Jina".',false); return; }
+  const body = table.slice(1).filter(r=>String(r[cN]||'').trim());
+  W_ROWS = body.map(r=>{
+    const pos = cP>=0 ? String(r[cP]||'').trim() : 'Agent';
+    return { name:String(r[cN]||'').trim(), email: cE>=0?String(r[cE]||'').trim():'', agent_code: cC>=0?String(r[cC]||'').trim().toUpperCase():'',
+      position: W_POS.includes(pos)?pos:'Agent', branch: cB>=0?String(r[cB]||'').trim():'', area: cA>=0?String(r[cA]||'').trim():'',
+      parent_idx:'', status:'', profile_id:null, password:'', parent_email: cR>=0?String(r[cR]||'').trim().toLowerCase():'' };
+  });
+  W_ROWS.forEach(r=>{ if(r.parent_email){ const k=W_ROWS.findIndex(q=>q.email.toLowerCase()===r.parent_email); if(k>=0) r.parent_idx=k; } delete r.parent_email; });
+  wRender(); wMsg('Watu '+W_ROWS.length+' wamepakiwa. Angalia kisha bonyeza "Tengeneza akaunti".', true);
+}
+function wPassword(){
+  const set='abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789', a=new Uint32Array(10); crypto.getRandomValues(a);
+  return Array.from(a, n=>set[n%set.length]).join('').slice(0,10);
+}
+async function wCreate(){
+  if(!W_ROWS.length){ wMsg('Hakuna watu wa kutengeneza.',false); return; }
+  const btn=document.getElementById('wCreateBtn'); btn.disabled=true;
+  W_ROWS.forEach((r,i)=>{
+    if(!r.name.trim()){ r.status='imeshindwa: jina linahitajika'; return; }
+    if(!r.agent_code){ r.agent_code = 'W'+String(i+1).padStart(3,'0'); }
+    if(!r.email){ r.email = (r.agent_code.toLowerCase()+'.'+(i+1)+'@hekima.local'); }
+  });
+  wRender();
+  const { data:{ session } } = await sb.auth.getSession();
+  let done=0, failed=0;
+  for(let i=0;i<W_ROWS.length;i++){
+    const r=W_ROWS[i];
+    if(r.profile_id || /imeshindwa: jina/.test(r.status) || /akaunti ipo/.test(r.status)) continue;
+    wProg('Inatengeneza akaunti '+(i+1)+' / '+W_ROWS.length+' ...');
+    r.password = wPassword();
+    try{
+      await sb.from('mikopo_agents').upsert({ code:r.agent_code, name:r.name }, { onConflict:'code', ignoreDuplicates:true });
+      const res = await fetch(SUPABASE_URL+'/functions/v1/create-agent', { method:'POST',
+        headers:{ 'Content-Type':'application/json', 'apikey':SUPABASE_KEY, 'Authorization':'Bearer '+session.access_token },
+        body: JSON.stringify({ email:r.email, password:r.password, full_name:r.name, agent_code:r.agent_code }) });
+      const out = await res.json();
+      if(res.status===409 || /tayari ina wasifu/i.test(out.error||'')){ r.status='akaunti ipo tayari'; }
+      else if(!res.ok || out.error){ throw new Error(out.error || ('HTTP '+res.status)); }
+      else { r.status='✓ akaunti imetengenezwa'; W_CREDS.push(r); done++; }
+    }catch(e){ r.status='imeshindwa: '+e.message; failed++; }
+    wRender();
+  }
+  wProg('Akaunti zimetengenezwa: '+done+' · zilizoshindwa: '+failed+'. Inaunganisha nafasi na mnyororo...');
+  await wLink();
+  btn.disabled=false;
+  await wSync();
+  wProg('Imekamilika. Akaunti mpya: '+done+' · zilizoshindwa: '+failed+'. Pakua nywila sasa; hazionekani tena baadaye.');
+  if(typeof muLoad==='function') muLoad();
+}
+async function wLink(){
+  const emails = W_ROWS.map(r=>r.email.toLowerCase()).filter(Boolean);
+  const { data:profs } = await sb.from('mikopo_profiles').select('id,email').in('email', emails);
+  const byEmail = {}; (profs||[]).forEach(p=>{ byEmail[(p.email||'').toLowerCase()] = p.id; });
+  W_ROWS.forEach(r=>{ r.profile_id = byEmail[r.email.toLowerCase()] || r.profile_id; });
+  for(const r of W_ROWS){
+    if(!r.profile_id) continue;
+    const { error } = await sb.rpc('set_staff_position', { p_profile_id:r.profile_id, p_position:r.position, p_department:null, p_supervisor_id:null, p_phone:null, p_hire_date:null });
+    if(error) r.status = 'nafasi imeshindwa: '+error.message;
+  }
+  for(const r of W_ROWS){
+    if(!r.profile_id || r.parent_idx==='' || r.parent_idx==null) continue;
+    const par = W_ROWS[r.parent_idx];
+    if(!par || !par.profile_id) continue;
+    const { error } = await sb.rpc('org_set_parent', { p_profile:r.profile_id, p_parent:par.profile_id });
+    if(error) r.status = 'mnyororo umeshindwa: '+error.message;
+  }
+  wRender();
+}
+function wDownload(){
+  const rows = W_CREDS.length ? W_CREDS : W_ROWS.filter(r=>r.password);
+  if(!rows.length){ wMsg('Hakuna nywila za kupakua bado.',false); return; }
+  const esc = v => '"'+String(v||'').replace(/"/g,'""')+'"';
+  const csv = ['Jina,Email,Agent code,Nafasi,Nywila'].concat(rows.map(r=>[r.name,r.email,r.agent_code,r.position,r.password].map(esc).join(','))).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='akaunti_nywila_'+new Date().toISOString().slice(0,10)+'.csv'; document.body.appendChild(a); a.click(); a.remove();
+}
+wRender();
+</script>
+
+<script>
+/* ======== Vyeo: orodha inayokua + kuongeza cheo; muundo unasasishwa baada ya akaunti ======== */
+async function loadPositions(){
+  if(!document.getElementById('posPosition')) { const { data } = await sb.rpc('org_positions_list'); if(data) W_POS = data.map(x=>x.name); return; }
+  const { data, error } = await sb.rpc('org_positions_list');
+  if(error || !data) return;
+  W_POS = data.map(x=>x.name);
+  const sel = document.getElementById('posPosition');
+  if(sel){ const cur=sel.value; sel.innerHTML = W_POS.map(n=>`<option ${n===cur?'selected':''}>${muE(n)}</option>`).join(''); }
+}
+async function addPosition(){
+  const name = (document.getElementById('posNewName').value||'').trim();
+  const msg = document.getElementById('posNewMsg');
+  const { data, error } = await sb.rpc('org_position_add', { p_name:name });
+  if(error){ msg.className='msg err'; msg.textContent='Imeshindwa: '+error.message; return; }
+  msg.className='msg ok'; msg.textContent='Cheo "'+data+'" kimeongezwa ✓';
+  document.getElementById('posNewName').value='';
+  await loadPositions();
+  if(typeof wRender==='function') wRender();
+}
+async function wSync(){
+  const fresh = W_ROWS.filter(r=>r.profile_id && r.position==='Agent' && r.branch && r.agent_code);
+  if(!fresh.length) return;
+  const rows = MU_ROWS.slice();
+  fresh.forEach(r=>{
+    const par = (r.parent_idx!=='' && W_ROWS[r.parent_idx]) ? W_ROWS[r.parent_idx] : null;
+    const item = { branch:r.branch, area:r.area||'', update_grp:'', ag_code:r.agent_code, agent_no:'', agent_name:r.name,
+                   zone_manager: par ? par.name : '', zone_profile_id: par ? par.profile_id : null };
+    const k = rows.findIndex(x=>x.ag_code===r.agent_code);
+    if(k>=0) rows[k] = {...rows[k], ...item}; else rows.push(item);
+  });
+  const { error } = await sb.rpc('org_save', { p_title: MU_META.title, p_subtitle: MU_META.subtitle,
+    p_rows: rows.map((x,i)=>({...x, sort_order:i+1})) });
+  if(error) wMsg('Muundo haujasasishwa: '+error.message, false);
+  else if(typeof muLoad==='function') muLoad();
+}
+</script>
+
+<script>
+/* ======== Watu & Muundo: sehemu moja ya kuongeza, kuhariri, cheo, msimamizi, ruhusa, tawi/eneo ======== */
+let UW_PEOPLE=[], UW_CREDS=[];
+const UW_ROLES=['agent','hr','operations','manager','admin'];
+function uwMsg(id,t,ok){ const el=document.getElementById(id); if(!el) return; el.className='msg'+(ok===true?' ok':(ok===false?' err':'')); el.textContent=t||''; }
+async function uwLoad(){
+  const [p, pos] = await Promise.all([sb.rpc('org_people_full'), sb.rpc('org_positions_list')]);
+  if(p.error){ document.getElementById('uwList').innerHTML='<div class="empty">'+muE(p.error.message)+'</div>'; return; }
+  UW_PEOPLE = p.data||[];
+  if(!pos.error && pos.data) W_POS = pos.data.map(x=>x.name);
+  MU_PEOPLE = UW_PEOPLE.map(x=>({id:x.id, full_name:x.full_name, agent_code:x.agent_code, job_position:x.job_position, supervisor_id:x.supervisor_id}));
+  uwRenderList();
+  await muLoad();
+  await updLoad();
+}
+function uwRenderList(){
+  const box=document.getElementById('uwList');
+  if(!UW_PEOPLE.length){ box.innerHTML='<div class="empty">Bado hakuna watu. Bonyeza "+ Ongeza mtu".</div>'; return; }
+  const where = code => { const r = MU_ROWS.find(x=>x.ag_code && x.ag_code===code); return r ? [r.branch, r.area].filter(Boolean).join(' · ') : ''; };
+  box.innerHTML = UW_PEOPLE.map(p=>{
+    const w = where(p.agent_code);
+    return `<div style="border-top:1px solid var(--border);padding:9px 0;display:flex;justify-content:space-between;gap:8px;align-items:center;">
+      <div style="min-width:0;">
+        <div style="font-weight:700;font-size:13.5px;">${muE(p.full_name)}${p.agent_code?' <span style="color:var(--sub);font-weight:400">('+muE(p.agent_code)+')</span>':''}</div>
+        <div style="font-size:11.5px;color:var(--sub);">${muE(p.job_position||'Bila cheo')}${p.supervisor_name?' · Msimamizi: '+muE(p.supervisor_name):''}${w?' · '+muE(w):''}${p.active?'':' · <span style="color:var(--red)">hai</span>'}</div>
+      </div>
+      <button class="btn secondary" style="padding:6px 11px;font-size:12px;" onclick="uwEdit('${p.id}')">Hariri</button>
+    </div>`;
+  }).join('');
+}
+function uwEdit(id){
+  const isNew = !id;
+  const p = UW_PEOPLE.find(x=>x.id===id) || {};
+  const r = MU_ROWS.find(x=>x.ag_code && x.ag_code===p.agent_code) || {};
+  const $ = i => document.getElementById(i);
+  $('uwEditTitle').textContent = isNew ? 'Mtu mpya' : 'Hariri: '+(p.full_name||'');
+  $('ue-id').value = id;
+  $('ue-name').value = isNew ? '' : (p.full_name||'');
+  $('ue-code').value = isNew ? '' : (p.agent_code||'');
+  $('ue-email').value = isNew ? '' : (p.email||'');
+  $('ue-email').disabled = !isNew;
+  $('ue-passWrap').style.display = isNew ? '' : 'none';
+  $('ue-pass').value = '';
+  $('ue-pos').innerHTML = '<option value="">— chagua —</option>' + W_POS.map(n=>`<option ${(isNew?n==='Agent':n===p.job_position)?'selected':''}>${muE(n)}</option>`).join('');
+  $('ue-sup').innerHTML = '<option value="">— hakuna —</option>' + UW_PEOPLE.filter(x=>x.id!==id).map(x=>`<option value="${x.id}" ${x.id===p.supervisor_id?'selected':''}>${muE(x.full_name)}${x.agent_code?' ('+muE(x.agent_code)+')':''}</option>`).join('');
+  $('ue-dept').value = isNew ? '' : (p.department||'');
+  $('ue-phone').value = isNew ? '' : (p.phone||'');
+  $('ue-hire').value = isNew ? '' : (p.hire_date||'');
+  $('ue-role').value = isNew ? 'agent' : (p.role||'agent');
+  $('ue-roleWrap').style.display = CURRENT_ROLE==='admin' ? '' : 'none';
+  $('ue-depts').value = isNew ? '' : ((p.allowed_depts||[]).join(', '));
+  $('ue-deptsWrap').style.display = CURRENT_ROLE==='admin' ? '' : 'none';
+  $('ue-branch').value = r.branch||'';
+  $('ue-area').value = r.area||'';
+  uwMsg('ue-msg','');
+  $('uwEditor').style.display='block';
+  const ed=$('uwEditor'); if(ed && ed.scrollIntoView) ed.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function uwClose(){ document.getElementById('uwEditor').style.display='none'; }
+function uwPassword(){ return wPassword(); }
+async function uwSyncRow(x){
+  const rows = MU_ROWS.slice();
+  const item = { branch:x.branch, area:x.area||'', update_grp:'', ag_code:x.code, agent_no:'', agent_name:x.name,
+                 zone_manager: x.zoneName||'', zone_profile_id: x.zoneId||null };
+  const k = rows.findIndex(r=>r.ag_code===x.code);
+  if(k>=0) rows[k] = {...rows[k], ...item}; else rows.push(item);
+  const { error } = await sb.rpc('org_save', { p_title:MU_META.title, p_subtitle:MU_META.subtitle, p_rows: rows.map((r,i)=>({...r, sort_order:i+1})) });
+  if(error) throw error;
+}
+async function uwSave(){
+  const $ = i => document.getElementById(i);
+  const id = $('ue-id').value;
+  const name = $('ue-name').value.trim();
+  let code = $('ue-code').value.trim().toUpperCase();
+  const email = $('ue-email').value.trim();
+  const pass = $('ue-pass').value;
+  const pos = $('ue-pos').value;
+  const dept = $('ue-dept').value.trim() || null;
+  const supId = $('ue-sup').value || null;
+  const phone = $('ue-phone').value.trim() || null;
+  const hire = $('ue-hire').value || null;
+  const role = $('ue-role').value;
+  const depts = $('ue-depts').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const branch = $('ue-branch').value.trim(), area = $('ue-area').value.trim();
+  if(!name){ uwMsg('ue-msg','Jina linahitajika',false); return; }
+  if(!pos){ uwMsg('ue-msg','Chagua cheo',false); return; }
+  const btn = $('ue-save'); btn.disabled = true;
+  try{
+    let profileId = id;
+    if(!id){
+      if(!email) throw new Error('Email inahitajika kwa akaunti mpya');
+      const generated = !pass;
+      const pw = pass || uwPassword();
+      if(!code) code = 'W' + Date.now().toString(36).slice(-4).toUpperCase();
+      await sb.from('mikopo_agents').upsert({ code, name }, { onConflict:'code', ignoreDuplicates:true });
+      const { data:{ session } } = await sb.auth.getSession();
+      const res = await fetch(SUPABASE_URL+'/functions/v1/create-agent', { method:'POST',
+        headers:{ 'Content-Type':'application/json', 'apikey':SUPABASE_KEY, 'Authorization':'Bearer '+session.access_token },
+        body: JSON.stringify({ email, password:pw, full_name:name, agent_code:code }) });
+      const out = await res.json();
+      if(!res.ok || out.error) throw new Error(out.error || ('HTTP '+res.status));
+      if(generated) UW_CREDS.push({ name, email, agent_code:code, position:pos, password:pw });
+      const { data:prof } = await sb.from('mikopo_profiles').select('id').eq('email', email).maybeSingle();
+      profileId = prof && prof.id;
+      if(!profileId) throw new Error('Akaunti imeundwa lakini haijapatikana. Jaribu tena');
+    } else {
+      const upd = { full_name:name, agent_code: code || null };
+      if(CURRENT_ROLE === 'admin'){ upd.role = role; upd.allowed_depts = depts; }
+      const { error } = await sb.from('mikopo_profiles').update(upd).eq('id', id);
+      if(error) throw error;
+    }
+    const cur = UW_PEOPLE.find(x=>x.id===profileId) || {};
+    const { error:e1 } = await sb.rpc('set_staff_position', { p_profile_id:profileId, p_position:pos, p_department:dept,
+      p_supervisor_id: cur.supervisor_id || null, p_phone:phone, p_hire_date:hire });
+    if(e1) throw e1;
+    if((cur.supervisor_id || null) !== supId){
+      const { error:e2 } = await sb.rpc('org_set_parent', { p_profile:profileId, p_parent:supId });
+      if(e2) throw e2;
+    }
+    if(code && branch){
+      const zoneName = supId ? ((UW_PEOPLE.find(x=>x.id===supId)||{}).full_name || '') : '';
+      await uwSyncRow({ code, name, branch, area, zoneId: supId, zoneName });
+    }
+    uwMsg('ue-msg','Imehifadhiwa ✓', true);
+    uwMsg('uwMsg', UW_CREDS.length ? 'Mtu ameongezwa. Usisahau kupakua nywila (CSV).' : 'Imehifadhiwa ✓', true);
+    await uwLoad();
+    setTimeout(uwClose, 600);
+  }catch(e){
+    uwMsg('ue-msg', 'Imeshindwa: ' + (e.message || e), false);
+  }finally{ btn.disabled = false; }
+}
+function uwCreds(){
+  if(!UW_CREDS.length){ uwMsg('uwMsg','Hakuna nywila mpya za kupakua. Nywila zinaonekana tu kwa watu walioongezwa bila nywila.',false); return; }
+  const esc = v => '"'+String(v||'').replace(/"/g,'""')+'"';
+  const csv = ['Jina,Email,Agent code,Cheo,Nywila'].concat(UW_CREDS.map(r=>[r.name,r.email,r.agent_code,r.position,r.password].map(esc).join(','))).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='akaunti_nywila_'+new Date().toISOString().slice(0,10)+'.csv'; document.body.appendChild(a); a.click(); a.remove();
+}
+</script>
+<script>
+async function muTasksPdf(){
+  const msg=document.getElementById('muTasksMsg');
+  if(!MU_TASKS.length){ msg.className='msg err'; msg.textContent='Hakuna kazi maalum za kupakua.'; return; }
+  try{ await orgDownloadTasksPdf({title:'MKEKA WA KAZI MAALUM', subtitle:'Viongozi na kazi zao maalum'}, MU_TASKS); }
+  catch(e){ msg.className='msg err'; msg.textContent='Imeshindwa kutengeneza PDF: '+e.message; }
+}
+</script>
+
+<script>
+/* ======== Updates: CEO anaunda, anaandika jina, anachagua kiongozi na agents ======== */
+let UPD_LIST=[];
+const updE = t => String(t==null?'':t).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function updMsg(id,t,ok){ const el=document.getElementById(id); if(!el) return; el.className='msg'+(ok===true?' ok':(ok===false?' err':'')); el.textContent=t||''; }
+let UPD_IS_CEO = false;
+async function updLoad(){
+  const ceo = await sb.rpc('org_is_ceo');
+  UPD_IS_CEO = ceo.data === true;
+  document.getElementById('updNewBtn').style.display = UPD_IS_CEO ? '' : 'none';
+  if(!UPD_IS_CEO) document.getElementById('updEditor').style.display='none';
+  const { data, error } = await sb.rpc('org_updates_list');
+  if(error){ document.getElementById('updList').innerHTML='<div class="empty">'+updE(error.message)+'</div>'; return; }
+  UPD_LIST = data || [];
+  updRender();
+}
+function updRender(){
+  const box=document.getElementById('updList');
+  if(!UPD_LIST.length){ box.innerHTML='<div class="empty">Bado hakuna update. Bonyeza "+ Unda update".</div>'; return; }
+  box.innerHTML = UPD_LIST.map(u=>`<div style="border-top:1px solid var(--border);padding:9px 0;display:flex;justify-content:space-between;gap:8px;align-items:center;">
+    <div style="min-width:0;">
+      <div style="font-weight:700;">${updE(u.name)}</div>
+      <div style="font-size:11.5px;color:var(--sub);">Kiongozi: ${updE(u.leader_name||'—')} · agents ${(u.members||[]).length}</div>
+    </div>
+    ${UPD_IS_CEO ? `<button class="btn secondary" style="padding:6px 11px;font-size:12px;" onclick="updEdit('${u.id}')">Hariri</button>` : ''}
+  </div>`).join('');
+}
+function updEdit(id){
+  if(!UPD_IS_CEO){ updMsg('updMsg','Ni CEO pekee anayeweza kubadilisha updates.',false); return; }
+  const u = UPD_LIST.find(x=>x.id===id) || {};
+  const isNew = !id;
+  document.getElementById('upd-id').value = id;
+  document.getElementById('upd-name').value = isNew ? '' : (u.name||'');
+  const people = (typeof UW_PEOPLE!=='undefined' ? UW_PEOPLE : []);
+  document.getElementById('upd-leader').innerHTML = '<option value="">— chagua —</option>' + people.map(p=>`<option value="${p.id}" ${p.id===u.leader_profile_id?'selected':''}>${updE(p.full_name)}${p.agent_code?' ('+updE(p.agent_code)+')':''}</option>`).join('');
+  const mine = new Set((u.members||[]).map(m=>m.profile_id));
+  const otherOf = {}; UPD_LIST.forEach(x=>{ if(x.id!==id) (x.members||[]).forEach(m=>otherOf[m.profile_id]=x.name); });
+  const agents = people.filter(p=>(p.job_position||'')==='Agent');
+  document.getElementById('upd-members').innerHTML = agents.length ? agents.map(p=>`<label style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12.5px;border-top:1px solid var(--border);">
+      <input type="checkbox" class="upd-chk" value="${p.id}" ${mine.has(p.id)?'checked':''}>
+      <span style="flex:1;">${updE(p.full_name)}${p.agent_code?' <span style="color:var(--sub)">('+updE(p.agent_code)+')</span>':''}</span>
+      ${otherOf[p.id]?`<span style="font-size:11px;color:var(--gold,#cc9c24);">${updE(otherOf[p.id])}</span>`:''}
+    </label>`).join('') : '<div class="empty">Hakuna agents bado. Waongeze kwenye Watu kwanza.</div>';
+  updMsg('upd-msg','');
+  const ed = document.getElementById('updEditor');
+  ed.style.display='block';
+  if(ed.scrollIntoView) ed.scrollIntoView({behavior:'smooth', block:'center'});
+}
+function updClose(){ document.getElementById('updEditor').style.display='none'; }
+async function updSave(){
+  const id = document.getElementById('upd-id').value || null;
+  const name = document.getElementById('upd-name').value.trim();
+  const leader = document.getElementById('upd-leader').value || null;
+  const members = [...document.querySelectorAll('.upd-chk:checked')].map(c=>c.value);
+  if(!name){ updMsg('upd-msg','Andika jina la update',false); return; }
+  if(!UPD_IS_CEO){ updMsg('upd-msg','Ni CEO pekee anayeweza kuhifadhi.',false); return; }
+  const btn=document.getElementById('upd-save'); btn.disabled=true;
+  const { error } = await sb.rpc('org_update_save', { p_id:id, p_name:name, p_leader:leader, p_members:members });
+  btn.disabled=false;
+  if(error){ updMsg('upd-msg','Imeshindwa: '+error.message,false); return; }
+  updMsg('updMsg','Update imehifadhiwa ✓',true);
+  await updLoad(); updClose();
+}
+
+function lnEsc(v){ return String(v==null?'':v).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function lnMoney(v){ return 'TZS '+Number(v||0).toLocaleString('en-US'); }
+async function lnOpenLetter(path){ if(!path) return; const {data,error}=await sb.storage.from('debt-letters').createSignedUrl(path,300); if(error||!data){ alert('Barua haipatikani: '+(error?error.message:'')); return; } window.open(data.signedUrl,'_blank'); }
+
+async function mgLoanLoad(){
+  const box=document.getElementById('mgLoanList'); if(!box) return;
+  const {data,error}=await sb.rpc('staff_loan_list',{p_status:'inasubiri_ceo'});
+  if(error){ box.innerHTML='<div class="empty">'+lnEsc(error.message)+'</div>'; return; }
+  const rows=data||[];
+  box.innerHTML = rows.length ? rows.map(r=>`<div style="border-top:1px solid var(--border);padding:10px 0;">
+    <div style="display:flex;justify-content:space-between;"><b>${lnEsc(r.applicant)}</b><b>${lnMoney(r.amount)}</b></div>
+    <div style="font-size:12px;color:var(--sub);margin:3px 0;">Sababu: ${lnEsc(r.reason)} · Miezi ${lnEsc(r.repay_months)}</div>
+    <div style="font-size:12px;color:var(--sub);">Wadhamini: ${lnEsc(r.guarantors||'—')}</div>
+    <div style="font-size:12px;color:var(--cyan);margin-top:3px;">HR: ${lnEsc(r.audit_note||'Amekagua ✓')}</div>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+      <button class="btn secondary" style="padding:6px 12px;font-size:12px;" onclick="lnOpenLetter('${lnEsc(r.letter_path)}')">Angalia barua</button>
+      <button class="btn" style="padding:6px 12px;font-size:12px;" onclick="mgLoanDecide('${r.id}',true)">Idhinisha</button>
+      <button class="btn secondary" style="padding:6px 12px;font-size:12px;color:var(--text);border-color:var(--red);" onclick="mgLoanDecide('${r.id}',false)">Kataa + sababu</button>
+    </div></div>`).join('') : '<div class="empty">Hakuna mkopo unaosubiri idhini yako.</div>';
+}
+async function mgLoanDecide(id, ok){
+  let note=null;
+  if(!ok){ note=prompt('Andika sababu ya kukataa:'); if(!note||!note.trim()) return; }
+  const {error}=await sb.rpc('staff_loan_ceo_decide',{p_id:id,p_approve:ok,p_note:note});
+  if(error){ alert('Imeshindwa: '+error.message); return; }
+  mgLoanLoad();
+}
+
+/* XL-NAV: mishale kama Excel kwenye visanduku vya namba. Mshale hauongezi/kupunguza namba. */
+(function(){
+  if(window.__xlNav) return; window.__xlNav=true;
+  function isNum(el){ return el && el.tagName==='INPUT' && el.type==='number' && !el.disabled && !el.readOnly && el.offsetParent!==null; }
+  function scopeOf(el){ return el.closest('form, .grid8, .card, .bx-card, .box, .modal, .sheet, .panel') || document; }
+  document.addEventListener('keydown', function(e){
+    const t=e.target; if(!isNum(t)) return;
+    const keys=['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter'];
+    if(!keys.includes(e.key)) return;
+    if(e.key!=='Enter') e.preventDefault();
+    const cands=[...scopeOf(t).querySelectorAll('input[type="number"]')].filter(c=>c!==t && isNum(c));
+    const r=t.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
+    let best=null, bestScore=Infinity;
+    cands.forEach(c=>{
+      const q=c.getBoundingClientRect(), x=q.left+q.width/2, y=q.top+q.height/2, dx=x-cx, dy=y-cy;
+      let ok=false, score=0;
+      if(e.key==='ArrowRight'){ ok=dx>5; score=dx+Math.abs(dy)*3; }
+      else if(e.key==='ArrowLeft'){ ok=dx<-5; score=-dx+Math.abs(dy)*3; }
+      else if(e.key==='ArrowDown'){ ok=dy>5; score=dy+Math.abs(dx)*3; }
+      else if(e.key==='ArrowUp'){ ok=dy<-5; score=-dy+Math.abs(dx)*3; }
+      else if(e.key==='Enter'){ ok=dy>5; score=dy+Math.abs(dx)*3; }
+      if(ok && score<bestScore){ bestScore=score; best=c; }
+    });
+    if(best){ if(e.key==='Enter') e.preventDefault(); best.focus(); if(best.select) best.select(); }
+  }, true);
+})();
+</script>
+<script src="assets/hekima-topbar.js">
+</script>
+<script>
+async function mgLoadPendingEmps(){
+  const box=document.getElementById('mgPendEmps'); if(!box) return;
+  const {data,error}=await sb.from('hr_employees').select('*').eq('approval_status','pending').order('created_at');
+  if(error){ box.innerHTML='<div class="empty">Sehemu hii itafanya kazi baada ya SQL ya uthibitisho kuendeshwa.</div>'; return; }
+  if(!data.length){ box.innerHTML='<div class="empty">Hakuna wafanyakazi wanaosubiri uthibitisho.</div>'; return; }
+  const url=async p=>{ if(!p) return null; const r=await sb.storage.from('employee-files').createSignedUrl(p,600); return r.data?r.data.signedUrl:null; };
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  let h='';
+  for(const e of data){
+    const [ph,idf,cf]=await Promise.all([url(e.photo_url),url(e.id_file_path),url(e.contract_file_path)]);
+    h+='<div style="border:1px solid var(--border,#e3e7ee);border-radius:12px;padding:12px;margin-bottom:10px;"><div style="display:flex;gap:12px;align-items:flex-start;">'+(ph?'<img src="'+ph+'" alt="" style="width:72px;height:72px;border-radius:12px;object-fit:cover;flex:0 0 auto">':'')+'<div style="min-width:0;"><b>'+esc(e.full_name)+'</b><div style="font-size:12.5px;opacity:.8">'+esc(e.position||'—')+' · '+esc(e.department)+'</div><div style="font-size:12.5px;line-height:1.7;margin-top:6px">Simu: '+esc(e.phone||'—')+'<br>Email: '+esc(e.email||'—')+'<br>NIDA: '+esc(e.national_id||e.id_number||'—')+'<br>Makazi: '+esc(e.residence||'—')+'<br>Agent: '+esc(e.agent_code||'—')+' · Mshahara: '+(e.base_salary?Number(e.base_salary).toLocaleString('en-US'):'—')+'<br>Mkataba: '+esc(e.contract_type||'—')+(e.contract_start?' · '+esc(e.contract_start):'')+'</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">'+(idf?'<a class="btn secondary" target="_blank" rel="noopener" href="'+idf+'">Fungua NIDA</a>':'')+(cf?'<a class="btn secondary" target="_blank" rel="noopener" href="'+cf+'">Fungua mkataba</a>':'')+'</div><div style="display:flex;gap:8px;margin-top:10px;"><button class="btn" style="flex:1" onclick="mgDecideEmp(\''+e.id+'\',true)">Thibitisha</button><button class="btn secondary" style="flex:1" onclick="mgDecideEmp(\''+e.id+'\',false)">Kataa</button></div></div>';
+  }
+  box.innerHTML=h;
+}
+async function mgDecideEmp(id,ok){
+  let note=null;
+  if(!ok){ note=(prompt('Sababu ya kukataa:')||'').trim(); if(!note) return; }
+  else if(!confirm('Thibitisha mfanyakazi huyu?')) return;
+  const {error}=await sb.rpc('ceo_decide_employee',{p_id:id,p_approve:ok,p_note:note});
+  if(error){ alert('Imeshindwa: '+error.message); return; }
+  mgLoadPendingEmps();
+}
+window.addEventListener('load',function(){var n=0,t=setInterval(function(){n++;if(typeof sb!=='undefined'&&sb&&sb.auth){clearInterval(t);mgLoadPendingEmps()}else if(n>40)clearInterval(t)},300)});
+</script><script>
+/* ======== Mikoa (CEO): kuongeza mkoa na kupanga mawakala ======== */
+let MK_IS_CEO=false, MK_REGIONS=[];
+const mkE=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function mkMsg(id,t,ok){ const el=document.getElementById(id); if(!el) return; el.className='msg'+(ok===true?' ok':(ok===false?' err':'')); el.textContent=t||''; }
+async function mkLoad(){
+  const ceo=await sb.rpc('am_i_ceo'); MK_IS_CEO=ceo.data===true;
+  document.getElementById('mkAdd').style.display=MK_IS_CEO?'block':'none';
+  const rg=await sb.from('regions').select('code,name,active').order('name');
+  if(rg.error){ document.getElementById('mkList').innerHTML='<span style="color:var(--red)">'+mkE(rg.error.message)+'</span>'; return; }
+  MK_REGIONS=rg.data||[];
+  document.getElementById('mkList').innerHTML=MK_REGIONS.length?MK_REGIONS.map(r=>'<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);color:var(--text);"><span><b>'+mkE(r.name)+'</b> <span style="color:var(--sub)">('+mkE(r.code)+')</span></span><span style="font-size:11px;font-weight:700;color:'+(r.active?'var(--green)':'var(--sub)')+'">'+(r.active?'Inatumika':'Imezimwa')+'</span></div>').join(''):'Hakuna mkoa bado.';
+  await mkLoadAgents();
+}
+async function mkLoadAgents(){
+  const box=document.getElementById('mkAgents');
+  const ag=await sb.from('mikopo_agents').select('code,name,region_code').order('name');
+  if(ag.error){ box.innerHTML='<span style="color:var(--red)">'+mkE(ag.error.message)+'</span>'; return; }
+  const opts=sel=>'<option value="">Haijapangiwa</option>'+MK_REGIONS.filter(r=>r.active||r.code===sel).map(r=>'<option value="'+mkE(r.code)+'"'+(r.code===sel?' selected':'')+'>'+mkE(r.name)+'</option>').join('');
+  box.innerHTML=(ag.data||[]).length?(ag.data||[]).map(a=>'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);color:var(--text);"><span><b>'+mkE(a.name||a.code)+'</b> <span style="color:var(--sub)">('+mkE(a.code)+')</span></span><select '+(MK_IS_CEO?'':'disabled ')+'onchange="mkAssign(\''+mkE(a.code)+'\',this)" style="background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:12.5px;max-width:50%;">'+opts(a.region_code||'')+'</select></div>').join(''):'Hakuna mawakala bado.';
+}
+async function mkAdd(){
+  if(!MK_IS_CEO){ mkMsg('mkMsg','Ni CEO pekee anayeweza kuongeza mkoa.',false); return; }
+  const name=document.getElementById('mkName').value.trim();
+  const code=document.getElementById('mkCode').value.trim().toUpperCase();
+  if(!name){ mkMsg('mkMsg','Andika jina la mkoa.',false); return; }
+  if(!/^[A-Z0-9_]{2,20}$/.test(code)){ mkMsg('mkMsg','Msimbo uwe herufi kubwa au namba pekee (2 hadi 20), bila nafasi.',false); return; }
+  const r=await sb.from('regions').insert({code,name});
+  if(r.error){ mkMsg('mkMsg','Imeshindwa: '+r.error.message,false); return; }
+  document.getElementById('mkName').value=''; document.getElementById('mkCode').value='';
+  mkMsg('mkMsg','Mkoa '+name+' umeongezwa ✓',true);
+  mkLoad();
+}
+async function mkAssign(code,sel){
+  if(!confirm('Kubadilisha mkoa wa wakala '+code+'? Historia yake yote ya Combine itahamia mkoa mpya.')){ mkLoadAgents(); return; }
+  sel.disabled=true;
+  const r=await sb.rpc('region_assign_agent',{p_agent:code,p_region:sel.value||''});
+  sel.disabled=false;
+  if(r.error){ mkMsg('mkMsg2','Imeshindwa: '+r.error.message,false); mkLoadAgents(); return; }
+  mkMsg('mkMsg2','Mkoa wa '+code+' umebadilishwa ✓',true);
+}
+</script>
+<style id="hkNavyV2">
+/* ===== HEKIMA FINANCE — muonekano mpya (giza, vigae, menyu ya chini). CSS + menyu pekee; logic haijaguswa ===== */
+html:not([data-theme="light"]){
+  --bg:#06182e;--panel:#0c2442;--panel2:#0a2040;--border:#14406c;
+  --text:#e6f1fa;--sub:#7f9bb8;--cyan:#d4a72c;--cyan-dim:rgba(212,167,44,.16);--gold:#d4a72c;
+  --green:#22d3ee;--red:#ef5350;
+  --hk-navy:#e6f1fa;--line:#14406c;--hk-green:#22d3ee;--hk-gold:#d4a72c;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--text);padding-bottom:0;}
+.wrap{max-width:640px;padding:12px 14px 120px;}
+.topbar h1,h1{font-size:20px;font-weight:600;color:var(--text);background:none;padding:0;border-radius:0;margin:4px 0 12px;box-shadow:none;letter-spacing:-.01em;}
+.back-link{color:var(--gold);}
+.icon-toggle-btn{background:var(--panel);border:.5px solid var(--border);color:var(--text);border-radius:10px;}
+.tabs{height:0;overflow:hidden;margin:0!important;padding:0!important;border:0;visibility:hidden;pointer-events:none;}
+.panel,.panel.active{background:transparent;border:0;padding:0;margin:0;box-shadow:none;}
+.card{background:var(--panel);border:.5px solid var(--border);border-radius:14px;box-shadow:none;padding:12px;margin-bottom:8px;color:var(--text);}
+.card .card{background:var(--panel2);}
+.card h3{font-size:13px;font-weight:600;margin:0 0 8px;color:var(--text);text-transform:lowercase;}
+.card h3::first-letter{text-transform:uppercase;}
+.field label,.card label{color:var(--sub);font-size:12px;}
+.field input,.field select,.field textarea,.card input,.card select,.card textarea{background:var(--bg);border:.5px solid var(--border);color:var(--text);border-radius:12px;padding:11px 12px;}
+::placeholder{color:var(--sub);opacity:.8;}
+.btn{background:var(--green);color:#06222a;border:0;border-radius:12px;font-weight:600;}
+.btn.secondary{background:transparent;color:var(--text);border:.5px solid var(--border);}
+.btn.danger,.btn.red{background:transparent;color:var(--red);border:.5px solid var(--red);}
+.msg{border-radius:10px;}
+.msg.ok{background:rgba(34,211,238,.12);color:var(--green);}
+.msg.err{background:rgba(239,83,80,.12);color:#ff8a85;}
+table{font-size:13px;}
+th{color:var(--sub);border-bottom:.5px solid var(--border);}
+td{border-bottom:.5px solid var(--border);}
+.xl-scroll,.scrollx{background:transparent;border:0;border-radius:12px;}
+.badge{font-weight:600;}
+.badge.active,.badge.present{background:rgba(34,211,238,.14);color:#22d3ee;}
+.badge.inactive,.badge.absent{background:rgba(239,83,80,.16);color:#ff8a85;}
+.badge.late{background:rgba(212,167,44,.18);color:#e6c35c;}
+.badge.leave{background:rgba(127,155,184,.16);color:var(--sub);}
+.empty{background:transparent;border:.5px dashed var(--border);border-radius:12px;color:var(--sub);padding:14px;}
+.report-item{border-bottom:.5px solid var(--border);}
+.kpi-row{gap:8px;margin-bottom:8px;}
+.kpi-box{background:var(--panel);border:.5px solid var(--border);border-radius:14px;padding:12px;}
+.kpi-box .num{font-size:20px;font-weight:600;color:var(--text);}
+.kpi-box .lbl{font-size:12px;color:var(--sub);}
+.lock-note{color:var(--sub);}
+
+details.hk-ask{margin:0 0 8px;}
+details.hk-ask>summary{list-style:none;cursor:pointer;text-align:center;color:var(--green);border:.5px solid var(--green);border-radius:14px;background:var(--panel);padding:12px;font-size:14px;font-weight:500;}
+details.hk-ask>summary::-webkit-details-marker{display:none;}
+details.hk-ask>summary::before{content:"+ ";}
+details.hk-ask[open]>summary::before{content:"– ";}
+
+button[onclick*="toggleTheme"],#themeToggleBtn{display:none!important;}
+
+/* menyu ya chini (dock) + Zaidi */
+#hkDock{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));width:min(calc(100% - 24px),520px);z-index:900;display:grid;margin:0;padding:8px 4px;background:var(--panel);border:.5px solid var(--border);border-radius:22px;box-shadow:0 6px 24px rgba(0,0,0,.35);}
+.hk-dk{background:none;border:0;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:500;padding:4px 0;cursor:pointer;position:relative;font-family:inherit;}
+.hk-dk svg{width:22px;height:22px;}
+.hk-dk.on{color:var(--green);}
+.hk-dot{position:absolute;top:0;right:24%;width:8px;height:8px;border-radius:50%;background:var(--gold);}
+.hk-more{position:fixed;inset:0;z-index:890;background:rgba(0,10,25,.62);display:none;}
+.hk-more.open{display:block;}
+.hk-more-in{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom,0px));width:min(calc(100% - 24px),520px);background:var(--bg);border:.5px solid var(--border);border-radius:20px;padding:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:calc(100vh - 140px);overflow:auto;}
+.hk-z{background:var(--panel);border:.5px solid var(--border);border-radius:14px;padding:12px;text-align:left;color:var(--text);cursor:pointer;font-family:inherit;}
+.hk-z svg{width:22px;height:22px;color:var(--green);display:block;margin-bottom:8px;}
+.hk-z .n{font-size:14px;font-weight:600;}
+.hk-z .s{font-size:12px;color:var(--sub);margin-top:2px;}
+.hk-z.on{border-color:var(--green);}
+.hk-z.warn svg{color:var(--red);}
+
+/* ===== MWANGA (white mode) — rangi za brand; Giza hapo juu halijaguswa ===== */
+html[data-theme="light"]{
+  --bg:#f4f6f8;--panel:#ffffff;--panel2:#e9edf3;--border:#dfe4ec;
+  --text:#001848;--sub:#51606c;--cyan:#cc9c24;--cyan-dim:rgba(204,156,36,.16);--gold:#cc9c24;--gold-dim:rgba(204,156,36,.16);
+  --green:#008454;--red:#c62828;
+  --hk-navy:#001848;--line:#dfe4ec;--hk-green:#008454;--hk-gold:#cc9c24;
+  color-scheme:light;
+}
+html[data-theme="light"] .tabs>.tab.active,html[data-theme="light"] .tabs>button.active{color:#fff!important;}
+html[data-theme="light"] .btn:not(.secondary):not(.danger):not(.red):not(.gold){color:#fff;}
+html[data-theme="light"] .msg.ok{background:rgba(0,132,84,.10);}
+html[data-theme="light"] .msg.err{color:#b3261e;}
+html[data-theme="light"] .badge.active,html[data-theme="light"] .badge.present{background:rgba(0,132,84,.12);color:#006b43;}
+html[data-theme="light"] .badge.inactive,html[data-theme="light"] .badge.absent{background:rgba(198,40,40,.12);color:#b3261e;}
+html[data-theme="light"] .badge.late{background:rgba(204,156,36,.20);color:#7a5a10;}
+html[data-theme="light"] #hkDock{box-shadow:0 6px 24px rgba(0,24,72,.14);}
+html[data-theme="light"] a[style*="color:var(--cyan)"],html[data-theme="light"] [style^="color:var(--gold)"],html[data-theme="light"] [style*=";color:var(--gold)"]{color:#7a5a10!important;}
+html[data-theme="light"] .refresh-btn,html[data-theme="light"] .print-btn{color:#7a5a10;}
+</style>
+<script id="hkDockJS">
+/* Menyu ya chini: inasoma tabs zilizopo na kuziita kwa switchTab() ileile ya ukurasa. Haibadilishi logic. */
+(function(){
+  var h=document.documentElement;
+  /* Mandhari (Giza/Mwanga) inafuata chaguo la mtumiaji; hailazimishwi tena kuwa giza. */
+  var CFG={"prim": ["reports", "debts", "payroll", "muundo"], "lbl": {"reports": "Ripoti", "debts": "Madeni", "payroll": "Payroll", "futa": "Futa (CEO)", "muundo": "Muundo", "mikoa": "Mikoa (CEO)"}, "sub": {"futa": "Futa data kwa idhini ya CEO", "mikoa": "Dhibiti mikoa"}, "warn": ["futa"]};
+  var ICON={
+   mine:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 18.5c1-2.5 3-3.5 5.5-3.5s4.5 1 5.5 3.5"/>',
+   employees:'<circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.5-5.5 5.5-5.5s5.5 2.5 5.5 5.5"/><circle cx="17" cy="9" r="2.4"/><path d="M16.5 14.5c2.5 0 4.5 2 4.5 4.5"/>',
+   profiles:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.5 1.7-2 3-2s2.4.5 3 2M14 10h4M14 14h4"/>',
+   performance:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+   attendance:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M9 15l2 2 4-4"/>',
+   leave:'<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>',
+   payroll:'<path d="M4 7h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 7V6a2 2 0 0 1 2-2h10"/><circle cx="16" cy="13.5" r="1"/>',
+   debts:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/>',
+   inbox:'<path d="M4 13l2.5-7h11L20 13v6H4z"/><path d="M4 13h4.5l1 2h5l1-2H20"/>',
+   compile:'<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+   sent:'<path d="M21 4L10 14"/><path d="M21 4l-7 17-4-7-7-4z"/>',
+   reports:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
+   futa:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+   muundo:'<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',
+   mikoa:'<path d="M12 21s-6.5-5.6-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.3"/>',
+   dots:'<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>'
+  };
+  function svg(k){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICON[k]||ICON.dots)+'</svg>'; }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  var box=document.querySelector('.tabs'); if(!box) return;
+  var dock=document.createElement('nav'); dock.id='hkDock'; dock.setAttribute('aria-label','Menyu');
+  var sheet=document.createElement('div'); sheet.id='hkMore'; sheet.className='hk-more';
+  document.body.appendChild(dock); document.body.appendChild(sheet);
+  var open=false;
+  sheet.addEventListener('click',function(e){ if(e.target===sheet){ open=false; render(); } });
+  function go(k){ open=false; if(typeof switchTab==='function') switchTab(k); render(); }
+  window.hkDockGo=go; window.hkDockMore=function(){ open=!open; render(); };
+  function tabs(){ return [].slice.call(box.querySelectorAll('.tab')).filter(function(t){ return t.style.display!=='none'; }); }
+  function render(){
+    var shown=box.getClientRects().length>0;
+    dock.style.display=shown?'':'none'; if(!shown){ sheet.classList.remove('open'); return; }
+    var all=tabs(), cur=(box.querySelector('.tab.active')||{dataset:{}}).dataset.tab;
+    var direct=all.length<=5;
+    var prim=direct?all:CFG.prim.map(function(k){return all.filter(function(t){return t.dataset.tab===k;})[0];}).filter(Boolean);
+    var more=direct?[]:all.filter(function(t){return prim.indexOf(t)<0;});
+    var lbl=function(t){ return CFG.lbl[t.dataset.tab]||t.textContent.trim(); };
+    var h=prim.map(function(t){ var k=t.dataset.tab; return '<button class="hk-dk '+((k===cur&&!open)?'on':'')+'" onclick="hkDockGo(\''+k+'\')" aria-label="'+esc(lbl(t))+'">'+svg(k)+'<span>'+esc(lbl(t))+'</span></button>'; }).join('');
+    var moreOn=more.some(function(t){return t.dataset.tab===cur;})||open;
+    if(more.length) h+='<button class="hk-dk '+(moreOn?'on':'')+'" onclick="hkDockMore()" aria-label="Zaidi">'+svg('dots')+'<span>Zaidi</span></button>';
+    dock.style.gridTemplateColumns='repeat('+(prim.length+(more.length?1:0))+',minmax(0,1fr))';
+    dock.innerHTML=h;
+    sheet.innerHTML=more.length?'<div class="hk-more-in">'+more.map(function(t){ var k=t.dataset.tab; return '<button class="hk-z '+(k===cur?'on':'')+(CFG.warn&&CFG.warn.indexOf(k)>=0?' warn':'')+'" onclick="hkDockGo(\''+k+'\')">'+svg(k)+'<div class="n">'+esc(t.textContent.trim())+'</div><div class="s">'+esc(CFG.sub[k]||'')+'</div></button>'; }).join('')+'</div>':'';
+    sheet.classList.toggle('open',open&&more.length>0);
+  }
+  var q=0; function soon(){ if(q) return; q=requestAnimationFrame(function(){ q=0; render(); }); }
+  new MutationObserver(function(rs){ for(var i=0;i<rs.length;i++){ var t=rs[i].target; if(!(t&&t.closest&&t.closest('#hkDock,#hkMore'))){ soon(); return; } } }).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','style']});
+  new MutationObserver(soon).observe(box,{childList:true,subtree:true});
+  render(); setTimeout(render,600);
+})();
+</script>
+
+<script>
+/* Navigation: sehemu za ndani = kiwango kimoja cha mtoto (Back -> sehemu kuu -> Home) */
+if(window.HkNav) HkNav.tabs({cur:function(){ var t=document.querySelector('.tab.active'); return t?t.dataset.tab:null; }, show:function(n){ switchTab(n,true); }});
+</script>
+</body>
+</html>
