@@ -244,14 +244,11 @@ addEventListener("beforeunload",show)})();</script>
   </div>
 
   <div class="panel" id="panel-payroll">
-    <div class="card">
-      <h3>Tengeneza Payroll ya Mwezi</h3>
-      <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Mshahara wa kila mfanyakazi unahesabiwa wenyewe kutokana na cheo chake, wateja wa agent na agents wa zone (kanuni hapa chini). Unaweza kubadilisha kiasi cha yeyote kabla ya kutuma. Makato ya madeni yanajazwa kutoka ratiba ya deni. Kisha unamtumia HR kuhakiki, na BALANCE ndio wanalipa.</p>
-      <div class="row2">
-        <div class="field"><label>Mwezi</label><input id="mpPeriod" type="month"></div>
-        <div class="field"><label>&nbsp;</label><button class="btn" onclick="mpCreate()" style="width:100%">Tengeneza</button></div>
-      </div>
-      <div class="msg" id="mpMsg"></div>
+    <div class="card" id="mpStatCard" style="margin-bottom:12px;">
+      <h3>Takwimu za Mshahara wa Mwezi</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 8px;">Inahesabiwa kutokana na vyeo, idara na kanuni zako, kwa wafanyakazi wote walio hai.</p>
+      <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px;"><div class="field" style="margin:0;flex:1;"><label>Mwezi</label><input type="month" id="mpStatMonth" onchange="mpStats()"></div><button class="btn" onclick="mpStats()">Hesabu</button></div>
+      <div id="mpStatBox"><div class="empty">Inapakia...</div></div>
     </div>
     <style>.mpr-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--border);font-size:13px;}.mpr-row input{width:130px;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:7px;text-align:right;font-family:inherit;}.mpr-h{font-weight:700;font-size:12.5px;margin:12px 0 2px;}.mpr-s{font-size:11.5px;color:var(--sub);margin:0 0 4px;}</style>
     <div class="card" id="mpRulesCard" style="margin-bottom:12px;">
@@ -261,7 +258,31 @@ addEventListener("beforeunload",show)})();</script>
       <button class="btn" style="width:100%;margin-top:12px;" onclick="mpRulesSave()">Hifadhi kanuni</button>
       <div class="msg" id="mpRulesMsg"></div>
     </div>
-    <div class="card" style="margin-bottom:12px;"><h3>Mikopo ya wafanyakazi — idhini ya CEO</h3><div id="mgLoanList"><div class="empty">Inapakia...</div></div></div>
+    <div class="card" id="mpPlanCard" style="margin-bottom:12px;">
+      <h3>Payroll ya Kila Siku</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 8px;">Weka vikomo tu. Mfumo unapanga tarehe wenyewe, unamweka kila mfanyakazi siku moja kwa mwezi (vyeo vinachanganywa, hakuna anayeachwa), kisha unatengeneza payroll moja kwa kila siku.</p>
+      <div class="row2">
+        <div class="field"><label>Watu kwa siku (juu)</label><input type="number" id="mpMaxN" value="7" min="1" inputmode="numeric"></div>
+        <div class="field"><label>Kiasi kwa siku (TZS, juu)</label><input type="number" id="mpMaxAmt" value="2000000" min="1" inputmode="numeric"></div>
+      </div>
+      <label style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--sub);margin:0 0 6px;"><input type="checkbox" id="mpSkipSun"> Ruka Jumapili</label>
+      <label style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--sub);margin:0 0 10px;"><input type="checkbox" id="mpFromToday" checked> Anza kutoka leo (ruka siku zilizopita, kwa mwezi wa sasa)</label>
+      <button class="btn" style="width:100%;" onclick="mpDailyCreate()">Tengeneza payroll za kila siku</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"><button class="btn secondary" onclick="mpPlan()">Hakiki ratiba</button><button class="btn secondary" onclick="mpPlanPdf()">Pakua ratiba (PDF)</button></div>
+      <div class="msg" id="mpPlanMsg"></div>
+      <div id="mpDailyLog"></div>
+      <div id="mpPlanBox"></div>
+    </div>
+        <div class="card" style="margin-bottom:12px;"><h3>Mikopo ya wafanyakazi — idhini ya CEO</h3><div id="mgLoanList"><div class="empty">Inapakia...</div></div></div>
+    <div class="card">
+      <h3>Tengeneza Payroll ya Mwezi</h3>
+      <p style="font-size:12px;color:var(--sub);margin:-4px 0 12px;">Mshahara wa kila mfanyakazi unahesabiwa wenyewe kutokana na cheo chake, wateja wa agent na agents wa zone (kanuni hapa chini). Unaweza kubadilisha kiasi cha yeyote kabla ya kutuma. Makato ya madeni yanajazwa kutoka ratiba ya deni. Kisha unamtumia HR kuhakiki, na BALANCE ndio wanalipa.</p>
+      <div class="row2">
+        <div class="field"><label>Mwezi</label><input id="mpPeriod" type="month"></div>
+        <div class="field"><label>&nbsp;</label><button class="btn" onclick="mpCreate()" style="width:100%">Tengeneza</button></div>
+      </div>
+      <div class="msg" id="mpMsg"></div>
+    </details>
     <div class="card"><h3>Payroll Zote</h3><div id="mpRuns"><div class="empty">Inapakia...</div></div></div>
     <div class="card" id="mpDetailCard" style="display:none"><h3 id="mpDetailTitle"></h3><div id="mpDetail"></div><div class="msg" id="mpDetailMsg"></div></div>
   </div>
@@ -516,7 +537,7 @@ function switchTab(name,silent){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+name));
   if(name==='debts'){ loadDebtsEmp(); loadPendingDebtRequests(); loadAllDebts(); mdLoad(); }
-  if(name==='payroll'){ mpLoadRuns(); mpRulesLoad(); }
+  if(name==='payroll'){ mpLoadRuns(); mpRulesLoad(); mpStats(); }
   if(name==='futa'){ fLoadAll(); }
   if(name==='muundo'){ uwLoad(); loadUsers(); loadVyeo(); }
   if(name==='mikoa'){ mkLoad(); }
@@ -894,6 +915,256 @@ async function mpLoadRuns(){
     </div>`;
   }).join('') : '<div class="empty">Hakuna payroll bado.</div>';
 }
+/* ---- Takwimu za mwezi na ratiba ya malipo ya kila siku ---- */
+const MP_DAYS_SW=['Jpl','Jtt','Jnn','Jtn','Alh','Ijm','Jms'], MP_MON_SW=['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ago','Sep','Okt','Nov','Des'];
+let MP_STAT=null, MP_PLAN=null;
+function mpMonthDays(ym,skipSun){
+  const [y,m]=ym.split('-').map(Number), n=new Date(y,m,0).getDate(), out=[];
+  for(let d=1; d<=n; d++){ const dt=new Date(y,m-1,d); if(skipSun && dt.getDay()===0) continue;
+    out.push({ date:ym+'-'+String(d).padStart(2,'0'), label:MP_DAYS_SW[dt.getDay()]+' '+String(d).padStart(2,'0')+' '+MP_MON_SW[m-1] }); }
+  return out;
+}
+/* Panga kila mfanyakazi siku moja: si zaidi ya K watu na si zaidi ya S TZS kwa siku; vyeo vinachanganywa; mzigo unagawanywa sawasawa.
+   Hakuna uchaguzi wa nasibu usio na mpangilio: kwa data ileile ratiba ni ileile. Ikibana, inajaribu njia zaidi ili mtu yeyote asiachwe. */
+function mpSchedule(items,nDays,K,S){
+  const mkDays=()=>Array.from({length:nDays},(_,i)=>({ i, list:[], load:0, pos:{} }));
+  const put=(e,d)=>{ d.list.push(e); d.load+=e.amt; d.pos[e.pos]=(d.pos[e.pos]||0)+1; };
+  const take=(e,d)=>{ d.list.splice(d.list.indexOf(e),1); d.load-=e.amt; d.pos[e.pos]--; };
+  const fits=(e,d)=>d.list.length<K && d.load+e.amt<=S;
+  const byAmt=(a,b)=>(b.amt-a.amt)||String(a.pos).localeCompare(String(b.pos))||String(a.name).localeCompare(String(b.name));
+  const balanced=(e,d)=>((d.load+e.amt)/S)+0.6*((d.list.length+1)/K)+0.35*(d.pos[e.pos]||0)+d.i*1e-7;
+  const tight=(e,d)=>(S-d.load-e.amt)/S+0.02*(K-d.list.length-1)/K+0.05*(d.pos[e.pos]||0)+d.i*1e-7;
+  function run(order,days,cost){
+    const left=[];
+    order.forEach(e=>{ let best=null,bc=Infinity; days.forEach(d=>{ if(fits(e,d)){ const c=cost(e,d); if(c<bc){ bc=c; best=d; } } }); if(best) put(e,best); else left.push(e); });
+    return left;
+  }
+  function repair(days,left){
+    if(left.length>12) return;                       // wengi mno: haifai kurekebisha kidogokidogo
+    for(let guard=0; guard<6 && left.length; guard++){
+      let moved=false;
+      for(let k=left.length-1;k>=0;k--){
+        const e=left[k]; let done=false;
+        for(const d of days){ if(done) break;
+          for(const f of d.list.slice().sort((a,b)=>a.amt-b.amt)){
+            if(d.load-f.amt+e.amt>S) continue;
+            const d2=days.find(x=>x!==d && fits(f,x));
+            if(d2){ take(f,d); put(f,d2); put(e,d); left.splice(k,1); done=true; moved=true; break; }
+            // kubadilishana na mtu mdogo wa siku nyingine
+            for(const d3 of days){ if(d3===d||done) continue;
+              for(const g of d3.list.slice().sort((a,b)=>b.amt-a.amt)){
+                if(g.amt>=f.amt) continue;
+                if(d3.load-g.amt+f.amt<=S && d.load-f.amt+g.amt+e.amt<=S && d.list.length+1<=K){ /* d: toa f, weka g na e; d3: toa g, weka f */
+                  take(f,d); take(g,d3); put(f,d3); put(g,d); put(e,d); left.splice(k,1); done=true; moved=true; break; }
+              }
+              if(done) break; }
+            if(done) break;
+          }
+        }
+      }
+      if(!moved) break;
+    }
+  }
+
+  /* Sambaza makundi ya siku kwenye mwezi mzima: vyeo vinabadilishana, kiasi kikubwa na kidogo kinapishana, na siku zinatumika kwa nafasi sawa. */
+  function spread(days){
+    const n=days.length, full=days.filter(d=>d.list.length), G=full.length;
+    if(!G) return days;
+    const key=d=>d.list.slice().sort((a,b)=>b.amt-a.amt)[0].pos, buckets={};
+    full.forEach(d=>{ const k=key(d); (buckets[k]=buckets[k]||[]).push(d); });
+    const names=Object.keys(buckets).sort((a,b)=>buckets[b].length-buckets[a].length||a.localeCompare(b));
+    names.forEach(k=>{ const arr=buckets[k].sort((a,b)=>b.load-a.load||a.i-b.i), alt=[]; let lo=0, hi=arr.length-1, front=true;
+      while(lo<=hi){ alt.push(front?arr[lo++]:arr[hi--]); front=!front; } buckets[k]=alt; });
+    const order=[]; let any=true;
+    while(any){ any=false; names.forEach(k=>{ const g=buckets[k].shift(); if(g){ order.push(g); any=true; } }); }
+    const out=Array.from({length:n},(_,i)=>({ i, list:[], load:0, pos:{} }));
+    order.forEach((g,idx)=>{ const slot=G===1?0:Math.min(n-1,Math.floor((idx+0.5)*n/G)); g.i=slot; out[slot]=g; });
+    return out;
+  }
+  const order=items.slice().sort(byAmt);
+  const sum=items.reduce((t,e)=>t+e.amt,0), hopeless=(sum>S*nDays+1e-6)||(items.length>K*nDays);
+  let best=null;
+  const consider=(days,left)=>{ if(!best || left.length<best.left.length){ best={ days, left }; } return left.length===0; };
+  { const days=mkDays(), left=run(order,days,balanced); repair(days,left); if(consider(days,left)||hopeless) return {days:spread(best.days),left:best.left}; }
+  { const days=mkDays(), left=run(order,days,tight); repair(days,left); if(consider(days,left)) return {days:spread(best.days),left:best.left}; }
+  // jaribio la kuvunja na kujenga upya (nasibu yenye mbegu isiyobadilika)
+  let seed=12345; const rnd=()=> (seed=(seed*1664525+1013904223)%4294967296)/4294967296;
+  const iters=Math.min(400,Math.floor(4e6/(Math.max(1,items.length)*nDays*8)));
+  for(let it=0; it<iters; it++){
+    const days=mkDays(); const ordr=order.slice();
+    // changanya kidogo mpangilio: kila kipengele kinaweza kuhamia mbele hadi nafasi chache
+    for(let i=0;i<ordr.length;i++){ const j=Math.min(ordr.length-1,i+Math.floor(rnd()*6)); const t=ordr[i]; ordr[i]=ordr[j]; ordr[j]=t; }
+    const left=run(ordr,days,it%2?tight:balanced); repair(days,left);
+    if(consider(days,left)) break;
+  }
+  return {days:spread(best.days),left:best.left};
+}
+async function mpStats(){
+  const box=document.getElementById('mpStatBox'); if(!box) return;
+  box.innerHTML='<div class="empty">Inahesabu...</div>';
+  const mEl=document.getElementById('mpStatMonth'); if(mEl && !mEl.value) mEl.value=new Date().toLocaleDateString('sv-SE').slice(0,7);
+  mpRulesRead();
+  const { data, error } = await sb.from('hr_employees').select('id, full_name, position, department, agent_code, base_salary, status');
+  if(error){ box.innerHTML='<div class="empty">Imeshindwa kusoma wafanyakazi: '+mE(error.message)+'</div>'; return; }
+  const emps=(data||[]).filter(e=>e.status==null || e.status==='active');
+  const calc=await mpCalc(emps);
+  const rows=emps.map(e=>({ id:e.id, name:String(e.full_name||'').trim(), pos:String(e.position||'').trim()||'Bila cheo', dept:String(e.department||'').trim()||'Bila idara', amt:Math.round((calc[e.id]||{}).gross||0), text:(calc[e.id]||{}).text||'' }));
+  MP_STAT={ month:mEl.value, rows };
+  const total=rows.reduce((s,r)=>s+r.amt,0), zero=rows.filter(r=>r.amt<=0);
+  const group=key=>{ const m={}; rows.forEach(r=>{ const k=r[key]; (m[k]=m[k]||{n:0,t:0}); m[k].n++; m[k].t+=r.amt; }); return Object.keys(m).map(k=>({k,n:m[k].n,t:m[k].t})).sort((a,b)=>b.t-a.t||a.k.localeCompare(b.k)); };
+  const tbl=(title,arr)=>`<div class="mpr-h">${title}</div><div style="overflow-x:auto;"><table style="width:100%;font-size:12.5px;border-collapse:collapse;"><thead><tr style="color:var(--sub);text-align:left;"><th style="padding:4px 0;">Jina</th><th style="text-align:right;">Idadi</th><th style="text-align:right;">Jumla (TZS)</th></tr></thead><tbody>`+
+    arr.map(x=>`<tr style="border-top:1px solid var(--border);"><td style="padding:6px 0;">${mE(x.k)}</td><td style="text-align:right;">${x.n}</td><td style="text-align:right;font-weight:600;">${mN(x.t)}</td></tr>`).join('')+
+    `<tr style="border-top:2px solid var(--border);font-weight:700;"><td style="padding:6px 0;">Jumla</td><td style="text-align:right;">${rows.length}</td><td style="text-align:right;">${mN(total)}</td></tr></tbody></table></div>`;
+  const avg=rows.length?Math.round(total/rows.length):0;
+  box.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;">
+      <div style="background:var(--panel2);border-radius:10px;padding:10px;"><div style="font-size:11.5px;color:var(--sub);">Mshahara wa mwezi</div><div style="font-size:18px;font-weight:800;">${mN(total)}</div></div>
+      <div style="background:var(--panel2);border-radius:10px;padding:10px;"><div style="font-size:11.5px;color:var(--sub);">Wafanyakazi</div><div style="font-size:18px;font-weight:800;">${rows.length}</div></div>
+      <div style="background:var(--panel2);border-radius:10px;padding:10px;"><div style="font-size:11.5px;color:var(--sub);">Wastani kwa mtu</div><div style="font-size:16px;font-weight:700;">${mN(avg)}</div></div>
+      <div style="background:var(--panel2);border-radius:10px;padding:10px;"><div style="font-size:11.5px;color:var(--sub);">Hawana mshahara</div><div style="font-size:16px;font-weight:700;${zero.length?'color:var(--red);':''}">${zero.length}</div></div></div>
+    ${zero.length?`<div class="mpr-s" style="color:var(--red);">Hawana mshahara (cheo bila kanuni na bila mshahara wa msingi): ${zero.slice(0,8).map(r=>mE(r.name)).join(', ')}${zero.length>8?'...':''}</div>`:''}
+    ${tbl('Kwa cheo',group('pos'))}${tbl('Kwa idara',group('dept'))}
+    <p class="mpr-s" style="margin-top:8px;">Makadirio kabla ya makato ya madeni, kwa kanuni zako za sasa. Wafanyakazi walio hai tu.</p>`;
+}
+function mpPlan(){
+  const box=document.getElementById('mpPlanBox'), msg='mpPlanMsg';
+  if(!MP_STAT){ mSay(msg,'Inahesabu takwimu kwanza...',true); mpStats().then(()=>mpPlan()); return; }
+  const K=Math.max(1,parseInt(document.getElementById('mpMaxN').value)||7), S=Math.max(1,parseFloat(document.getElementById('mpMaxAmt').value)||2000000), skip=document.getElementById('mpSkipSun').checked;
+  const fromToday=document.getElementById('mpFromToday').checked, today=new Date().toLocaleDateString('sv-SE');
+  const days=mpMonthDays(MP_STAT.month,skip).filter(d=>!fromToday||d.date>=today);
+  if(!days.length){ MP_PLAN=null; box.innerHTML=''; mSay(msg,'Hakuna siku zilizobaki mwezi huu. Ondoa tiki ya "Anza kutoka leo" au chagua mwezi mwingine.',false); return; }
+  const pay=MP_STAT.rows.filter(r=>r.amt>0), zero=MP_STAT.rows.filter(r=>r.amt<=0), big=pay.filter(r=>r.amt>S);
+  const res=mpSchedule(pay.filter(r=>r.amt<=S),days.length,K,S);
+  const left=res.left.concat(big), total=pay.reduce((s,r)=>s+r.amt,0), cap=S*days.length, capN=K*days.length;
+  MP_PLAN={ month:MP_STAT.month, days, res, left, zero, K, S, total };
+  const issues=[];
+  if(total>cap) issues.push('Mshahara jumla ('+mN(total)+') unazidi uwezo wa mwezi ('+mN(S)+' × siku '+days.length+' = '+mN(cap)+') kwa '+mN(total-cap)+'.');
+  if(pay.length>capN) issues.push('Wafanyakazi '+pay.length+' ni wengi kuliko uwezo wa mwezi ('+K+' × siku '+days.length+' = '+capN+').');
+  if(big.length) issues.push('Mshahara wa '+big.map(r=>mE(r.name)+' ('+mN(r.amt)+')').join(', ')+' unazidi kikomo cha siku ('+mN(S)+').');
+  if(!issues.length && res.left.length) issues.push('Haikupatikana mpangilio unaotosha kwa vikomo hivi, ingawa jumla inatosha. Ongeza kidogo kiasi cha siku.');
+  const used=res.days.filter(d=>d.list.length).length, mxN=Math.max(0,...res.days.map(d=>d.list.length)), mxL=Math.max(0,...res.days.map(d=>d.load));
+  const head=left.length
+    ? `<div class="msg err" style="display:block;">Haitoshi: wafanyakazi ${left.length} hawajapangwa.<br>${issues.map(mE).join('<br>')}<div style="margin-top:6px;">Hawajapangwa: ${left.slice(0,10).map(r=>mE(r.name)).join(', ')}${left.length>10?'...':''}</div></div>`
+    : `<div class="msg ok" style="display:block;">✓ Wafanyakazi wote ${pay.length} wamepangwa. Siku zenye malipo: ${used} kati ya ${days.length} · Kiwango cha juu cha siku: watu ${mxN}, ${mN(mxL)} TZS.</div>`;
+  const dayHtml=res.days.map(d=>{
+    const dd=days[d.i], chips=Object.keys(d.pos).map(k=>mE(k)+' '+d.pos[k]).join(' · ');
+    if(!d.list.length) return `<div style="padding:8px 4px;border-top:1px solid var(--border);color:var(--sub);font-size:12.5px;">${mE(dd.label)} · —</div>`;
+    return `<details style="border-top:1px solid var(--border);"><summary style="padding:8px 4px;cursor:pointer;font-size:13px;"><b>${mE(dd.label)}</b> · ${d.list.length} watu · <b>${mN(d.load)}</b><div style="font-size:11.5px;color:var(--sub);">${chips}</div></summary>`+
+      d.list.map(e=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 8px;font-size:12.5px;"><span>${mE(e.name)} <small style="color:var(--sub);">${mE(e.pos)} · ${mE(e.dept)}</small></span><b>${mN(e.amt)}</b></div>`).join('')+`</details>`;
+  }).join('');
+  box.innerHTML=head+`<div style="margin-top:8px;">${dayHtml}</div>`+(zero.length?`<p class="mpr-s" style="color:var(--red);">Hawajajumuishwa (hawana mshahara): ${zero.map(r=>mE(r.name)).join(', ')}</p>`:'');
+  mSay(msg,'');
+}
+async function mpPlanPdf(){
+  if(!MP_PLAN){ mSay('mpPlanMsg','Panga ratiba kwanza.',false); return; }
+  if(!(window.HkMkeka && HkMkeka.simplePdf)){ mSay('mpPlanMsg','Pakia toleo jipya la assets/hekima-mkeka.js kwenye repo.',false); return; }
+  const P=MP_PLAN, head=['SIKU','NO','MFANYAKAZI','CHEO','IDARA','KIASI (TZS)','JUMLA YA SIKU'], body=[]; let n=0;
+  P.res.days.forEach((d,k)=>{
+    const dd=P.days[d.i], fill=k%2?[245,247,250]:[255,255,255];
+    if(!d.list.length){ body.push([{content:dd.label,styles:{fillColor:fill}},{content:'',styles:{fillColor:fill}},{content:'—',styles:{fillColor:fill}},{content:'',styles:{fillColor:fill}},{content:'',styles:{fillColor:fill}},{content:'',styles:{fillColor:fill}},{content:'0',styles:{fillColor:fill,halign:'right'}}]); return; }
+    d.list.forEach((e,j)=>{ n++;
+      const row=[]; if(j===0) row.push({content:dd.label,rowSpan:d.list.length,styles:{fillColor:fill,valign:'middle',fontStyle:'bold'}});
+      row.push({content:String(n),styles:{fillColor:fill,halign:'center'}},{content:e.name,styles:{fillColor:fill}},{content:e.pos,styles:{fillColor:fill}},{content:e.dept,styles:{fillColor:fill}},{content:mN(e.amt),styles:{fillColor:fill,halign:'right'}});
+      if(j===0) row.push({content:mN(d.load)+'\n('+d.list.length+' watu)',rowSpan:d.list.length,styles:{fillColor:fill,valign:'middle',halign:'right',fontStyle:'bold'}});
+      body.push(row); });
+  });
+  try{
+    await HkMkeka.simplePdf({ title:'RATIBA YA MALIPO YA KILA SIKU — '+P.month, subtitle:'Watu kwa siku: si zaidi ya '+P.K+' · Kiasi kwa siku: si zaidi ya '+mN(P.S)+' TZS · Jumla ya mwezi: '+mN(P.total)+' TZS'+(P.left.length?' · HAWAJAPANGWA: '+P.left.map(r=>r.name).join(', '):''),
+      head, body, orientation:'portrait', filename:'Ratiba_ya_Malipo_'+P.month+'.pdf', columnStyles:{0:{cellWidth:62},1:{cellWidth:24},2:{cellWidth:'auto'},3:{cellWidth:78},4:{cellWidth:70},5:{cellWidth:64,halign:'right'},6:{cellWidth:76}} });
+    mSay('mpPlanMsg','PDF imepakuliwa ✓',true);
+  }catch(e){ mSay('mpPlanMsg','Imeshindwa kutengeneza PDF: '+e.message,false); }
+}
+
+/* ---- Tengeneza payroll za kila siku (moja kwa kila siku yenye malipo) ---- */
+let MP_BUSY=false;
+function mpLog(lines){ const el=document.getElementById('mpDailyLog'); if(el) el.innerHTML = lines.length ? '<div style="font-size:12.5px;border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-top:8px;">'+lines.map(l=>'<div style="padding:2px 0;">'+l+'</div>').join('')+'</div>' : ''; }
+/* hatua 1: tengeneza payroll ya siku, ongeza waliokosekana, soma orodha */
+async function mpCreateDay(day,emps,ctx){
+  const out={ runId:null, added:0, set:0, unknown:0, errors:[], items:[], sched:{} };
+  const cr=await sb.rpc('payroll_create_run',{ p_period:day.date });
+  if(cr.error){ out.fatal=cr.error.message; return out; }
+  out.runId=cr.data; ctx.created.push(out.runId);
+  const byId={}, byName={}; emps.forEach(e=>{ byId[e.id]=e; const n=mpNorm(e.full_name); (byName[n]=byName[n]||[]).push(e); });
+  out.idOf=it=>(it.employee_id && byId[it.employee_id]) ? it.employee_id : (((byName[mpNorm(it.full_name)]||[]).length===1) ? byName[mpNorm(it.full_name)][0].id : null);
+  const r1=await sb.rpc('payroll_run_items',{ p_run_id:out.runId });
+  if(r1.error){ out.fatal=r1.error.message; return out; }
+  let items=r1.data||[];
+  day.items.forEach(e=>{ out.sched[e.id]=e; });
+  const present=new Set(items.map(out.idOf).filter(Boolean));
+  for(const e of day.items){ if(present.has(e.id)) continue;
+    const ad=await sb.rpc('payroll_add_item',{ p_run_id:out.runId, p_employee_id:e.id });
+    if(ad.error) out.errors.push(e.name+': '+ad.error.message); else out.added++; }
+  if(out.added){ const r2=await sb.rpc('payroll_run_items',{ p_run_id:out.runId }); if(!r2.error) items=r2.data||[]; }
+  out.items=items; out.extras=items.filter(it=>{ const id=out.idOf(it); return id && !out.sched[id]; }).length;
+  return out;
+}
+/* hatua 2: weka mshahara wa waliopangiwa siku hii; wasiopangiwa (walioongezwa na mfumo) wawe 0 */
+async function mpApplyDay(out){
+  for(const it of out.items){
+    const id=out.idOf(it); if(!id){ out.unknown++; continue; }
+    const e=out.sched[id], ded=e ? (it.deductions||[]).map(x=>({ debt_id:x.debt_id, amount:x.amount })) : [];
+    const r=await sb.rpc('payroll_set_item',{ p_item_id:it.item_id, p_gross:e?e.amt:0, p_deductions:ded });
+    if(r.error) out.errors.push((it.full_name||'')+': '+r.error.message); else if(e) out.set++;
+  }
+}
+async function mpDailyCreate(){
+  if(MP_BUSY) return; MP_BUSY=true;
+  const say=(t,ok)=>mSay('mpPlanMsg',t,ok), ctx={ created:[], extrasOk:null }, log=[];
+  try{
+    mpLog([]); say('Inahesabu ratiba...',true);
+    await mpStats(); mpPlan();
+    const P=MP_PLAN;
+    if(!P){ say('Hakuna siku za kupanga. Ondoa tiki ya "Anza kutoka leo" au chagua mwezi mwingine.',false); return; }
+    if(P.left.length){ say('Haiwezekani kutengeneza: wafanyakazi '+P.left.length+' hawajapangwa kwa vikomo hivi. Soma maelezo hapa chini, kisha badilisha vikomo.',false); return; }
+    const plan=P.res.days.filter(d=>d.list.length).map(d=>({ date:P.days[d.i].date, label:P.days[d.i].label, items:d.list, load:d.load }));
+    if(!plan.length){ say('Hakuna wa kulipwa.',false); return; }
+    const nEmp=plan.reduce((s,d)=>s+d.items.length,0);
+    if(!confirm('Kutengeneza payroll '+plan.length+' (moja kwa kila siku) za '+P.month+':\n• Wafanyakazi '+nEmp+', jumla '+mN(P.total)+' TZS\n• Kila siku: si zaidi ya watu '+P.K+' na '+mN(P.S)+' TZS'+(P.zero.length?'\n• Hawana mshahara (hawatajumuishwa): '+P.zero.length:'')+'\n\nZitakuwa rasimu; utazikagua kisha kuzituma kwa HR. Endelea?')){ say('',true); return; }
+    const ex=await sb.rpc('payroll_list_runs');
+    if(ex.error){ say('Imeshindwa kusoma payroll zilizopo: '+ex.error.message,false); return; }
+    const have=new Set((ex.data||[]).map(r=>String(r.period)));
+    const { data:emps, error:ee } = await sb.from('hr_employees').select('id, full_name');
+    if(ee){ say('Imeshindwa kusoma wafanyakazi: '+ee.message,false); return; }
+    let made=0, skipped=0, i=0, stop=null, warn=0;
+    for(const day of plan){
+      i++;
+      if(have.has(day.date)){ skipped++; log.push('⏭ '+mE(day.label)+': tayari ipo, imerukwa'); mpLog(log); continue; }
+      say('Inatengeneza '+i+'/'+plan.length+' ('+day.label+')...',true);
+      const out=await mpCreateDay(day,emps||[],ctx);
+      if(out.fatal){
+        stop=day.label+': '+out.fatal;
+        if(out.runId){ await sb.rpc('ceo_delete_payroll_run',{ p_run_id:out.runId }); ctx.created=ctx.created.filter(x=>x!==out.runId); }
+        break;
+      }
+      if(out.extras>0 && ctx.extrasOk===null){
+        ctx.extrasOk = confirm('Mfumo wa payroll umeongeza wafanyakazi '+out.extras+' ambao hawajapangiwa siku hii. Hawawezi kuondolewa; nitaweka mshahara wao 0 kwenye payroll hii na zinazofuata.\n\nNiendelee?');
+        if(!ctx.extrasOk){ await sb.rpc('ceo_delete_payroll_run',{ p_run_id:out.runId }); ctx.created=ctx.created.filter(x=>x!==out.runId); stop='Umeacha. Payroll ya jaribio imefutwa, hakuna kilichobaki.'; break; }
+      }
+      await mpApplyDay(out);
+      made++; if(out.errors.length||out.unknown) warn++;
+      log.push('✓ '+mE(day.label)+': watu '+day.items.length+' · '+mN(day.load)+(out.extras?' · (waliongezwa na mfumo, 0: '+out.extras+')':'')+(out.errors.length?' · <span style="color:var(--red);">makosa '+out.errors.length+': '+mE(out.errors[0])+'</span>':''));
+      mpLog(log);
+    }
+    const sub=ctx.created.length ? ' <button class="btn" style="padding:6px 12px;font-size:12px;margin-top:6px;" onclick="mpDailySubmitAll(\''+P.month+'\')">Tuma zote kwa HR</button>' : '';
+    const hint=(stop && !made && /period|kipindi|date|format|YYYY/i.test(stop)) ? '<br><span style="font-weight:400;">Mfumo wa payroll hauikubali tarehe ya siku kama kipindi. Nitumie picha ya ujumbe huu nirekebishe.</span>' : '';
+    log.push('<b>'+(stop?'Imesimama: '+mE(stop)+hint+'<br>':'')+'Zilizotengenezwa: '+made+(skipped?' · zilizorukwa (zilikuwepo): '+skipped:'')+'</b>'+(made?sub:''));
+    mpLog(log);
+    say(stop ? 'Imesimama baada ya payroll '+made+'. Unaweza kurudia; zilizokuwepo zinarukwa.' : (made?'Payroll '+made+' za kila siku zimetengenezwa ✓ Zikague kisha uzitume kwa HR.':'Hakuna kipya kilichotengenezwa.'), stop?false:true);
+    await mpLoadRuns();
+  }catch(e){ say('Imeshindwa: '+e.message,false); }
+  finally{ MP_BUSY=false; }
+}
+async function mpDailySubmitAll(month){
+  const { data, error } = await sb.rpc('payroll_list_runs');
+  if(error){ mSay('mpPlanMsg','Imeshindwa: '+error.message,false); return; }
+  const drafts=(data||[]).filter(r=>r.status==='rasimu' && String(r.period).indexOf(month+'-')===0);
+  if(!drafts.length){ mSay('mpPlanMsg','Hakuna payroll za rasimu za mwezi huu.',false); return; }
+  if(!confirm('Kutuma payroll '+drafts.length+' kwa HR? Huwezi kuzibadilisha baada ya kutuma.')) return;
+  let ok=0; const errs=[];
+  for(const r of drafts){ const x=await sb.rpc('payroll_submit',{ p_run_id:r.id }); if(x.error) errs.push(r.period+': '+x.error.message); else ok++; }
+  mSay('mpPlanMsg','Zimetumwa kwa HR: '+ok+(errs.length?' · zimeshindwa: '+errs.slice(0,3).join('; '):''), !errs.length);
+  await mpLoadRuns();
+}
+
 /* ---- Kanuni za mshahara: cheo, wateja wa agent, agents wa zone ---- */
 const MP_RK='hk_pay_rules_v1';
 let MP_RULES={ min:{}, agent:{from:50,per:0}, zone:{per:0} }, MP_CALC={};
@@ -926,7 +1197,7 @@ function mpRulesSave(){
   const min={}; document.querySelectorAll('#mpRulesBox input[data-pos]').forEach(i=>{ const n=parseFloat(i.value); if(n>0) min[i.dataset.pos]=n; });
   const g=id=>parseFloat((document.getElementById(id)||{}).value)||0;
   MP_RULES={ min, agent:{ from:Math.max(1,g('mprAgFrom')||50), per:g('mprAgPer') }, zone:{ per:g('mprZnPer') } };
-  try{ localStorage.setItem(MP_RK, JSON.stringify(MP_RULES)); mSay('mpRulesMsg','Kanuni zimehifadhiwa ✓ (zinatumika payroll mpya na "Hesabu upya")',true); }
+  try{ localStorage.setItem(MP_RK, JSON.stringify(MP_RULES)); mSay('mpRulesMsg','Kanuni zimehifadhiwa ✓ (takwimu zimesasishwa; zinatumika payroll mpya na "Hesabu upya")',true); mpStats(); }
   catch(e){ mSay('mpRulesMsg','Imeshindwa kuhifadhi kwenye kifaa hiki.',false); }
 }
 async function mpCalc(emps){
