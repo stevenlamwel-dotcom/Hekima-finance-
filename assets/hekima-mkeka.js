@@ -181,5 +181,38 @@
     doc.save('Mkeka_'+now.getFullYear()+pad(now.getMonth()+1)+pad(now.getDate())+'.pdf');
   }
 
-  window.HkMkeka={ pdf:pdf, decodeMeta:decodeMeta, encodeMeta:encodeMeta, groups:groups, norm:norm, DEFAULT_BANNERS:DEFAULT_BANNERS, PALETTE:PALETTE };
+
+  /* PDF ya jedwali la kawaida lenye logo (inatumika na ratiba ya malipo) */
+  async function simplePdf(o){
+    await loadLibs();
+    var logo=await logoData();
+    var jsPDF=window.jspdf.jsPDF, doc=new jsPDF({ orientation:o.orientation||'portrait', unit:'pt', format:'a4' });
+    var W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), ML=32;
+    var NAVY=[0,24,60], GOLD=[204,156,36], MUTED=[100,112,128];
+    var now=new Date(), pad=function(n){ return String(n).padStart(2,'0'); };
+    var stamp=pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear();
+    if(logo){ try{ doc.addImage(logo,'JPEG',ML,16,44,44); }catch(e){} }
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor.apply(doc,GOLD); doc.text('HEKIMA FINANCE', ML+54, 30);
+    doc.setFontSize(14); doc.setTextColor.apply(doc,NAVY); doc.text(String(o.title||''), ML+54, 48);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor.apply(doc,MUTED); doc.text(stamp, W-ML, 30, {align:'right'});
+    var y=70;
+    if(o.subtitle){ var lines=doc.splitTextToSize(String(o.subtitle), W-2*ML); doc.text(lines, ML, y+6); y+=6+lines.length*11; }
+    doc.setDrawColor.apply(doc,GOLD); doc.setLineWidth(1.1); doc.line(ML,y+2,W-ML,y+2);
+    var drawn={};
+    doc.autoTable({
+      startY:y+10, theme:'grid', head:[o.head], body:o.body, margin:{ left:ML, right:ML, top:42, bottom:30 }, rowPageBreak:'avoid',
+      styles:{ font:'helvetica', fontSize:8, textColor:[20,30,45], cellPadding:{top:3,bottom:3,left:4,right:4}, lineColor:[190,198,208], lineWidth:.4, overflow:'linebreak' },
+      headStyles:{ fillColor:NAVY, textColor:[255,255,255], fontSize:8 },
+      columnStyles:o.columnStyles||{},
+      didDrawPage:function(d){ if(d.pageNumber<2||drawn[d.pageNumber]) return; drawn[d.pageNumber]=true;
+        if(logo){ try{ doc.addImage(logo,'JPEG',ML,10,18,18); }catch(e){} }
+        doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor.apply(doc,NAVY); doc.text(String(o.title||''), ML+24, 22); }
+    });
+    var pages=doc.internal.getNumberOfPages();
+    for(var p=1;p<=pages;p++){ doc.setPage(p); doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor.apply(doc,MUTED);
+      doc.text('Hekima Finance  ·  '+stamp, ML, H-14); doc.text('Ukurasa '+p+' / '+pages, W-ML, H-14, {align:'right'}); }
+    doc.save(o.filename||'ripoti.pdf');
+  }
+
+  window.HkMkeka={ pdf:pdf, simplePdf:simplePdf, decodeMeta:decodeMeta, encodeMeta:encodeMeta, groups:groups, norm:norm, DEFAULT_BANNERS:DEFAULT_BANNERS, PALETTE:PALETTE };
 })();
